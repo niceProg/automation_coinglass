@@ -2505,13 +2505,13 @@ class CoinglassRepository:
         INSERT INTO cg_spot_large_orderbook_history (
             id, exchange_name, symbol, base_asset, quote_asset, price,
             start_time, start_quantity, start_usd_value, current_quantity,
-            current_usd_value, current_time, executed_volume, executed_usd_value,
+            current_usd_value, `current_time`, executed_volume, executed_usd_value,
             trade_count, order_side, order_state, order_end_time
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             current_quantity=VALUES(current_quantity),
             current_usd_value=VALUES(current_usd_value),
-            current_time=VALUES(current_time),
+            `current_time`=VALUES(`current_time`),
             executed_volume=VALUES(executed_volume),
             executed_usd_value=VALUES(executed_usd_value),
             trade_count=VALUES(trade_count),
