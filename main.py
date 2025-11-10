@@ -458,25 +458,23 @@ def show_help():
     logger.info("\n📈 Individual Market Categories:")
     logger.info("  # Derivatives")
     logger.info(
-        "  python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis"
+        "  python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history"
     )
     # logger.info("  python main.py funding_rate open_interest long_short_ratio options [options DISABLED]")
     logger.info("  ")
     # logger.info("  # Exchange Infrastructure")
     # logger.info("  python main.py exchange_balance_list")  # DISABLED - Not documented
     logger.info("  ")
-    logger.info("  # Spot Markets")
+    logger.info("  # Spot Microstructure")
     logger.info("  python main.py spot_orderbook spot_orderbook_aggregated")
     logger.info("  python main.py spot_coins_markets spot_pairs_markets spot_price_history")
+    logger.info("  python main.py spot_large_orderbook spot_large_orderbook_history")
+    logger.info("  python main.py spot_aggregated_taker_volume_history spot_taker_volume_history")
     logger.info("  ")
     logger.info("  # Bitcoin ETFs")
     logger.info(
         "  python main.py bitcoin_etf_list bitcoin_etf_flows_history bitcoin_etf_premium_discount_history  # bitcoin_etf_history disabled"
     )
-    logger.info("  ")
-    logger.info("  # Trading Markets")
-    # logger.info("  python main.py coins_markets [DISABLED]")
-    # logger.info("  python main.py supported_exchange_pairs pairs_markets coins_markets")
     logger.info("  ")
     logger.info("  # Macro Overlay")
     logger.info("  python main.py bitcoin_vs_global_m2_growth")
