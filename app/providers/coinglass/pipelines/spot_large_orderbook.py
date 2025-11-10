@@ -44,12 +44,12 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 )
 
                 if data:
-                        # Process and insert data
-                        repo.insert_spot_large_orderbook(exchange, symbol, data)
-                        summary["large_orderbook"] += len(data)
-                        logger.info(f"Inserted {len(data)} large orderbook records for {exchange} {symbol}")
-                    else:
-                        logger.info(f"No large orderbook data available for {exchange} {symbol}")
+                    # Process and insert data
+                    repo.insert_spot_large_orderbook(exchange, symbol, data)
+                    summary["large_orderbook"] += len(data)
+                    logger.info(f"Inserted {len(data)} large orderbook records for {exchange} {symbol}")
+                else:
+                    logger.info(f"No large orderbook data available for {exchange} {symbol}")
 
                 summary["fetches"] += 1
 

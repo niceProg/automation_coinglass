@@ -2450,3 +2450,191 @@ class CoinglassRepository:
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
             return 0
+
+    # ===== NEW ENDPOINTS REPOSITORY METHODS =====
+
+    def insert_futures_footprint_history(self, exchange: str, symbol: str, interval: str, data: List[List]) -> int:
+        """Insert futures footprint history data."""
+        if not data:
+            return 0
+
+        sql = """
+        INSERT INTO cg_futures_footprint_history (
+            exchange, symbol, interval, time, price_start, price_end,
+            taker_buy_volume, taker_sell_volume, taker_buy_volume_usd,
+            taker_sell_volume_usd, taker_buy_trades, taker_sell_trades
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            taker_buy_volume=VALUES(taker_buy_volume),
+            taker_sell_volume=VALUES(taker_sell_volume),
+            taker_buy_volume_usd=VALUES(taker_buy_volume_usd),
+            taker_sell_volume_usd=VALUES(taker_sell_volume_usd),
+            taker_buy_trades=VALUES(taker_buy_trades),
+            taker_sell_trades=VALUES(taker_sell_trades)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for timestamp, price_ranges in data:
+                    for price_range in price_ranges:
+                        if len(price_range) >= 8:
+                            cur.execute(sql, (
+                                exchange, symbol, interval, timestamp,
+                                price_range[0],  # price_start
+                                price_range[1],  # price_end
+                                price_range[2],  # taker_buy_volume
+                                price_range[3],  # taker_sell_volume
+                                price_range[4],  # taker_buy_volume_usd
+                                price_range[5],  # taker_sell_volume_usd
+                                price_range[7],  # taker_buy_trades (index 6 is duplicate)
+                                price_range[8] if len(price_range) > 8 else 0  # taker_sell_trades
+                            ))
+            self.conn.commit()
+            return len(data)
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error inserting futures footprint history: {e}")
+            return 0
+
+    def insert_spot_large_orderbook_history(self, exchange: str, symbol: str, state: str, data: List[Dict]) -> int:
+        """Insert spot large orderbook history data."""
+        if not data:
+            return 0
+
+        sql = """
+        INSERT INTO cg_spot_large_orderbook_history (
+            id, exchange_name, symbol, base_asset, quote_asset, price,
+            start_time, start_quantity, start_usd_value, current_quantity,
+            current_usd_value, current_time, executed_volume, executed_usd_value,
+            trade_count, order_side, order_state, order_end_time
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            current_quantity=VALUES(current_quantity),
+            current_usd_value=VALUES(current_usd_value),
+            current_time=VALUES(current_time),
+            executed_volume=VALUES(executed_volume),
+            executed_usd_value=VALUES(executed_usd_value),
+            trade_count=VALUES(trade_count),
+            order_state=VALUES(order_state),
+            order_end_time=VALUES(order_end_time)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    cur.execute(sql, (
+                        row.get("id"), row.get("exchange_name"), row.get("symbol"),
+                        row.get("base_asset"), row.get("quote_asset"), row.get("price"),
+                        row.get("start_time"), row.get("start_quantity"), row.get("start_usd_value"),
+                        row.get("current_quantity"), row.get("current_usd_value"), row.get("current_time"),
+                        row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
+                        row.get("order_side"), row.get("order_state"), row.get("order_end_time")
+                    ))
+            self.conn.commit()
+            return len(data)
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error inserting spot large orderbook history: {e}")
+            return 0
+
+    def insert_spot_large_orderbook(self, exchange: str, symbol: str, data: List[Dict]) -> int:
+        """Insert current spot large orderbook data."""
+        if not data:
+            return 0
+
+        sql = """
+        INSERT INTO cg_spot_large_orderbook (
+            id, exchange_name, symbol, base_asset, quote_asset, price,
+            start_time, start_quantity, start_usd_value, current_quantity,
+            current_usd_value, current_time, executed_volume, executed_usd_value,
+            trade_count, order_side, order_state
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            current_quantity=VALUES(current_quantity),
+            current_usd_value=VALUES(current_usd_value),
+            current_time=VALUES(current_time),
+            executed_volume=VALUES(executed_volume),
+            executed_usd_value=VALUES(executed_usd_value),
+            trade_count=VALUES(trade_count),
+            order_state=VALUES(order_state)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    cur.execute(sql, (
+                        row.get("id"), row.get("exchange_name"), row.get("symbol"),
+                        row.get("base_asset"), row.get("quote_asset"), row.get("price"),
+                        row.get("start_time"), row.get("start_quantity"), row.get("start_usd_value"),
+                        row.get("current_quantity"), row.get("current_usd_value"), row.get("current_time"),
+                        row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
+                        row.get("order_side"), row.get("order_state")
+                    ))
+            self.conn.commit()
+            return len(data)
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error inserting spot large orderbook: {e}")
+            return 0
+
+    def insert_spot_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> int:
+        """Insert spot aggregated taker volume history data."""
+        if not data:
+            return 0
+
+        sql = """
+        INSERT INTO cg_spot_aggregated_taker_volume_history (
+            exchange_list, symbol, interval, unit, time,
+            aggregated_buy_volume_usd, aggregated_sell_volume_usd
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            aggregated_buy_volume_usd=VALUES(aggregated_buy_volume_usd),
+            aggregated_sell_volume_usd=VALUES(aggregated_sell_volume_usd)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    cur.execute(sql, (
+                        exchange_list, symbol, interval, unit,
+                        row.get("time"),
+                        row.get("aggregated_buy_volume_usd"),
+                        row.get("aggregated_sell_volume_usd")
+                    ))
+            self.conn.commit()
+            return len(data)
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error inserting spot aggregated taker volume history: {e}")
+            return 0
+
+    def insert_spot_taker_volume_history(self, exchange: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> int:
+        """Insert spot taker volume history data."""
+        if not data:
+            return 0
+
+        sql = """
+        INSERT INTO cg_spot_taker_volume_history (
+            exchange, symbol, interval, unit, time,
+            aggregated_buy_volume_usd, aggregated_sell_volume_usd
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            aggregated_buy_volume_usd=VALUES(aggregated_buy_volume_usd),
+            aggregated_sell_volume_usd=VALUES(aggregated_sell_volume_usd)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    cur.execute(sql, (
+                        exchange, symbol, interval, unit,
+                        row.get("time"),
+                        row.get("aggregated_buy_volume_usd"),
+                        row.get("aggregated_sell_volume_usd")
+                    ))
+            self.conn.commit()
+            return len(data)
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error inserting spot taker volume history: {e}")
+            return 0
