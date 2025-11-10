@@ -22,9 +22,9 @@ RUN chmod +x /app/entrypoint.sh
 # Copy application code
 COPY . .
 
-# Health check
+# Health check - updated to include both Coinglass and CryptoQuant services
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import app.controllers.ingestion_controller; print('OK')" || exit 1
+    CMD python -c "from app.controllers.ingestion_controller import IngestionController; from app.services.cryptoquant_service import CryptoQuantService; print('OK')" || exit 1
 
 # Default command
 CMD ["python", "main.py"]

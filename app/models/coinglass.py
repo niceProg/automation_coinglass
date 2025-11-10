@@ -844,14 +844,39 @@ COINGLASS_TABLES = {
         symbol VARCHAR(20) NOT NULL,
         unit VARCHAR(10) NOT NULL,
         `range` VARCHAR(10) NOT NULL,
-        time_list JSON,
-        exchange_data JSON,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY uk_symbol_unit_range (symbol, unit, `range`),
         INDEX idx_symbol (symbol),
         INDEX idx_unit (unit),
         INDEX idx_range (`range`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_option_exchange_oi_history_time_list": """
+    CREATE TABLE IF NOT EXISTS cg_option_exchange_oi_history_time_list (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        option_exchange_oi_history_id BIGINT NOT NULL,
+        time_value BIGINT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (option_exchange_oi_history_id) REFERENCES cg_option_exchange_oi_history(id) ON DELETE CASCADE,
+        INDEX idx_option_exchange_oi_history_id (option_exchange_oi_history_id),
+        INDEX idx_time_value (time_value),
+        UNIQUE KEY uk_oi_history_time (option_exchange_oi_history_id, time_value)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_option_exchange_oi_history_exchange_data": """
+    CREATE TABLE IF NOT EXISTS cg_option_exchange_oi_history_exchange_data (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        option_exchange_oi_history_id BIGINT NOT NULL,
+        exchange_name VARCHAR(50) NOT NULL,
+        oi_value DECIMAL(20,8) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (option_exchange_oi_history_id) REFERENCES cg_option_exchange_oi_history(id) ON DELETE CASCADE,
+        INDEX idx_option_exchange_oi_history_id (option_exchange_oi_history_id),
+        INDEX idx_exchange_name (exchange_name),
+        UNIQUE KEY uk_oi_history_exchange (option_exchange_oi_history_id, exchange_name)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 

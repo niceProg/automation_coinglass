@@ -18,4 +18,4 @@ find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null
 
 echo "✅ Cache cleared successfully!"
 echo ""
-echo "Now run: python main.py spot_orderbook_aggregated"
+echo "Now run your pipeline: python main.py <pipeline_name>"

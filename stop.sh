@@ -30,6 +30,7 @@ show_usage() {
     echo "  --spot             Stop only spot market pipelines"
     echo "  --etf              Stop only Bitcoin ETF pipelines"
     echo "  --trading          Stop only trading market pipelines"
+    echo "  --cryptoquant      Stop only CryptoQuant pipelines"
     echo "  --production       Stop all production services"
     echo "  --monitoring       Stop monitoring services (status, freshness)"
     echo "  --service <name>   Stop a specific service by name"
@@ -37,7 +38,7 @@ show_usage() {
     echo "  --help             Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./stop.sh                          # Stop all services (derivatives, exchange, spot, etf, trading)"
+    echo "  ./stop.sh                          # Stop all services (derivatives, exchange, spot, etf, trading, cryptoquant)"
     echo "  ./stop.sh --derivatives            # Stop only derivatives services"
     echo "  ./stop.sh --service funding_rate   # Stop only funding_rate service"
     echo "  ./stop.sh --remove                 # Stop and remove everything"
@@ -47,7 +48,7 @@ show_usage() {
 # Function to stop all services across all profiles
 stop_all() {
     echo -e "${YELLOW}🛑 Stopping all services across all profiles...${NC}"
-    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile monitoring --profile setup down
+    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile monitoring --profile setup down
     echo -e "${GREEN}✅ All services stopped${NC}"
 }
 
@@ -73,7 +74,7 @@ stop_and_remove() {
     echo -e "${RED}🗑️  Stopping and removing all containers, networks, and volumes...${NC}"
     echo -e "${YELLOW}⚠️  This will remove all data. Press Ctrl+C to cancel...${NC}"
     sleep 3
-    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile monitoring --profile setup down --volumes --remove-orphans
+    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile monitoring --profile setup down --volumes --remove-orphans
     echo -e "${GREEN}✅ All containers, networks, and volumes removed${NC}"
 }
 
@@ -109,6 +110,10 @@ case "${1:-}" in
         ;;
     --trading)
         stop_profile "trading"
+        show_status
+        ;;
+    --cryptoquant)
+        stop_profile "cryptoquant"
         show_status
         ;;
     --production)

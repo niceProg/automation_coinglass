@@ -20,7 +20,7 @@ while true; do
     echo "⏰ $(date '+%Y-%m-%d %H:%M:%S') - Running ${PIPELINE}${EXCHANGE_FILTER:+ for $EXCHANGE_FILTER}"
 
     # Run the pipeline
-    python main.py --server "${PIPELINE}"
+    python main.py "${PIPELINE}"
 
     EXIT_CODE=$?
 

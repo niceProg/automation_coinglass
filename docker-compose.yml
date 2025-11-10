@@ -238,41 +238,41 @@ services:
   #     - production
 
   # =============================================================================
-  # SPOT ORDERBOOK (25s delay) - Binance, Bybit [DISABLED]
+  # SPOT ORDERBOOK (25s delay) - Binance, Bybit [ENABLED]
   # =============================================================================
-  # spot_orderbook_binance:
-  #   build: .
-  #   container_name: coinglass_spot_orderbook_binance
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - EXCHANGE_FILTER=Binance
-  #     - DELAY=25
-  #     - PIPELINE=spot_orderbook
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
-  #
-  # spot_orderbook_bybit:
-  #   build: .
-  #   container_name: coinglass_spot_orderbook_bybit
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - EXCHANGE_FILTER=Bybit
-  #     - DELAY=25
-  #     - PIPELINE=spot_orderbook
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
+  spot_orderbook_binance:
+    build: .
+    container_name: coinglass_spot_orderbook_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=25
+      - PIPELINE=spot_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_orderbook_bybit:
+    build: .
+    container_name: coinglass_spot_orderbook_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=25
+      - PIPELINE=spot_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
 
   # =============================================================================
   # PAIRS MARKETS (25s delay) - No exchange filter [DISABLED]
@@ -496,23 +496,42 @@ services:
   #     - production
 
   # =============================================================================
-  # SPOT PAIRS MARKETS (35s delay) - No exchange filter [DISABLED]
+  # SPOT PAIRS MARKETS (35s delay) - No exchange filter [ENABLED]
   # =============================================================================
-  # spot_pairs_markets:
-  #   build: .
-  #   container_name: coinglass_spot_pairs_markets
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - DELAY=35
-  #     - PIPELINE=spot_pairs_markets
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
+  spot_pairs_markets:
+    build: .
+    container_name: coinglass_spot_pairs_markets
+    env_file:
+      - .env
+    environment:
+      - DELAY=35
+      - PIPELINE=spot_pairs_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  # =============================================================================
+  # CRYPTOQUANT EXCHANGE INFLOW CDD (60s delay) - All exchanges
+  # =============================================================================
+  cryptoquant_exchange_inflow_cdd:
+    build: .
+    container_name: cryptoquant_exchange_inflow_cdd
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=exchange_inflow_cdd
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - cryptoquant
+      - production
 
   # =============================================================================
   # COINS MARKETS (45s delay) - Binance, Bybit, CoinEx, OKX, Bitget, Crypto.com, BingX, Coinbase, KuCoin
@@ -720,6 +739,210 @@ services:
       - coinglass_network
     profiles:
       - etf
+      - production
+
+  # =============================================================================
+  # OPEN INTEREST AGGREGATED STABLECOIN HISTORY (35s delay) - Binance, Bybit
+  # =============================================================================
+  open_interest_aggregated_stablecoin_history_binance:
+    build: .
+    container_name: coinglass_open_interest_aggregated_stablecoin_history_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=35
+      - PIPELINE=open_interest_aggregated_stablecoin_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  open_interest_aggregated_stablecoin_history_bybit:
+    build: .
+    container_name: coinglass_open_interest_aggregated_stablecoin_history_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=35
+      - PIPELINE=open_interest_aggregated_stablecoin_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # FUTURES FOOTPRINT HISTORY (45s delay) - Binance, Bybit, OKX, Deribit
+  # =============================================================================
+  futures_footprint_history_binance:
+    build: .
+    container_name: coinglass_futures_footprint_history_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=45
+      - PIPELINE=futures_footprint_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  futures_footprint_history_bybit:
+    build: .
+    container_name: coinglass_futures_footprint_history_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=45
+      - PIPELINE=futures_footprint_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # SPOT LARGE ORDERBOOK HISTORY (30s delay) - Binance, Bybit
+  # =============================================================================
+  spot_large_orderbook_history_binance:
+    build: .
+    container_name: coinglass_spot_large_orderbook_history_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=30
+      - PIPELINE=spot_large_orderbook_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_large_orderbook_history_bybit:
+    build: .
+    container_name: coinglass_spot_large_orderbook_history_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=30
+      - PIPELINE=spot_large_orderbook_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  # =============================================================================
+  # SPOT LARGE ORDERBOOK (25s delay) - Binance, Bybit
+  # =============================================================================
+  spot_large_orderbook_binance:
+    build: .
+    container_name: coinglass_spot_large_orderbook_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=25
+      - PIPELINE=spot_large_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_large_orderbook_bybit:
+    build: .
+    container_name: coinglass_spot_large_orderbook_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=25
+      - PIPELINE=spot_large_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  # =============================================================================
+  # SPOT AGGREGATED TAKER VOLUME HISTORY (30s delay) - No exchange filter
+  # =============================================================================
+  spot_aggregated_taker_volume_history:
+    build: .
+    container_name: coinglass_spot_aggregated_taker_volume_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=spot_aggregated_taker_volume_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  # =============================================================================
+  # SPOT TAKER VOLUME HISTORY (30s delay) - Binance, Bybit
+  # =============================================================================
+  spot_taker_volume_history_binance:
+    build: .
+    container_name: coinglass_spot_taker_volume_history_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=30
+      - PIPELINE=spot_taker_volume_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_taker_volume_history_bybit:
+    build: .
+    container_name: coinglass_spot_taker_volume_history_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=30
+      - PIPELINE=spot_taker_volume_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
       - production
 
   # =============================================================================
