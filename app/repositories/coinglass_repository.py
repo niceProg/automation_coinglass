@@ -265,16 +265,19 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
+                total_processed = len(rows)
                 for row in rows:
                     cur.execute(sql, (
                         symbol, interval, row.get("time"),
                         row.get("open"), row.get("high"),
                         row.get("low"), row.get("close"), unit
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["oi_aggregated_history"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["oi_aggregated_history_duplicates"] += 1
             self.conn.commit()
             return result
@@ -894,10 +897,12 @@ class CoinglassRepository:
                         row.get("open_change"),
                         row.get("close_change")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["futures_basis"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["futures_basis_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2122,10 +2127,12 @@ class CoinglassRepository:
                         row.get("bids_usd"), row.get("bids_quantity"),
                         row.get("asks_usd"), row.get("asks_quantity")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["spot_orderbook_history"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["spot_orderbook_history_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2176,10 +2183,12 @@ class CoinglassRepository:
                         row.get("aggregated_bids_usd"), row.get("aggregated_bids_quantity"),
                         row.get("aggregated_asks_usd"), row.get("aggregated_asks_quantity")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["spot_orderbook_aggregated"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["spot_orderbook_aggregated_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2255,10 +2264,12 @@ class CoinglassRepository:
                 for row in rows:
                     values = [row.get(col) for col in columns]
                     cur.execute(sql, values)
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["spot_coins_markets"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["spot_coins_markets_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2326,10 +2337,12 @@ class CoinglassRepository:
                 for row in rows:
                     values = [row.get(col) for col in columns]
                     cur.execute(sql, values)
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["spot_pairs_markets"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["spot_pairs_markets_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2380,10 +2393,12 @@ class CoinglassRepository:
                         row.get("low"), row.get("close"),
                         row.get("volume_usd")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["spot_price_history"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["spot_price_history_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2432,10 +2447,12 @@ class CoinglassRepository:
                         row.get("open"), row.get("high"),
                         row.get("low"), row.get("close")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
+                    # Get affected rows count
+                    affected = cur.rowcount
+                    # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                    if affected == 1:
                         result["open_interest_aggregated_stablecoin_history"] += 1
-                    elif cur.rowcount == 2:
+                    else:
                         result["open_interest_aggregated_stablecoin_history_duplicates"] += 1
             self.conn.commit()
             return result
@@ -2500,10 +2517,12 @@ class CoinglassRepository:
                                 price_range[7],  # taker_buy_trades (index 6 is duplicate)
                                 price_range[8] if len(price_range) > 8 else 0  # taker_sell_trades
                             ))
-                            # Get affected rows count (1 = insert, 2 = update)
-                            if cur.rowcount == 1:
+                            # Get affected rows count
+                            affected = cur.rowcount
+                            # rowcount = 1 for INSERT, 2 for UPDATE (but may vary)
+                            if affected == 1:
                                 result["futures_footprint_history"] += 1
-                            elif cur.rowcount == 2:
+                            else:
                                 result["futures_footprint_history_duplicates"] += 1
             self.conn.commit()
             return result
