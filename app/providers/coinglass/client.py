@@ -625,7 +625,7 @@ class CoinglassClient:
             params["start_time"] = str(start_time)
         if end_time:
             params["end_time"] = str(end_time)
-        return self._make_request("spot/orderbook/history", params) or []
+        return self._make_request("spot/orderbook/ask-bids-history", params) or []
 
     def get_spot_orderbook_aggregated(
         self,
@@ -661,7 +661,7 @@ class CoinglassClient:
             params["start_time"] = str(start_time)
         if end_time:
             params["end_time"] = str(end_time)
-        return self._make_request("spot/orderbook/aggregated", params) or []
+        return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
 
     # ---------- Spot Markets ----------
     def get_spot_supported_exchange_pairs(self) -> Dict[str, List[Dict[str, Any]]]:
@@ -693,7 +693,7 @@ class CoinglassClient:
         }
         if symbols:
             params["symbols"] = ",".join(symbols)
-        return self._make_request("spot/coins/markets", params) or []
+        return self._make_request("spot/coins-markets", params) or []
 
     def get_spot_pairs_markets(
         self,
