@@ -25,6 +25,7 @@ COMMAND CATEGORIES:
     liquidation_aggregated           Coin liquidations aggregated across exchanges (BTC, ETH, SOL)
     liquidation_heatmap              Liquidation heatmap visualization (BTC, ETH, SOL, XRP, HYPE, BNB, DOGE)
     futures_basis                    Futures basis data (BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, HYPEUSDT, BNBUSDT, DOGEUSDT)
+    futures_footprint_history        Futures volume footprint data with taker buy/sell volumes at price ranges
     options                          Options market data and Max Pain
 
 🏦 EXCHANGE INFRASTRUCTURE:
@@ -38,6 +39,10 @@ COMMAND CATEGORIES:
     spot_coins_markets               Comprehensive coin market data
     spot_pairs_markets               Trading pair market data
     spot_price_history               Historical OHLC price data
+    spot_large_orderbook             Current large limit orders in spot markets
+    spot_large_orderbook_history     Historical data for large limit orders
+    spot_aggregated_taker_volume_history  Aggregated taker buy/sell volumes across exchanges
+    spot_taker_volume_history        Single exchange taker buy/sell volume data
 
 ₿ BITCOIN ETF:
     bitcoin_etf_list                 Bitcoin ETF overview and status (real-time)
@@ -74,9 +79,9 @@ Usage Examples:
     python main.py --server
 
     # Individual Pipelines
-    python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis
+    python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
     # python main.py exchange_balance_list  # DISABLED - Not documented
-    python main.py spot_orderbook spot_orderbook_aggregated spot_coins_markets spot_pairs_markets spot_price_history
+    python main.py spot_orderbook spot_orderbook_aggregated spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history
     python main.py bitcoin_etf_list bitcoin_etf_flows_history  # bitcoin_etf_history disabled
     # python main.py supported_exchange_pairs pairs_markets  # DISABLED
 """
@@ -536,9 +541,9 @@ def main():
         "pipelines",
         nargs="*",
         help="Specific pipelines to run by category:\n"
-        "Derivatives: funding_rate, oi_exchange_list, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis\n"
+        "Derivatives: funding_rate, oi_exchange_list, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis, futures_footprint_history\n"
         "Exchange: exchange_assets [DISABLED], exchange_balance_list [DISABLED], exchange_onchain_transfers [DISABLED]\n"
-        "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history\n"
+        "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history\n"
         "Bitcoin ETF: bitcoin_etf_list, bitcoin_etf_flows_history, bitcoin_etf_premium_discount_history\n"
         "Trading: supported_exchange_pairs [DISABLED], pairs_markets [DISABLED], coins_markets [DISABLED]\n"
         "Macro: bitcoin_vs_global_m2_growth\n"
