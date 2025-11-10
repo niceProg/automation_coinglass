@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 from app.services.coinglass_service import CoinglassService
+from app.services.cryptoquant_service import CryptoQuantService
 
 logger = logging.getLogger(__name__)
 
@@ -69,15 +70,60 @@ class IngestionController:
             if "service" in locals():
                 service.close()
 
+    def run_cryptoquant(self, pipelines: Optional[List[str]] = None):
+        """Run CryptoQuant pipelines."""
+        try:
+            service = CryptoQuantService()
+            if pipelines:
+                results = {}
+                for pipeline in pipelines:
+                    result = service.run_pipeline(pipeline)
+                    results[pipeline] = result
+                return results
+            else:
+                return service.run_all_pipelines()
+        except Exception as e:
+            self.logger.error(f"CryptoQuant service failed: {e}", exc_info=True)
+            return {"error": str(e)}
+
     def setup_database(self):
         """Setup database tables."""
         try:
-            service = CoinglassService(ensure_tables=True)
-            self.logger.info("Database setup completed successfully")
-            return {"status": "success", "message": "Database tables created"}
+            # Setup Coinglass tables
+            coinglass_service = CoinglassService(ensure_tables=True)
+            self.logger.info("Coinglass database setup completed successfully")
+            coinglass_service.close()
+
+            # Setup CryptoQuant tables
+            from app.models.cryptoquant import CRYPTOQUANT_TABLES
+            from app.database.connection import get_connection
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            for table_name, create_query in CRYPTOQUANT_TABLES.items():
+                self.logger.info(f"Creating table: {table_name}")
+                cursor.execute(create_query)
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            self.logger.info("CryptoQuant database setup completed successfully")
+            return {"status": "success", "message": "All database tables created"}
         except Exception as e:
             self.logger.error(f"Database setup failed: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
         finally:
-            if "service" in locals():
-                service.close()
+            # Clean up any open connections
+            try:
+                if "coinglass_service" in locals():
+                    coinglass_service.close()
+            except:
+                pass  # Connection already closed, ignore error
+
+            try:
+                if "conn" in locals() and hasattr(conn, 'open') and conn.open:
+                    conn.close()
+            except:
+                pass  # Connection already closed, ignore error

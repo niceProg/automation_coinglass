@@ -39,6 +39,9 @@ class Settings:
     # ---------- Coinglass ----------
     COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY")
 
+    # ---------- CryptoQuant ----------
+    CRYPTOQUANT_API_KEY = os.getenv("CRYPTOQUANT_API_KEY")
+
     # Default exchanges and symbols
     COINGLASS_EXCHANGES = _env_list(
         "COINGLASS_EXCHANGES",

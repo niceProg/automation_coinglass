@@ -22,7 +22,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGE_LISTS = params.get("exchange_lists", ["Binance,OKX,Bybit"])  # Comma-separated exchange lists
+    EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])  # Individual exchanges
     SYMBOLS = params.get("symbols", ["BTC", "ETH"])  # Trading symbols
     INTERVALS = params.get("intervals", ["1h", "4h", "1d"])  # Time intervals for OHLC data
 
@@ -38,15 +38,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         "fetches": 0
     }
 
-    logger.info(f"Starting Open Interest Aggregated Stablecoin History pipeline for exchange lists: {EXCHANGE_LISTS}")
+    logger.info(f"Starting Open Interest Aggregated Stablecoin History pipeline for exchanges: {EXCHANGES}")
 
-    for exchange_list in EXCHANGE_LISTS:
-        for symbol in SYMBOLS:
-            for interval in INTERVALS:
+    for symbol in SYMBOLS:
+        for interval in INTERVALS:
+            for exchange in EXCHANGES:
                 try:
-                    logger.info(f"Fetching aggregated stablecoin OI OHLC for {exchange_list} {symbol} {interval}")
+                    logger.info(f"Fetching aggregated stablecoin OI OHLC for {exchange} {symbol} {interval}")
                     rows = client.get_open_interest_aggregated_stablecoin_history(
-                        exchange_list=exchange_list,
+                        exchange_list=exchange,
                         symbol=symbol,
                         interval=interval,
                         start_time=start_time
@@ -54,10 +54,10 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
                     if rows:
                         saved = repo.upsert_open_interest_aggregated_stablecoin_history(
-                            exchange_list, symbol, interval, rows
+                            exchange, symbol, interval, rows
                         )
                         logger.info(
-                            f"✅ open_interest_aggregated_stablecoin_history[{exchange_list}:{symbol}:{interval}]: "
+                            f"✅ open_interest_aggregated_stablecoin_history[{exchange}:{symbol}:{interval}]: "
                             f"received={len(rows)}, saved={saved.get('open_interest_aggregated_stablecoin_history', 0)}, duplicates={saved.get('open_interest_aggregated_stablecoin_history_duplicates', 0)}"
                         )
                         # Handle both old int format and new dict format for backward compatibility
@@ -68,12 +68,12 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         else:
                             summary["open_interest_aggregated_stablecoin_history"] += saved
                     else:
-                        logger.warning(f"No data returned for aggregated stablecoin OI: {exchange_list} {symbol} {interval}")
+                        logger.warning(f"No data returned for aggregated stablecoin OI: {exchange} {symbol} {interval}")
 
                     summary["fetches"] += 1
 
                 except Exception as e:
-                    logger.warning(f"Error fetching aggregated stablecoin OI for {exchange_list} {symbol}: {e}")
+                    logger.warning(f"Error fetching aggregated stablecoin OI for {exchange} {symbol}: {e}")
                     summary["fetches"] += 1
                     continue
 

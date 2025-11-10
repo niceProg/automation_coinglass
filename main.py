@@ -66,6 +66,10 @@ COMMAND CATEGORIES:
     hyperliquid_whale_alert          Hyperliquid whale position alerts
     whale_transfer                   Large on-chain transfers ($10M+)
 
+🔬 CRYPTOQUANT ANALYTICS:
+    exchange_inflow_cdd              Exchange Inflow CDD (Coin Days Destroyed) data
+    btc_market_price                 Bitcoin market price data (OHLC) for price overlay
+
 Usage Examples:
     # System Administration
     python main.py --setup
@@ -510,6 +514,66 @@ def show_help():
     logger.info("=" * 80)
 
 
+def run_cryptoquant_pipelines(pipelines=None):
+    """Run specific CryptoQuant pipelines or all CryptoQuant pipelines."""
+    if pipelines:
+        logger.info("=" * 60)
+        logger.info(f"RUNNING CRYPTOQUANT PIPELINES: {', '.join(pipelines)}")
+        logger.info("=" * 60)
+    else:
+        logger.info("=" * 60)
+        logger.info("RUNNING ALL CRYPTOQUANT PIPELINES")
+        logger.info("=" * 60)
+
+    controller = IngestionController()
+    results = controller.run_cryptoquant(pipelines=pipelines)
+
+    # Track overall statistics
+    total_fresh = 0
+    total_duplicates = 0
+    total_processed = 0
+
+    # Print summary with duplicate detection
+    logger.info("📊 CRYPTOQUANT PIPELINE EXECUTION SUMMARY:")
+    logger.info("-" * 60)
+    for pipeline, result in results.items():
+        if "error" in result:
+            logger.error(f"❌ {pipeline}: {result['error']}")
+        else:
+            # Calculate fresh vs duplicate data
+            pipeline_fresh = 0
+            pipeline_duplicates = 0
+
+            for key, value in result.items():
+                if isinstance(value, int) and key != "fetches":
+                    pipeline_fresh += value
+                elif key.endswith("_duplicates"):
+                    pipeline_duplicates += value
+
+            pipeline_total = pipeline_fresh + pipeline_duplicates
+            total_fresh += pipeline_fresh
+            total_duplicates += pipeline_duplicates
+            total_processed += pipeline_total
+
+            # Display detailed breakdown
+            if pipeline_duplicates > 0:
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh, {pipeline_duplicates} duplicates (total: {pipeline_total})")
+            else:
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} records")
+
+    # Overall summary
+    logger.info("-" * 60)
+    if total_duplicates > 0:
+        logger.info(f"📈 OVERALL: {total_fresh} fresh records, {total_duplicates} duplicates detected")
+        logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+    else:
+        logger.info(f"📈 OVERALL: {total_fresh} fresh records processed")
+
+    logger.info("=" * 60)
+
+    return results
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -555,7 +619,8 @@ def main():
         "Trading: supported_exchange_pairs [DISABLED], pairs_markets [DISABLED], coins_markets [DISABLED]\n"
         "Macro: bitcoin_vs_global_m2_growth\n"
         "Options: option_exchange_oi_history\n"
-        "Sentiment: fear_greed_index, hyperliquid_whale_alert, whale_transfer",
+        "Sentiment: fear_greed_index, hyperliquid_whale_alert, whale_transfer\n"
+        "CryptoQuant: exchange_inflow_cdd, btc_market_price",
     )
 
     args = parser.parse_args()
@@ -587,7 +652,23 @@ def main():
         show_freshness()
 
     elif args.pipelines:
-        results = run_pipelines(pipelines=args.pipelines)
+        # Check if any CryptoQuant pipelines are requested
+        cryptoquant_pipelines = ["exchange_inflow_cdd", "btc_market_price"]
+        requested_cryptoquant = [p for p in args.pipelines if p in cryptoquant_pipelines]
+        requested_coinglass = [p for p in args.pipelines if p not in cryptoquant_pipelines]
+
+        results = {}
+
+        # Run Coinglass pipelines if any
+        if requested_coinglass:
+            coinglass_results = run_pipelines(pipelines=requested_coinglass)
+            results.update(coinglass_results)
+
+        # Run CryptoQuant pipelines if any
+        if requested_cryptoquant:
+            cryptoquant_results = run_cryptoquant_pipelines(pipelines=requested_cryptoquant)
+            results.update(cryptoquant_results)
+
         has_errors = any("error" in r for r in results.values())
         sys.exit(1 if has_errors else 0)
 
