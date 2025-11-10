@@ -23,8 +23,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "oi_history": 0,
-        "oi_exchange_list": 0,
-        "oi_aggregated_history": 0,
+                "oi_aggregated_history": 0,
         "oi_history_fetches": 0,
         "oi_aggregated_fetches": 0
     }
@@ -61,21 +60,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     #                 summary["oi_history_fetches"] += 1
     #                 continue
 
-    # 2) OI Exchange List (Current OI by exchange)
-    for symbol in SYMBOLS:
-        try:
-            rows = client.get_oi_exchange_list(symbol=symbol)
-            if rows:
-                saved = repo.upsert_oi_exchange_list(symbol, rows)
-                logger.info(f"✅ oi_exchange_list[{symbol}]: saved={saved}")
-                summary["oi_exchange_list"] += saved
-            else:
-                logger.info(f"⚠️ oi_exchange_list[{symbol}]: No data (skipped)")
-        except Exception as e:
-            logger.warning(f"⚠️ oi_exchange_list[{symbol}]: Exception: {e} (skipped)")
-            continue
-
-    # 3) OI Aggregated History (OHLC aggregated data across exchanges)
+    
+    # 2) OI Aggregated History (OHLC aggregated data across exchanges)
     for symbol in SYMBOLS:
         for interval in TIMEFRAMES:
             try:
@@ -105,11 +91,10 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 summary["oi_aggregated_fetches"] += 1
                 continue
 
-    total_saved = summary["oi_exchange_list"] + summary["oi_aggregated_history"]
+    total_saved = summary["oi_aggregated_history"]
     logger.info(
         f"📦 Open Interest summary -> total_saved={total_saved} | "
         f"oi_history:DISABLED (fetches:{summary['oi_history_fetches']}), "
-        f"oi_exchange_list:{summary['oi_exchange_list']}, "
         f"oi_aggregated_history:{summary['oi_aggregated_history']} (fetches:{summary['oi_aggregated_fetches']})"
     )
 

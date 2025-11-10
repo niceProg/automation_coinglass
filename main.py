@@ -18,8 +18,7 @@ COMMAND CATEGORIES:
 📈 DERIVATIVES MARKET:
     funding_rate                     OHLC funding rate data (8h + 1h snapshots)
     # oi_history                        Open interest OHLC history by exchange/symbol/interval [DISABLED]
-    oi_exchange_list                 Current open interest data by exchange
-    oi_aggregated_history            Open interest OHLC data aggregated across exchanges
+        oi_aggregated_history            Open interest OHLC data aggregated across exchanges
     long_short_ratio_global          Global account ratios (all intervals)
     long_short_ratio_top             Top account ratios (all intervals)
     liquidation_aggregated           Coin liquidations aggregated across exchanges (BTC, ETH, SOL)
@@ -82,7 +81,7 @@ Usage Examples:
     python main.py --server
 
     # Individual Pipelines
-    python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
+    python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
     # python main.py exchange_balance_list  # DISABLED - Not documented
     python main.py spot_orderbook spot_orderbook_aggregated spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history
     python main.py bitcoin_etf_list bitcoin_etf_flows_history  # bitcoin_etf_history disabled
@@ -393,7 +392,6 @@ def show_help():
 
     logger.info("  funding_rate                OHLC funding rate data (8h + 1h snapshots)")
     # logger.info("  oi_history                  Open interest OHLC history by exchange/symbol/interval [DISABLED]")
-    logger.info("  oi_exchange_list           Current open interest data by exchange")
     logger.info("  oi_aggregated_history      Open interest OHLC data aggregated across exchanges")
     logger.info("  open_interest_aggregated_stablecoin_history  Aggregated stablecoin margin OHLC data")
     logger.info("  long_short_ratio_global      Global account ratios (all intervals)")
@@ -470,7 +468,7 @@ def show_help():
     logger.info("\n📈 Individual Market Categories:")
     logger.info("  # Derivatives")
     logger.info(
-        "  python main.py funding_rate oi_exchange_list oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history"
+        "  python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history"
     )
     # logger.info("  python main.py funding_rate open_interest long_short_ratio options [options DISABLED]")
     logger.info("  ")
@@ -611,7 +609,7 @@ def main():
         "pipelines",
         nargs="*",
         help="Specific pipelines to run by category:\n"
-        "Derivatives: funding_rate, oi_exchange_list, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis, futures_footprint_history\n"
+        "Derivatives: funding_rate, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis, futures_footprint_history\n"
         "Exchange: exchange_assets [DISABLED], exchange_balance_list [DISABLED], exchange_onchain_transfers [DISABLED]\n"
         "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history\n"
         "Bitcoin ETF: bitcoin_etf_list, bitcoin_etf_flows_history, bitcoin_etf_premium_discount_history\n"

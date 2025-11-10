@@ -30,8 +30,7 @@ from . import (
     bitcoin_etf_premium_discount_history,
     bitcoin_vs_global_m2_growth,
     option_exchange_oi_history,
-    # open_interest_exchange_list,  # DISABLED - Replaced by oi_exchange_list
-    open_interest_aggregated_stablecoin_history,
+        open_interest_aggregated_stablecoin_history,
     # coins_markets,  # DISABLED
     fear_greed_index,
     hyperliquid_whale_alert,
@@ -69,8 +68,7 @@ __all__ = [
     "bitcoin_etf_premium_discount_history",
     "bitcoin_vs_global_m2_growth",
     "option_exchange_oi_history",
-    # "open_interest_exchange_list",  # DISABLED - Replaced by oi_exchange_list
-    "open_interest_aggregated_stablecoin_history",
+        "open_interest_aggregated_stablecoin_history",
     # "coins_markets",  # DISABLED
     "fear_greed_index",
     "hyperliquid_whale_alert",
