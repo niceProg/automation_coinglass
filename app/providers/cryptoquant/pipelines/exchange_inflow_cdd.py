@@ -37,7 +37,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         "bitstamp",
         "mexc"
     ])
-    INTERVALS = params.get("intervals", ["day", "week"])  # Daily and weekly intervals using CryptoQuant format
+    INTERVALS = params.get("intervals", ["day"])  # Daily intervals only (weekly causes 403 errors)
     DAYS_BACK = params.get("days_back", 30)  # 30 days historical data
 
     # Calculate date range

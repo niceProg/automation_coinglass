@@ -69,20 +69,11 @@ class CryptoQuantClient:
             List of data points with date and value fields
         """
         # Build endpoint with parameters according to CryptoQuant API
-        if exchange in ["all_exchange", "spot_exchange", "derivative_exchange"]:
-            # Aggregated exchanges - use 'exchanges' parameter
-            endpoint = f"btc/flow-indicator/exchange-inflow-cdd"
-            params = {
-                "exchanges": exchange,
-                "window": interval
-            }
-        else:
-            # Single exchange - use 'exchange' parameter
-            endpoint = f"btc/flow-indicator/exchange-inflow-cdd"
-            params = {
-                "exchange": exchange,
-                "window": interval
-            }
+        endpoint = f"btc/flow-indicator/exchange-inflow-cdd"
+        params = {
+            "exchange": exchange,
+            "window": interval
+        }
 
         data = self._make_request(endpoint, params)
 
