@@ -27,6 +27,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "large_orderbook": 0,
+        "large_orderbook_duplicates": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -44,18 +45,27 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 )
 
                 if data:
-                    # Process and insert data
-                    repo.insert_spot_large_orderbook(exchange, symbol, data)
-                    summary["large_orderbook"] += len(data)
-                    logger.info(f"Inserted {len(data)} large orderbook records for {exchange} {symbol}")
+                    # Process and insert data with duplicate checking
+                    result = repo.insert_spot_large_orderbook(exchange, symbol, data)
+                    logger.info(
+                        f"✅ spot_large_orderbook[{exchange}:{symbol}]: "
+                        f"received={len(data)}, saved={result['saved']}, duplicates={result['duplicates']}"
+                    )
+                    summary["large_orderbook"] += result['saved']
+                    summary["large_orderbook_duplicates"] += result['duplicates']
                 else:
-                    logger.info(f"No large orderbook data available for {exchange} {symbol}")
+                    logger.info(
+                        f"⚠️ spot_large_orderbook[{exchange}:{symbol}]: No data (skipped)"
+                    )
 
                 summary["fetches"] += 1
 
             except Exception as e:
-                logger.error(f"Error fetching large orderbook for {exchange} {symbol}: {e}")
+                logger.warning(
+                    f"⚠️ spot_large_orderbook[{exchange}:{symbol}]: Exception: {e} (skipped)"
+                )
                 summary["errors"] += 1
+                continue
 
     logger.info(f"Spot Large Orderbook pipeline completed: {summary}")
     return summary

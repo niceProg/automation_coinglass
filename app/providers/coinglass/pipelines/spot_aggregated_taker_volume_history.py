@@ -38,6 +38,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "aggregated_taker_volume_history": 0,
+        "aggregated_taker_volume_history_duplicates": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -61,18 +62,27 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     )
 
                     if data:
-                        # Process and insert data
-                        repo.insert_spot_aggregated_taker_volume_history(exchange_list, symbol, interval, UNIT, data)
-                        summary["aggregated_taker_volume_history"] += len(data)
-                        logger.info(f"Inserted {len(data)} aggregated taker volume records for {exchange_list} {symbol} {interval}")
+                        # Process and insert data with duplicate checking
+                        result = repo.insert_spot_aggregated_taker_volume_history(exchange_list, symbol, interval, UNIT, data)
+                        logger.info(
+                            f"✅ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: "
+                            f"received={len(data)}, saved={result['saved']}, duplicates={result['duplicates']}"
+                        )
+                        summary["aggregated_taker_volume_history"] += result['saved']
+                        summary["aggregated_taker_volume_history_duplicates"] += result['duplicates']
                     else:
-                        logger.info(f"No aggregated taker volume data available for {exchange_list} {symbol} {interval}")
+                        logger.info(
+                            f"⚠️ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: No data (skipped)"
+                        )
 
                     summary["fetches"] += 1
 
                 except Exception as e:
-                    logger.error(f"Error fetching aggregated taker volume history for {exchange_list} {symbol} {interval}: {e}")
+                    logger.warning(
+                        f"⚠️ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: Exception: {e} (skipped)"
+                    )
                     summary["errors"] += 1
+                    continue
 
     logger.info(f"Spot Aggregated Taker Volume History pipeline completed: {summary}")
     return summary

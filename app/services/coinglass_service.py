@@ -9,7 +9,6 @@ from app.providers.coinglass.pipelines import (
     funding_rate,
     # open_interest,  # DISABLED - Replaced by separate OI pipelines
     # oi_history,  # DISABLED
-    # oi_exchange_list,  # DISABLED - Table deleted
     oi_aggregated_history,
     long_short_ratio_global,
     long_short_ratio_top,
@@ -46,9 +45,7 @@ from app.providers.coinglass.pipelines import (
     # open_interest_exchange_list,  # DISABLED - Table deleted
     # Open Interest Aggregated Stablecoin History Pipeline
     open_interest_aggregated_stablecoin_history,
-    # Exchange Rank Pipeline
-    exchange_rank,
-    # Sentiment Pipelines
+        # Sentiment Pipelines
     fear_greed_index,
     hyperliquid_whale_alert,
     whale_transfer,
@@ -98,13 +95,6 @@ class CoinglassService:
             #         "exchanges": ["Binance", "Bybit"],
             #         "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
             #         "unit": "usd",
-            #     },
-            # },
-            # OI Exchange List Pipeline (DISABLED - Table deleted)
-            # "oi_exchange_list": {
-            #     "func": oi_exchange_list.run,
-            #     "params": {
-            #         "symbols": settings.COINGLASS_SYMBOLS,
             #     },
             # },
             # OI Aggregated History Pipeline
@@ -310,13 +300,6 @@ class CoinglassService:
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                 },
             },
-            # Exchange Rank Pipeline
-            "exchange_rank": {
-                "func": exchange_rank.run,
-                "params": {
-                    "symbols": ["BTC", "ETH", "SOL"],
-                },
-            },
             # Sentiment Pipelines
             "fear_greed_index": {
                 "func": fear_greed_index.run,
@@ -504,7 +487,6 @@ class CoinglassService:
                 tables = [
                     ("funding_rate_history", "cg_funding_rate_history"),
                     # ("oi_history", "cg_open_interest_history"),  # DISABLED
-                    # ("oi_exchange_list", "cg_open_interest_exchange_list"),  # DISABLED - Table deleted
                     ("oi_aggregated_history", "cg_open_interest_aggregated_history"),  # ACTIVE in oi_aggregated_history pipeline
                     ("lsr_global_account", "cg_long_short_global_account_ratio_history"),
                     ("lsr_top_account", "cg_long_short_top_account_ratio_history"),

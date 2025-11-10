@@ -59,18 +59,26 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     )
 
                     if data:
-                        # Process and insert data
-                        repo.insert_futures_footprint_history(exchange, symbol, interval, data)
-                        summary["footprint_history"] += len(data)
-                        logger.info(f"Inserted {len(data)} footprint records for {exchange} {symbol} {interval}")
+                        # Process and insert data with duplicate checking
+                        saved = repo.insert_futures_footprint_history(exchange, symbol, interval, data)
+                        logger.info(
+                            f"✅ futures_footprint_history[{exchange}:{symbol}:{interval}]: "
+                            f"received={len(data)}, saved={saved}"
+                        )
+                        summary["footprint_history"] += saved
                     else:
-                        logger.info(f"No footprint data available for {exchange} {symbol} {interval}")
+                        logger.info(
+                            f"⚠️ futures_footprint_history[{exchange}:{symbol}:{interval}]: No data (skipped)"
+                        )
 
                     summary["fetches"] += 1
 
                 except Exception as e:
-                    logger.error(f"Error fetching footprint history for {exchange} {symbol} {interval}: {e}")
+                    logger.warning(
+                        f"⚠️ futures_footprint_history[{exchange}:{symbol}:{interval}]: Exception: {e} (skipped)"
+                    )
                     summary["errors"] += 1
+                    continue
 
     logger.info(f"Futures Volume Footprint History pipeline completed: {summary}")
     return summary

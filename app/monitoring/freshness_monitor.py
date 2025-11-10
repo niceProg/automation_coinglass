@@ -79,8 +79,7 @@ class DataFreshnessMonitor:
             # Futures Data
             "funding_rate": FreshnessConfig("cg_funding_rate_history", "time"),
             # "oi_history": FreshnessConfig("cg_open_interest_history", "time"),  # DISABLED
-            # "oi_exchange_list": FreshnessConfig("cg_open_interest_exchange_list", "updated_at", "datetime"),  # DISABLED - Table deleted
-            "oi_aggregated_history": FreshnessConfig(
+                        "oi_aggregated_history": FreshnessConfig(
                 "cg_open_interest_aggregated_history", "time"
             ),  # ACTIVE in oi_aggregated_history pipeline
             "long_short_ratio_top_account": FreshnessConfig(
@@ -132,8 +131,6 @@ class DataFreshnessMonitor:
             "open_interest_aggregated_stablecoin_history": FreshnessConfig(
                 "cg_open_interest_aggregated_stablecoin_history", "time"
             ),
-            # Exchange Rank Data
-            "exchange_rank": FreshnessConfig("cg_exchange_rank", "create_time"),
             # Sentiment Data
             "fear_greed_index": FreshnessConfig(
                 "cg_fear_greed_index", "updated_at", "datetime"

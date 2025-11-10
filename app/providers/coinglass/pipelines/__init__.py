@@ -3,7 +3,6 @@ from . import (
     funding_rate,
     # open_interest,  # DISABLED - Replaced by separate OI pipelines
     # oi_history,  # DISABLED
-    # oi_exchange_list,  # DISABLED - Table deleted
     oi_aggregated_history,
     long_short_ratio_global,
     long_short_ratio_top,
@@ -32,7 +31,7 @@ from . import (
     bitcoin_vs_global_m2_growth,
     option_exchange_oi_history,
     # open_interest_exchange_list,  # DISABLED - Replaced by oi_exchange_list
-    # open_interest_aggregated_stablecoin_history,  # DISABLED - Replaced by oi_aggregated_history
+    open_interest_aggregated_stablecoin_history,
     # coins_markets,  # DISABLED
     fear_greed_index,
     hyperliquid_whale_alert,
@@ -43,7 +42,6 @@ __all__ = [
     "funding_rate",
     # "open_interest",  # DISABLED - Replaced by separate OI pipelines
     # "oi_history",  # DISABLED
-    # "oi_exchange_list",  # DISABLED - Table deleted
     "oi_aggregated_history",
     "long_short_ratio_global",
     "long_short_ratio_top",
@@ -72,7 +70,7 @@ __all__ = [
     "bitcoin_vs_global_m2_growth",
     "option_exchange_oi_history",
     # "open_interest_exchange_list",  # DISABLED - Replaced by oi_exchange_list
-    # "open_interest_aggregated_stablecoin_history",  # DISABLED - Replaced by oi_aggregated_history
+    "open_interest_aggregated_stablecoin_history",
     # "coins_markets",  # DISABLED
     "fear_greed_index",
     "hyperliquid_whale_alert",

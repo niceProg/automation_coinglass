@@ -38,6 +38,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "taker_volume_history": 0,
+        "taker_volume_history_duplicates": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -62,18 +63,27 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     )
 
                     if data:
-                        # Process and insert data
-                        repo.insert_spot_taker_volume_history(exchange, symbol, interval, UNIT, data)
-                        summary["taker_volume_history"] += len(data)
-                        logger.info(f"Inserted {len(data)} taker volume records for {exchange} {symbol} {interval}")
+                        # Process and insert data with duplicate checking
+                        result = repo.insert_spot_taker_volume_history(exchange, symbol, interval, UNIT, data)
+                        logger.info(
+                            f"✅ spot_taker_volume_history[{exchange}:{symbol}:{interval}]: "
+                            f"received={len(data)}, saved={result['saved']}, duplicates={result['duplicates']}"
+                        )
+                        summary["taker_volume_history"] += result['saved']
+                        summary["taker_volume_history_duplicates"] += result['duplicates']
                     else:
-                        logger.info(f"No taker volume data available for {exchange} {symbol} {interval}")
+                        logger.info(
+                            f"⚠️ spot_taker_volume_history[{exchange}:{symbol}:{interval}]: No data (skipped)"
+                        )
 
                     summary["fetches"] += 1
 
                 except Exception as e:
-                    logger.error(f"Error fetching taker volume history for {exchange} {symbol} {interval}: {e}")
+                    logger.warning(
+                        f"⚠️ spot_taker_volume_history[{exchange}:{symbol}:{interval}]: Exception: {e} (skipped)"
+                    )
                     summary["errors"] += 1
+                    continue
 
     logger.info(f"Spot Taker Volume History pipeline completed: {summary}")
     return summary

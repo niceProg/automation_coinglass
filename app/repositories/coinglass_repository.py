@@ -328,55 +328,7 @@ class CoinglassRepository:
     #         )
     #         return 0
 
-    # def upsert_oi_exchange_list(self, symbol: str, rows: List[Dict]) -> int:
-    #     """Upsert OI exchange list."""
-    #     if not rows:
-    #         return 0
-
-    #     sql = """
-    #     INSERT INTO cg_open_interest_exchange_list (
-    #         symbol, exchange, open_interest_usd, open_interest_quantity,
-    #         open_interest_by_coin_margin, open_interest_by_stable_coin_margin,
-    #         open_interest_quantity_by_coin_margin, open_interest_quantity_by_stable_coin_margin,
-    #         open_interest_change_percent_5m, open_interest_change_percent_15m,
-    #         open_interest_change_percent_30m, open_interest_change_percent_1h,
-    #         open_interest_change_percent_4h, open_interest_change_percent_24h
-    #     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    #     ON DUPLICATE KEY UPDATE
-    #         open_interest_usd=VALUES(open_interest_usd),
-    #         open_interest_quantity=VALUES(open_interest_quantity),
-    #         open_interest_by_coin_margin=VALUES(open_interest_by_coin_margin),
-    #         open_interest_by_stable_coin_margin=VALUES(open_interest_by_stable_coin_margin),
-    #         open_interest_quantity_by_coin_margin=VALUES(open_interest_quantity_by_coin_margin),
-    #         open_interest_quantity_by_stable_coin_margin=VALUES(open_interest_quantity_by_stable_coin_margin),
-    #         open_interest_change_percent_5m=VALUES(open_interest_change_percent_5m),
-    #         open_interest_change_percent_15m=VALUES(open_interest_change_percent_15m),
-    #         open_interest_change_percent_30m=VALUES(open_interest_change_percent_30m),
-    #         open_interest_change_percent_1h=VALUES(open_interest_change_percent_1h),
-    #         open_interest_change_percent_4h=VALUES(open_interest_change_percent_4h),
-    #         open_interest_change_percent_24h=VALUES(open_interest_change_percent_24h),
-    #         updated_at=CURRENT_TIMESTAMP
-    #     """
-
-    #     try:
-    #         with self.conn.cursor() as cur:
-    #             for row in rows:
-    #                 cur.execute(sql, (
-    #                     symbol, row.get("exchange"), row.get("open_interest_usd"),
-    #                     row.get("open_interest_quantity"), row.get("open_interest_by_coin_margin"),
-    #                     row.get("open_interest_by_stable_coin_margin"), row.get("open_interest_quantity_by_coin_margin"),
-    #                     row.get("open_interest_quantity_by_stable_coin_margin"), row.get("open_interest_change_percent_5m"),
-    #                     row.get("open_interest_change_percent_15m"), row.get("open_interest_change_percent_30m"),
-    #                     row.get("open_interest_change_percent_1h"), row.get("open_interest_change_percent_4h"),
-    #                     row.get("open_interest_change_percent_24h")
-    #                 ))
-    #         self.conn.commit()
-    #         return len(rows)
-    #     except Exception as e:
-    #         self.conn.rollback()
-    #         self.logger.error(f"Error upserting open_interest_exchange_list: {e}")
-    #         return 0
-
+    
     # ===== EXCHANGE INFRASTRUCTURE (DISABLED) =====
     # def upsert_exchange_balance_list(self, symbol: str, rows: List[Dict]) -> int:
     #     """Upsert exchange balance list data."""
@@ -2404,57 +2356,11 @@ class CoinglassRepository:
             )
             return 0
 
-    # ===== EXCHANGE RANK =====
-    def upsert_exchange_rank(self, rows: List[Dict]) -> int:
-        """Upsert exchange rank data."""
-        if not rows:
-            return 0
-
-        sql = """
-        INSERT INTO cg_exchange_rank (
-            exchange_name, symbol, open_interest_usd, open_interest_rank,
-            volume_usd_24h, volume_rank, liquidation_usd_24h, liquidation_rank, create_time
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-            open_interest_usd=VALUES(open_interest_usd), open_interest_rank=VALUES(open_interest_rank),
-            volume_usd_24h=VALUES(volume_usd_24h), volume_rank=VALUES(volume_rank),
-            liquidation_usd_24h=VALUES(liquidation_usd_24h), liquidation_rank=VALUES(liquidation_rank),
-            updated_at=CURRENT_TIMESTAMP
-        """
-
-        try:
-            with self.conn.cursor() as cur:
-                for row in rows:
-                    cur.execute(sql, (
-                        row.get("exchange_name"), row.get("symbol"),
-                        row.get("open_interest_usd"), row.get("open_interest_rank"),
-                        row.get("volume_usd_24h"), row.get("volume_rank"),
-                        row.get("liquidation_usd_24h"), row.get("liquidation_rank"),
-                        row.get("create_time")
-                    ))
-            self.conn.commit()
-            return len(rows)
-        except pymysql.Error as e:
-            self.conn.rollback()
-            error_code = e.args[0] if e.args else 'unknown'
-            error_msg = e.args[1] if len(e.args) > 1 else str(e)
-            self.logger.error(
-                f"Database error upserting exchange_rank - "
-                f"Error code: {error_code}, Message: {error_msg}"
-            )
-            return 0
-        except Exception as e:
-            self.conn.rollback()
-            self.logger.error(
-                f"Unexpected error upserting exchange_rank - "
-                f"Type: {type(e).__name__}, Message: {str(e)}"
-            )
-            return 0
-
+    
     # ===== NEW ENDPOINTS REPOSITORY METHODS =====
 
     def insert_futures_footprint_history(self, exchange: str, symbol: str, interval: str, data: List[List]) -> int:
-        """Insert futures footprint history data."""
+        """Insert futures footprint history data with duplicate checking."""
         if not data:
             return 0
 
@@ -2474,6 +2380,7 @@ class CoinglassRepository:
         """
 
         try:
+            inserted_count = 0
             with self.conn.cursor() as cur:
                 for timestamp, price_ranges in data:
                     for price_range in price_ranges:
@@ -2489,17 +2396,23 @@ class CoinglassRepository:
                                 price_range[7],  # taker_buy_trades (index 6 is duplicate)
                                 price_range[8] if len(price_range) > 8 else 0  # taker_sell_trades
                             ))
+                            inserted_count += 1
             self.conn.commit()
-            return len(data)
+            return inserted_count
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting futures footprint history: {e}")
             return 0
 
-    def insert_spot_large_orderbook_history(self, exchange: str, symbol: str, state: str, data: List[Dict]) -> int:
+    def insert_spot_large_orderbook_history(self, exchange: str, symbol: str, state: str, data: List[Dict]) -> Dict[str, int]:
         """Insert spot large orderbook history data."""
+        result = {
+            "saved": 0,
+            "duplicates": 0
+        }
+
         if not data:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_large_orderbook_history (
@@ -2530,17 +2443,27 @@ class CoinglassRepository:
                         row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
                         row.get("order_side"), row.get("order_state"), row.get("order_end_time")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["saved"] += 1
+                    elif cur.rowcount == 2:
+                        result["duplicates"] += 1
             self.conn.commit()
-            return len(data)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting spot large orderbook history: {e}")
-            return 0
+            return result
 
-    def insert_spot_large_orderbook(self, exchange: str, symbol: str, data: List[Dict]) -> int:
+    def insert_spot_large_orderbook(self, exchange: str, symbol: str, data: List[Dict]) -> Dict[str, int]:
         """Insert current spot large orderbook data."""
+        result = {
+            "saved": 0,
+            "duplicates": 0
+        }
+
         if not data:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_large_orderbook (
@@ -2570,17 +2493,27 @@ class CoinglassRepository:
                         row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
                         row.get("order_side"), row.get("order_state")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["saved"] += 1
+                    elif cur.rowcount == 2:
+                        result["duplicates"] += 1
             self.conn.commit()
-            return len(data)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting spot large orderbook: {e}")
-            return 0
+            return result
 
-    def insert_spot_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> int:
+    def insert_spot_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
         """Insert spot aggregated taker volume history data."""
+        result = {
+            "saved": 0,
+            "duplicates": 0
+        }
+
         if not data:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_aggregated_taker_volume_history (
@@ -2601,17 +2534,27 @@ class CoinglassRepository:
                         row.get("aggregated_buy_volume_usd"),
                         row.get("aggregated_sell_volume_usd")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["saved"] += 1
+                    elif cur.rowcount == 2:
+                        result["duplicates"] += 1
             self.conn.commit()
-            return len(data)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting spot aggregated taker volume history: {e}")
-            return 0
+            return result
 
-    def insert_spot_taker_volume_history(self, exchange: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> int:
+    def insert_spot_taker_volume_history(self, exchange: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
         """Insert spot taker volume history data."""
+        result = {
+            "saved": 0,
+            "duplicates": 0
+        }
+
         if not data:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_taker_volume_history (
@@ -2632,9 +2575,14 @@ class CoinglassRepository:
                         row.get("aggregated_buy_volume_usd"),
                         row.get("aggregated_sell_volume_usd")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["saved"] += 1
+                    elif cur.rowcount == 2:
+                        result["duplicates"] += 1
             self.conn.commit()
-            return len(data)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting spot taker volume history: {e}")
-            return 0
+            return result

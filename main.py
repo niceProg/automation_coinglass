@@ -381,9 +381,7 @@ def show_help():
     # logger.info("  oi_history                  Open interest OHLC history by exchange/symbol/interval [DISABLED]")
     logger.info("  oi_exchange_list           Current open interest data by exchange")
     logger.info("  oi_aggregated_history      Open interest OHLC data aggregated across exchanges")
-    # logger.info(
-    #     "  open_interest_aggregated     Open interest aggregated OHLC data (all intervals) [DISABLED]"
-    # )
+    logger.info("  open_interest_aggregated_stablecoin_history  Aggregated stablecoin margin OHLC data")
     logger.info("  long_short_ratio_global      Global account ratios (all intervals)")
     logger.info("  long_short_ratio_top         Top account ratios (all intervals)")
     logger.info(

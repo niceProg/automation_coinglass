@@ -201,27 +201,6 @@ COINGLASS_TABLES = {
     # ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     # """,
 
-    # "cg_open_interest_exchange_list": """
-    # CREATE TABLE IF NOT EXISTS cg_open_interest_exchange_list (
-    #     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    #     symbol VARCHAR(20) NOT NULL,
-    #     exchange VARCHAR(50) NOT NULL,
-    #     open_interest_usd DECIMAL(38,8),
-    #     open_interest_quantity DECIMAL(38,8),
-    #     open_interest_change_percent_5m DECIMAL(18,8),
-    #     open_interest_change_percent_15m DECIMAL(18,8),
-    #     open_interest_change_percent_30m DECIMAL(18,8),
-    #     open_interest_change_percent_1h DECIMAL(18,8),
-    #     open_interest_change_percent_4h DECIMAL(18,8),
-    #     open_interest_change_percent_24h DECIMAL(18,8),
-    #     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    #     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    #     UNIQUE KEY uk_symbol_exchange (symbol, exchange),
-    #     INDEX idx_symbol (symbol),
-    #     INDEX idx_exchange (exchange)
-    # ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    # """,
-
     # ----- On-chain Tables (DISABLED) -----
     # "cg_exchange_assets": """
     # CREATE TABLE IF NOT EXISTS cg_exchange_assets (
@@ -965,31 +944,6 @@ COINGLASS_TABLES = {
         INDEX idx_symbol (symbol),
         INDEX idx_interval (`interval`),
         INDEX idx_time (time)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    """,
-
-    # ----- Exchange Rank Table -----
-    "cg_exchange_rank": """
-    CREATE TABLE IF NOT EXISTS cg_exchange_rank (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        exchange_name VARCHAR(50) NOT NULL,
-        symbol VARCHAR(20) NOT NULL,
-        open_interest_usd DECIMAL(38,8),
-        open_interest_rank INT,
-        volume_usd_24h DECIMAL(38,8),
-        volume_rank INT,
-        liquidation_usd_24h DECIMAL(38,8),
-        liquidation_rank INT,
-        create_time BIGINT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_exchange_name_symbol_create_time (exchange_name, symbol, create_time),
-        INDEX idx_exchange_name (exchange_name),
-        INDEX idx_symbol (symbol),
-        INDEX idx_open_interest_rank (open_interest_rank),
-        INDEX idx_volume_rank (volume_rank),
-        INDEX idx_liquidation_rank (liquidation_rank),
-        INDEX idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 

@@ -175,14 +175,6 @@ class CoinglassClient:
     #         params["unit"] = unit
     #     return self._make_request("futures/open-interest/history", params) or []
 
-    def get_oi_exchange_list(self, symbol: str):
-        return (
-            self._make_request(
-                "futures/open-interest/exchange-list", {"symbol": symbol}
-            )
-            or []
-        )
-
     # DISABLED - These are now replaced by the original open_interest methods
     # def get_open_interest_exchange_list(self, symbol: str):
     # def get_open_interest_aggregated_history(self, symbol: str, interval: str = "1d", limit: int = 1000, start_time: Optional[int] = None, end_time: Optional[int] = None, unit: str = "usd") -> List[Dict]:
@@ -759,22 +751,6 @@ class CoinglassClient:
         if end_time:
             params["end_time"] = str(end_time)
         return self._make_request("futures/open-interest/aggregated-stablecoin-history", params) or []
-
-    # ---------- Exchange Rank ----------
-    def get_exchange_rank(
-        self,
-        symbol: str,
-    ) -> List[Dict[str, Any]]:
-        """
-        Get Exchange Rank - Exchange rankings by open interest, volume, and liquidations.
-
-        Args:
-            symbol: Trading symbol (e.g., BTC)
-        """
-        params: Dict[str, Any] = {
-            "symbol": symbol,
-        }
-        return self._make_request("futures/exchange-rank", params) or []
 
     # ---------- Macro Overlay ----------
     def get_bitcoin_vs_global_m2_growth(self) -> List[Dict[str, Any]]:
