@@ -992,4 +992,134 @@ COINGLASS_TABLES = {
         INDEX idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+
+    # ===== NEW ENDPOINTS TABLES =====
+
+    "cg_futures_footprint_history": """
+    CREATE TABLE IF NOT EXISTS cg_futures_footprint_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange VARCHAR(50) NOT NULL,
+        symbol VARCHAR(50) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        time BIGINT NOT NULL,
+        price_start DECIMAL(20,8),
+        price_end DECIMAL(20,8),
+        taker_buy_volume DECIMAL(38,8),
+        taker_sell_volume DECIMAL(38,8),
+        taker_buy_volume_usd DECIMAL(38,8),
+        taker_sell_volume_usd DECIMAL(38,8),
+        taker_buy_trades INT,
+        taker_sell_trades INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_symbol_interval_time_price (exchange, symbol, `interval`, time, price_start, price_end),
+        INDEX idx_exchange (exchange),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_spot_large_orderbook_history": """
+    CREATE TABLE IF NOT EXISTS cg_spot_large_orderbook_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        order_id BIGINT NOT NULL,
+        exchange_name VARCHAR(50) NOT NULL,
+        symbol VARCHAR(50) NOT NULL,
+        base_asset VARCHAR(20) NOT NULL,
+        quote_asset VARCHAR(20) NOT NULL,
+        price DECIMAL(20,8),
+        start_time BIGINT NOT NULL,
+        start_quantity DECIMAL(38,8),
+        start_usd_value DECIMAL(38,8),
+        current_quantity DECIMAL(38,8),
+        current_usd_value DECIMAL(38,8),
+        `current_time` BIGINT NOT NULL,
+        executed_volume DECIMAL(38,8),
+        executed_usd_value DECIMAL(38,8),
+        trade_count INT,
+        order_side TINYINT,
+        order_state TINYINT,
+        order_end_time BIGINT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_order_id (order_id),
+        INDEX idx_exchange_name (exchange_name),
+        INDEX idx_symbol (symbol),
+        INDEX idx_base_asset (base_asset),
+        INDEX idx_start_time (start_time),
+        INDEX idx_order_state (order_state)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_spot_large_orderbook": """
+    CREATE TABLE IF NOT EXISTS cg_spot_large_orderbook (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        order_id BIGINT NOT NULL,
+        exchange_name VARCHAR(50) NOT NULL,
+        symbol VARCHAR(50) NOT NULL,
+        base_asset VARCHAR(20) NOT NULL,
+        quote_asset VARCHAR(20) NOT NULL,
+        price DECIMAL(20,8),
+        start_time BIGINT NOT NULL,
+        start_quantity DECIMAL(38,8),
+        start_usd_value DECIMAL(38,8),
+        current_quantity DECIMAL(38,8),
+        current_usd_value DECIMAL(38,8),
+        `current_time` BIGINT NOT NULL,
+        executed_volume DECIMAL(38,8),
+        executed_usd_value DECIMAL(38,8),
+        trade_count INT,
+        order_side TINYINT,
+        order_state TINYINT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_order_id (order_id),
+        INDEX idx_exchange_name (exchange_name),
+        INDEX idx_symbol (symbol),
+        INDEX idx_base_asset (base_asset),
+        INDEX idx_current_time (`current_time`),
+        INDEX idx_order_state (order_state)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_spot_aggregated_taker_volume_history": """
+    CREATE TABLE IF NOT EXISTS cg_spot_aggregated_taker_volume_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange_list VARCHAR(200) NOT NULL,
+        symbol VARCHAR(20) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        unit VARCHAR(10) NOT NULL DEFAULT 'usd',
+        time BIGINT NOT NULL,
+        aggregated_buy_volume_usd DECIMAL(38,8),
+        aggregated_sell_volume_usd DECIMAL(38,8),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_list_symbol_interval_time (exchange_list, symbol, `interval`, time),
+        INDEX idx_exchange_list (exchange_list),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    "cg_spot_taker_volume_history": """
+    CREATE TABLE IF NOT EXISTS cg_spot_taker_volume_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange VARCHAR(50) NOT NULL,
+        symbol VARCHAR(20) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        unit VARCHAR(10) NOT NULL DEFAULT 'usd',
+        time BIGINT NOT NULL,
+        aggregated_buy_volume_usd DECIMAL(38,8),
+        aggregated_sell_volume_usd DECIMAL(38,8),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_symbol_interval_time (exchange, symbol, `interval`, time),
+        INDEX idx_exchange (exchange),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 }

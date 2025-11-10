@@ -2460,7 +2460,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_futures_footprint_history (
-            exchange, symbol, interval, time, price_start, price_end,
+            exchange, symbol, `interval`, time, price_start, price_end,
             taker_buy_volume, taker_sell_volume, taker_buy_volume_usd,
             taker_sell_volume_usd, taker_buy_trades, taker_sell_trades
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -2584,7 +2584,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_aggregated_taker_volume_history (
-            exchange_list, symbol, interval, unit, time,
+            exchange_list, symbol, `interval`, unit, time,
             aggregated_buy_volume_usd, aggregated_sell_volume_usd
         ) VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
@@ -2615,7 +2615,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_taker_volume_history (
-            exchange, symbol, interval, unit, time,
+            exchange, symbol, `interval`, unit, time,
             aggregated_buy_volume_usd, aggregated_sell_volume_usd
         ) VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE

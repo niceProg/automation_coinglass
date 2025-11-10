@@ -514,8 +514,14 @@ class CoinglassService:
                     # ("exchange_assets", "cg_exchange_assets"),  # DISABLED
                     # ("exchange_balance_list", "cg_exchange_balance_list"),  # DISABLED - Not documented
                     # ("exchange_onchain_transfers", "cg_exchange_onchain_transfers"),  # DISABLED
+                    # ===== NEW ENDPOINTS =====
+                    ("futures_footprint_history", "cg_futures_footprint_history"),
                     ("spot_orderbook", "cg_spot_orderbook_history"),
                     ("spot_orderbook_aggregated", "cg_spot_orderbook_aggregated"),
+                    ("spot_large_orderbook_history", "cg_spot_large_orderbook_history"),
+                    ("spot_large_orderbook", "cg_spot_large_orderbook"),
+                    ("spot_aggregated_taker_volume_history", "cg_spot_aggregated_taker_volume_history"),
+                    ("spot_taker_volume_history", "cg_spot_taker_volume_history"),
                     # Spot Market Tables
                     ("spot_coins_markets", "cg_spot_coins_markets"),
                     ("spot_pairs_markets", "cg_spot_pairs_markets"),
@@ -549,6 +555,12 @@ class CoinglassService:
                         elif table in ["cg_spot_coins_markets", "cg_spot_pairs_markets"]:
                             # These tables don't have a time column, use updated_at instead
                             cur.execute(f"SELECT COUNT(*) as count, MAX(UNIX_TIMESTAMP(updated_at) * 1000) as latest_time FROM {table}")
+                        elif table == "cg_spot_large_orderbook_history":
+                            # Uses start_time as the primary time column
+                            cur.execute(f"SELECT COUNT(*) as count, MAX(start_time) as latest_time FROM {table}")
+                        elif table == "cg_spot_large_orderbook":
+                            # Uses current_time as the primary time column
+                            cur.execute(f"SELECT COUNT(*) as count, MAX(current_time) as latest_time FROM {table}")
                         else:
                             cur.execute(f"SELECT COUNT(*) as count, MAX(time) as latest_time FROM {table}")
 
