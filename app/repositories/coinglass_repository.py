@@ -245,10 +245,15 @@ class CoinglassRepository:
             )
             return 0
 
-    def upsert_oi_aggregated_history(self, symbol: str, interval: str, rows: List[Dict], unit: str = "usd") -> int:
+    def upsert_oi_aggregated_history(self, symbol: str, interval: str, rows: List[Dict], unit: str = "usd") -> Dict[str, int]:
         """Upsert open interest aggregated history."""
+        result = {
+            "oi_aggregated_history": 0,
+            "oi_aggregated_history_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_open_interest_aggregated_history (symbol, `interval`, time, open, high, low, close, unit)
@@ -266,8 +271,13 @@ class CoinglassRepository:
                         row.get("open"), row.get("high"),
                         row.get("low"), row.get("close"), unit
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["oi_aggregated_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["oi_aggregated_history_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -276,14 +286,14 @@ class CoinglassRepository:
                 f"Database error upserting oi_aggregated_history for {symbol}:{interval} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting oi_aggregated_history for {symbol}:{interval} - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== DISABLED METHODS (Commented Out) =====
 
@@ -852,10 +862,15 @@ class CoinglassRepository:
             return {"liquidation_heatmap": 0, "liquidation_heatmap_duplicates": 0}
 
     # ===== FUTURES BASIS =====
-    def upsert_futures_basis_history(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> int:
+    def upsert_futures_basis_history(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert futures basis history."""
+        result = {
+            "futures_basis": 0,
+            "futures_basis_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_futures_basis_history (
@@ -879,12 +894,17 @@ class CoinglassRepository:
                         row.get("open_change"),
                         row.get("close_change")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["futures_basis"] += 1
+                    elif cur.rowcount == 2:
+                        result["futures_basis_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error upserting futures_basis_history: {e}")
-            return 0
+            return result
 
     # def upsert_lsr_position_ratio(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> int:
     #     """Upsert long/short position ratio."""
@@ -2073,10 +2093,15 @@ class CoinglassRepository:
             self.logger.error(f"Unexpected error upserting whale_transfer: {e}")
             return result
     # ===== SPOT ORDERBOOK =====
-    def upsert_spot_orderbook_history(self, exchange: str, pair: str, interval: str, range_percent: str, rows: List[Dict]) -> int:
+    def upsert_spot_orderbook_history(self, exchange: str, pair: str, interval: str, range_percent: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot orderbook history data."""
+        result = {
+            "spot_orderbook_history": 0,
+            "spot_orderbook_history_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_orderbook_history (
@@ -2097,8 +2122,13 @@ class CoinglassRepository:
                         row.get("bids_usd"), row.get("bids_quantity"),
                         row.get("asks_usd"), row.get("asks_quantity")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_orderbook_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_orderbook_history_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2107,19 +2137,24 @@ class CoinglassRepository:
                 f"Database error upserting spot_orderbook_history for {exchange}:{pair}:{interval}:{range_percent} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting spot_orderbook_history for {exchange}:{pair}:{interval}:{range_percent} - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
-    def upsert_spot_orderbook_aggregated(self, exchange_list: str, symbol: str, interval: str, range_percent: str, rows: List[Dict]) -> int:
+    def upsert_spot_orderbook_aggregated(self, exchange_list: str, symbol: str, interval: str, range_percent: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot orderbook aggregated data."""
+        result = {
+            "spot_orderbook_aggregated": 0,
+            "spot_orderbook_aggregated_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_orderbook_aggregated (
@@ -2141,8 +2176,13 @@ class CoinglassRepository:
                         row.get("aggregated_bids_usd"), row.get("aggregated_bids_quantity"),
                         row.get("aggregated_asks_usd"), row.get("aggregated_asks_quantity")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_orderbook_aggregated"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_orderbook_aggregated_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2151,20 +2191,25 @@ class CoinglassRepository:
                 f"Database error upserting spot_orderbook_aggregated for {exchange_list}:{symbol}:{interval}:{range_percent} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting spot_orderbook_aggregated for {exchange_list}:{symbol}:{interval}:{range_percent} - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== SPOT COINS MARKETS =====
-    def upsert_spot_coins_markets(self, rows: List[Dict]) -> int:
+    def upsert_spot_coins_markets(self, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot coins markets data."""
+        result = {
+            "spot_coins_markets": 0,
+            "spot_coins_markets_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         # Build the SQL dynamically to avoid format string issues
         columns = [
@@ -2210,8 +2255,13 @@ class CoinglassRepository:
                 for row in rows:
                     values = [row.get(col) for col in columns]
                     cur.execute(sql, values)
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_coins_markets"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_coins_markets_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2220,20 +2270,25 @@ class CoinglassRepository:
                 f"Database error upserting spot_coins_markets - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting spot_coins_markets - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== SPOT PAIRS MARKETS =====
-    def upsert_spot_pairs_markets(self, rows: List[Dict]) -> int:
+    def upsert_spot_pairs_markets(self, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot pairs markets data."""
+        result = {
+            "spot_pairs_markets": 0,
+            "spot_pairs_markets_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         # Build the SQL dynamically to avoid format string issues
         columns = [
@@ -2271,8 +2326,13 @@ class CoinglassRepository:
                 for row in rows:
                     values = [row.get(col) for col in columns]
                     cur.execute(sql, values)
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_pairs_markets"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_pairs_markets_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2281,20 +2341,25 @@ class CoinglassRepository:
                 f"Database error upserting spot_pairs_markets - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting spot_pairs_markets - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== SPOT PRICE HISTORY =====
-    def upsert_spot_price_history(self, exchange: str, symbol: str, interval: str, rows: List[Dict]) -> int:
+    def upsert_spot_price_history(self, exchange: str, symbol: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot price history data."""
+        result = {
+            "spot_price_history": 0,
+            "spot_price_history_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_spot_price_history (
@@ -2315,8 +2380,13 @@ class CoinglassRepository:
                         row.get("low"), row.get("close"),
                         row.get("volume_usd")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_price_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_price_history_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2325,20 +2395,25 @@ class CoinglassRepository:
                 f"Database error upserting spot_price_history for {exchange}:{symbol}:{interval} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting spot_price_history for {exchange}:{symbol}:{interval} - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== OPEN INTEREST AGGREGATED STABLECOIN HISTORY =====
-    def upsert_open_interest_aggregated_stablecoin_history(self, exchange_list: str, symbol: str, interval: str, rows: List[Dict]) -> int:
+    def upsert_open_interest_aggregated_stablecoin_history(self, exchange_list: str, symbol: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert open interest aggregated stablecoin history (OHLC) data."""
+        result = {
+            "open_interest_aggregated_stablecoin_history": 0,
+            "open_interest_aggregated_stablecoin_history_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_open_interest_aggregated_stablecoin_history (
@@ -2357,8 +2432,13 @@ class CoinglassRepository:
                         row.get("open"), row.get("high"),
                         row.get("low"), row.get("close")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["open_interest_aggregated_stablecoin_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["open_interest_aggregated_stablecoin_history_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -2367,22 +2447,27 @@ class CoinglassRepository:
                 f"Database error upserting open_interest_aggregated_stablecoin_history for {exchange_list}:{symbol}:{interval} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting open_interest_aggregated_stablecoin_history for {exchange_list}:{symbol}:{interval} - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     
     # ===== NEW ENDPOINTS REPOSITORY METHODS =====
 
-    def insert_futures_footprint_history(self, exchange: str, symbol: str, interval: str, data: List[List]) -> int:
+    def insert_futures_footprint_history(self, exchange: str, symbol: str, interval: str, data: List[List]) -> Dict[str, int]:
         """Insert futures footprint history data with duplicate checking."""
+        result = {
+            "futures_footprint_history": 0,
+            "futures_footprint_history_duplicates": 0
+        }
+
         if not data:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_futures_footprint_history (
@@ -2400,7 +2485,6 @@ class CoinglassRepository:
         """
 
         try:
-            inserted_count = 0
             with self.conn.cursor() as cur:
                 for timestamp, price_ranges in data:
                     for price_range in price_ranges:
@@ -2416,13 +2500,17 @@ class CoinglassRepository:
                                 price_range[7],  # taker_buy_trades (index 6 is duplicate)
                                 price_range[8] if len(price_range) > 8 else 0  # taker_sell_trades
                             ))
-                            inserted_count += 1
+                            # Get affected rows count (1 = insert, 2 = update)
+                            if cur.rowcount == 1:
+                                result["futures_footprint_history"] += 1
+                            elif cur.rowcount == 2:
+                                result["futures_footprint_history_duplicates"] += 1
             self.conn.commit()
-            return inserted_count
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error inserting futures footprint history: {e}")
-            return 0
+            return result
 
     def insert_spot_large_orderbook_history(self, exchange: str, symbol: str, state: str, data: List[Dict]) -> Dict[str, int]:
         """Insert spot large orderbook history data."""

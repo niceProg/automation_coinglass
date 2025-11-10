@@ -34,6 +34,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "open_interest_aggregated_stablecoin_history": 0,
+        "open_interest_aggregated_stablecoin_history_duplicates": 0,
         "fetches": 0
     }
 
@@ -55,8 +56,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         saved = repo.upsert_open_interest_aggregated_stablecoin_history(
                             exchange_list, symbol, interval, rows
                         )
-                        summary["open_interest_aggregated_stablecoin_history"] += saved
-                        logger.info(f"✅ Saved {saved} aggregated stablecoin OI records for {symbol} ✅")
+                        logger.info(
+                            f"✅ open_interest_aggregated_stablecoin_history[{exchange_list}:{symbol}:{interval}]: "
+                            f"received={len(rows)}, saved={saved.get('open_interest_aggregated_stablecoin_history', 0)}, duplicates={saved.get('open_interest_aggregated_stablecoin_history_duplicates', 0)}"
+                        )
+                        # Handle both old int format and new dict format for backward compatibility
+                        if isinstance(saved, dict):
+                            summary["open_interest_aggregated_stablecoin_history"] += saved.get("open_interest_aggregated_stablecoin_history", 0)
+                            if saved.get("open_interest_aggregated_stablecoin_history_duplicates", 0) > 0:
+                                summary["open_interest_aggregated_stablecoin_history_duplicates"] = summary.get("open_interest_aggregated_stablecoin_history_duplicates", 0) + saved.get("open_interest_aggregated_stablecoin_history_duplicates", 0)
+                        else:
+                            summary["open_interest_aggregated_stablecoin_history"] += saved
                     else:
                         logger.warning(f"No data returned for aggregated stablecoin OI: {exchange_list} {symbol} {interval}")
 
@@ -67,5 +77,5 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     summary["fetches"] += 1
                     continue
 
-    logger.info(f"📦 Open Interest Aggregated Stablecoin History pipeline completed. Total records saved: {summary['open_interest_aggregated_stablecoin_history']} ✅")
+    logger.info(f"📦 Open Interest Aggregated Stablecoin History pipeline completed. Total records saved: {summary['open_interest_aggregated_stablecoin_history']}, duplicates={summary['open_interest_aggregated_stablecoin_history_duplicates']} ✅")
     return summary

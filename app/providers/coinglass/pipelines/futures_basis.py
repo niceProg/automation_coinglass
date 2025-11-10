@@ -24,6 +24,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "futures_basis": 0,
+        "futures_basis_duplicates": 0,
         "futures_basis_fetches": 0
     }
 
@@ -41,9 +42,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         )
                         logger.info(
                             f"✅ futures_basis[{exchange}:{pair}:{interval}]: "
-                            f"received={len(rows)}, saved={saved}"
+                            f"received={len(rows)}, saved={saved.get('futures_basis', 0)}, duplicates={saved.get('futures_basis_duplicates', 0)}"
                         )
-                        summary["futures_basis"] += saved
+                        # Handle both old int format and new dict format for backward compatibility
+                        if isinstance(saved, dict):
+                            summary["futures_basis"] += saved.get("futures_basis", 0)
+                            if saved.get("futures_basis_duplicates", 0) > 0:
+                                summary["futures_basis_duplicates"] = summary.get("futures_basis_duplicates", 0) + saved.get("futures_basis_duplicates", 0)
+                        else:
+                            summary["futures_basis"] += saved
                     else:
                         logger.info(
                             f"⚠️ futures_basis[{exchange}:{pair}:{interval}]: No data (skipped)"
@@ -57,7 +64,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     continue
 
     logger.info(
-        f"📦 Futures Basis summary -> total_saved={summary['futures_basis']} | "
+        f"📦 Futures Basis summary -> total_saved={summary['futures_basis']}, duplicates={summary['futures_basis_duplicates']} | "
         f"futures_basis:{summary['futures_basis']} (fetches:{summary['futures_basis_fetches']})"
     )
 

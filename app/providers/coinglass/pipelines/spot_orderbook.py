@@ -35,6 +35,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "spot_orderbook": 0,
+        "spot_orderbook_duplicates": 0,
         "fetches": 0
     }
 
@@ -58,8 +59,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                             saved = repo.upsert_spot_orderbook_history(
                                 exchange, symbol, interval, range_percent, rows
                             )
-                            summary["spot_orderbook"] += saved
-                            logger.info(f"✅ Saved {saved} spot orderbook records for {exchange} {symbol} ✅")
+                            logger.info(
+                                f"✅ spot_orderbook[{exchange}:{symbol}:{interval}:{range_percent}]: "
+                                f"received={len(rows)}, saved={saved.get('spot_orderbook', 0)}, duplicates={saved.get('spot_orderbook_duplicates', 0)}"
+                            )
+                            # Handle both old int format and new dict format for backward compatibility
+                            if isinstance(saved, dict):
+                                summary["spot_orderbook"] += saved.get("spot_orderbook", 0)
+                                if saved.get("spot_orderbook_duplicates", 0) > 0:
+                                    summary["spot_orderbook_duplicates"] = summary.get("spot_orderbook_duplicates", 0) + saved.get("spot_orderbook_duplicates", 0)
+                            else:
+                                summary["spot_orderbook"] += saved
                         else:
                             logger.warning(f"No data returned for spot orderbook: {exchange} {symbol} {interval}")
 
@@ -70,5 +80,5 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         summary["fetches"] += 1
                         continue
 
-    logger.info(f"📦 Spot Orderbook pipeline completed. Total records saved: {summary['spot_orderbook']} ✅")
+    logger.info(f"📦 Spot Orderbook pipeline completed. Total records saved: {summary['spot_orderbook']}, duplicates={summary['spot_orderbook_duplicates']} ✅")
     return summary

@@ -23,6 +23,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "spot_coins_markets": 0,
+        "spot_coins_markets_duplicates": 0,
         "fetches": 0
     }
 
@@ -43,8 +44,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
             if filtered_rows:
                 saved = repo.upsert_spot_coins_markets(filtered_rows)
-                summary["spot_coins_markets"] += saved
-                logger.info(f"✅ Saved {saved} spot coins markets records ✅")
+                logger.info(
+                    f"✅ spot_coins_markets[page:{PAGE}]: "
+                    f"received={len(filtered_rows)}, saved={saved.get('spot_coins_markets', 0)}, duplicates={saved.get('spot_coins_markets_duplicates', 0)}"
+                )
+                # Handle both old int format and new dict format for backward compatibility
+                if isinstance(saved, dict):
+                    summary["spot_coins_markets"] += saved.get("spot_coins_markets", 0)
+                    if saved.get("spot_coins_markets_duplicates", 0) > 0:
+                        summary["spot_coins_markets_duplicates"] = summary.get("spot_coins_markets_duplicates", 0) + saved.get("spot_coins_markets_duplicates", 0)
+                else:
+                    summary["spot_coins_markets"] += saved
             else:
                 logger.info("No matching symbols found in spot coins markets data")
         else:
@@ -56,5 +66,5 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         logger.warning(f"Error fetching spot coins markets: {e}")
         summary["fetches"] += 1
 
-    logger.info(f"📦 Spot Coins Markets pipeline completed. Total records saved: {summary['spot_coins_markets']} ✅")
+    logger.info(f"📦 Spot Coins Markets pipeline completed. Total records saved: {summary['spot_coins_markets']}, duplicates={summary['spot_coins_markets_duplicates']} ✅")
     return summary

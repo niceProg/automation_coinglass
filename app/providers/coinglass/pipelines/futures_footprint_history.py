@@ -36,7 +36,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     end_time = params.get("end_time", int(datetime.now().timestamp() * 1000))
 
     summary = {
-        "footprint_history": 0,
+        "futures_footprint_history": 0,
+        "futures_footprint_history_duplicates": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -63,9 +64,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         saved = repo.insert_futures_footprint_history(exchange, symbol, interval, data)
                         logger.info(
                             f"✅ futures_footprint_history[{exchange}:{symbol}:{interval}]: "
-                            f"received={len(data)}, saved={saved}"
+                            f"received={len(data)}, saved={saved.get('futures_footprint_history', 0)}, duplicates={saved.get('futures_footprint_history_duplicates', 0)}"
                         )
-                        summary["footprint_history"] += saved
+                        # Handle both old int format and new dict format for backward compatibility
+                        if isinstance(saved, dict):
+                            summary["futures_footprint_history"] += saved.get("futures_footprint_history", 0)
+                            if saved.get("futures_footprint_history_duplicates", 0) > 0:
+                                summary["futures_footprint_history_duplicates"] = summary.get("futures_footprint_history_duplicates", 0) + saved.get("futures_footprint_history_duplicates", 0)
+                        else:
+                            summary["futures_footprint_history"] += saved
                     else:
                         logger.info(
                             f"⚠️ futures_footprint_history[{exchange}:{symbol}:{interval}]: No data (skipped)"
@@ -80,5 +87,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     summary["errors"] += 1
                     continue
 
-    logger.info(f"Futures Volume Footprint History pipeline completed: {summary}")
+    logger.info(
+        f"📦 Futures Volume Footprint History pipeline completed. Total records saved: {summary['futures_footprint_history']}, duplicates={summary['futures_footprint_history_duplicates']} | "
+        f"fetches={summary['fetches']}, errors={summary['errors']}"
+    )
     return summary

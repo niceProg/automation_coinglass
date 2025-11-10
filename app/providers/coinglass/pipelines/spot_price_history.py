@@ -25,6 +25,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "spot_price_history": 0,
+        "spot_price_history_duplicates": 0,
         "fetches": 0
     }
 
@@ -46,8 +47,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         saved = repo.upsert_spot_price_history(
                             exchange, symbol, interval, rows
                         )
-                        summary["spot_price_history"] += saved
-                        logger.info(f"✅ Saved {saved} spot price history records for {exchange} {symbol} ✅")
+                        logger.info(
+                            f"✅ spot_price_history[{exchange}:{symbol}:{interval}]: "
+                            f"received={len(rows)}, saved={saved.get('spot_price_history', 0)}, duplicates={saved.get('spot_price_history_duplicates', 0)}"
+                        )
+                        # Handle both old int format and new dict format for backward compatibility
+                        if isinstance(saved, dict):
+                            summary["spot_price_history"] += saved.get("spot_price_history", 0)
+                            if saved.get("spot_price_history_duplicates", 0) > 0:
+                                summary["spot_price_history_duplicates"] = summary.get("spot_price_history_duplicates", 0) + saved.get("spot_price_history_duplicates", 0)
+                        else:
+                            summary["spot_price_history"] += saved
                     else:
                         logger.warning(f"No data returned for spot price history: {exchange} {symbol} {interval}")
 
@@ -58,5 +68,5 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     summary["fetches"] += 1
                     continue
 
-    logger.info(f"📦 Spot Price History pipeline completed. Total records saved: {summary['spot_price_history']} ✅")
+    logger.info(f"📦 Spot Price History pipeline completed. Total records saved: {summary['spot_price_history']}, duplicates={summary['spot_price_history_duplicates']} ✅")
     return summary

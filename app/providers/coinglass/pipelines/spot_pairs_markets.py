@@ -24,6 +24,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "spot_pairs_markets": 0,
+        "spot_pairs_markets_duplicates": 0,
         "fetches": 0
     }
 
@@ -43,8 +44,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
                 if filtered_rows:
                     saved = repo.upsert_spot_pairs_markets(filtered_rows)
-                    summary["spot_pairs_markets"] += saved
-                    logger.info(f"✅ Saved {saved} spot pairs markets records for {symbol} on {TARGET_EXCHANGES} ✅")
+                    logger.info(
+                        f"✅ spot_pairs_markets[{symbol}]: "
+                        f"received={len(filtered_rows)}, saved={saved.get('spot_pairs_markets', 0)}, duplicates={saved.get('spot_pairs_markets_duplicates', 0)}"
+                    )
+                    # Handle both old int format and new dict format for backward compatibility
+                    if isinstance(saved, dict):
+                        summary["spot_pairs_markets"] += saved.get("spot_pairs_markets", 0)
+                        if saved.get("spot_pairs_markets_duplicates", 0) > 0:
+                            summary["spot_pairs_markets_duplicates"] = summary.get("spot_pairs_markets_duplicates", 0) + saved.get("spot_pairs_markets_duplicates", 0)
+                    else:
+                        summary["spot_pairs_markets"] += saved
                 else:
                     logger.info(f"No data found for {symbol} on target exchanges: {TARGET_EXCHANGES}")
             else:
@@ -57,5 +67,5 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
             summary["fetches"] += 1
             continue
 
-    logger.info(f"📦 Spot Pairs Markets pipeline completed. Total records saved: {summary['spot_pairs_markets']} ✅")
+    logger.info(f"📦 Spot Pairs Markets pipeline completed. Total records saved: {summary['spot_pairs_markets']}, duplicates={summary['spot_pairs_markets_duplicates']} ✅")
     return summary

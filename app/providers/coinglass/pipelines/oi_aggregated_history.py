@@ -23,6 +23,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "oi_aggregated_history": 0,
+        "oi_aggregated_history_duplicates": 0,
         "oi_aggregated_fetches": 0
     }
 
@@ -41,9 +42,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     )
                     logger.info(
                         f"✅ oi_aggregated_history[{symbol}:{interval}]: "
-                        f"received={len(rows)}, saved={saved}"
+                        f"received={len(rows)}, saved={saved.get('oi_aggregated_history', 0)}, duplicates={saved.get('oi_aggregated_history_duplicates', 0)}"
                     )
-                    summary["oi_aggregated_history"] += saved
+                    # Handle both old int format and new dict format for backward compatibility
+                    if isinstance(saved, dict):
+                        summary["oi_aggregated_history"] += saved.get("oi_aggregated_history", 0)
+                        if saved.get("oi_aggregated_history_duplicates", 0) > 0:
+                            summary["oi_aggregated_history_duplicates"] = summary.get("oi_aggregated_history_duplicates", 0) + saved.get("oi_aggregated_history_duplicates", 0)
+                    else:
+                        summary["oi_aggregated_history"] += saved
                 else:
                     logger.info(
                         f"⚠️ oi_aggregated_history[{symbol}:{interval}]: No data (skipped)"
@@ -57,7 +64,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 continue
 
     logger.info(
-        f"📦 OI Aggregated History summary -> total_saved={summary['oi_aggregated_history']} | "
+        f"📦 OI Aggregated History summary -> total_saved={summary['oi_aggregated_history']}, duplicates={summary['oi_aggregated_history_duplicates']} | "
         f"fetches={summary['oi_aggregated_fetches']}"
     )
 
