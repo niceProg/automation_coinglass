@@ -872,11 +872,13 @@ COINGLASS_TABLES = {
         option_exchange_oi_history_id BIGINT NOT NULL,
         exchange_name VARCHAR(50) NOT NULL,
         oi_value DECIMAL(20,8) NOT NULL,
+        timestamp_value BIGINT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (option_exchange_oi_history_id) REFERENCES cg_option_exchange_oi_history(id) ON DELETE CASCADE,
         INDEX idx_option_exchange_oi_history_id (option_exchange_oi_history_id),
         INDEX idx_exchange_name (exchange_name),
-        UNIQUE KEY uk_oi_history_exchange (option_exchange_oi_history_id, exchange_name)
+        INDEX idx_timestamp_value (timestamp_value),
+        UNIQUE KEY uk_oi_history_exchange_time (option_exchange_oi_history_id, exchange_name, timestamp_value)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 

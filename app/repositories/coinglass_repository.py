@@ -1893,39 +1893,49 @@ class CoinglassRepository:
                     cur.execute(delete_time_sql, (option_exchange_oi_history_id,))
                     cur.execute(delete_exchange_sql, (option_exchange_oi_history_id,))
 
-                # Step 3: Insert time_list data
-                time_list = data.get("time_list", [])
-                if time_list:
-                    time_values = [(option_exchange_oi_history_id, time_val) for time_val in time_list]
-                    time_sql = """
-                    INSERT INTO cg_option_exchange_oi_history_time_list (
-                        option_exchange_oi_history_id, time_value
-                    )
-                    VALUES (%s, %s)
-                    """
-                    cur.executemany(time_sql, time_values)
+                # Step 3: Extract data from API response structure
+                # The API response structure: data.data_map contains arrays of OI values
+                time_list = []
+                if isinstance(data, dict) and "data" in data and len(data["data"]) > 0:
+                    main_data = data["data"][0]  # Get first data object
 
-                # Step 4: Insert exchange_data
-                # The exchange_data structure varies, so we need to handle different formats
-                exchange_data = data
-                if isinstance(exchange_data, dict):
-                    # Extract exchange names and values
-                    for key, value in exchange_data.items():
-                        if key not in ["time_list"] and isinstance(value, (int, float, str)):
-                            try:
-                                # Try to convert to decimal
-                                oi_value = float(value) if value else 0.0
+                    # Extract time_list and data_map from the correct location
+                    time_list = main_data.get("time_list", [])
+                    data_map = main_data.get("data_map", {})
 
-                                exchange_sql = """
-                                INSERT INTO cg_option_exchange_oi_history_exchange_data (
-                                    option_exchange_oi_history_id, exchange_name, oi_value
-                                )
-                                VALUES (%s, %s, %s)
-                                """
-                                cur.execute(exchange_sql, (option_exchange_oi_history_id, key, oi_value))
-                            except (ValueError, TypeError):
-                                # Skip invalid numeric values
-                                continue
+                    # Step 4: Insert time_list data
+                    if isinstance(time_list, list) and time_list:
+                        time_values = [(option_exchange_oi_history_id, time_val) for time_val in time_list]
+                        time_sql = """
+                        INSERT INTO cg_option_exchange_oi_history_time_list (
+                            option_exchange_oi_history_id, time_value
+                        )
+                        VALUES (%s, %s)
+                        """
+                        cur.executemany(time_sql, time_values)
+
+                    # Step 5: Insert exchange_data from data_map
+                    if isinstance(data_map, dict):
+                        for exchange_name, oi_values in data_map.items():
+                            if isinstance(oi_values, list):
+                                # Insert each OI value with its corresponding timestamp
+                                for i, oi_value in enumerate(oi_values):
+                                    if i < len(time_list):  # Ensure we have corresponding timestamp
+                                        try:
+                                            # Convert to decimal
+                                            oi_decimal = float(oi_value) if oi_value else 0.0
+                                            timestamp = time_list[i]
+
+                                            exchange_sql = """
+                                            INSERT INTO cg_option_exchange_oi_history_exchange_data (
+                                                option_exchange_oi_history_id, exchange_name, oi_value, timestamp_value
+                                            )
+                                            VALUES (%s, %s, %s, %s)
+                                            """
+                                            cur.execute(exchange_sql, (option_exchange_oi_history_id, exchange_name, oi_decimal, timestamp))
+                                        except (ValueError, TypeError):
+                                            # Skip invalid numeric values
+                                            continue
 
                 # Update result counts
                 if main_affected == 1:
@@ -1979,55 +1989,71 @@ class CoinglassRepository:
                 where_clause = " AND ".join(conditions) if conditions else "1=1"
                 params.append(limit)
 
-                # Main query with relationships
+                # Get main records first
                 main_query = f"""
                 SELECT
-                    h.id, h.symbol, h.unit, h.`range`, h.created_at, h.updated_at,
-                    GROUP_CONCAT(DISTINCT tl.time_value ORDER BY tl.time_value) as time_list,
-                    GROUP_CONCAT(
-                        DISTINCT CONCAT(ed.exchange_name, ':', ed.oi_value)
-                        ORDER BY ed.exchange_name
-                    ) as exchange_data
+                    h.id, h.symbol, h.unit, h.`range`, h.created_at, h.updated_at
                 FROM cg_option_exchange_oi_history h
-                LEFT JOIN cg_option_exchange_oi_history_time_list tl ON h.id = tl.option_exchange_oi_history_id
-                LEFT JOIN cg_option_exchange_oi_history_exchange_data ed ON h.id = ed.option_exchange_oi_history_id
                 WHERE {where_clause}
-                GROUP BY h.id, h.symbol, h.unit, h.`range`, h.created_at, h.updated_at
                 ORDER BY h.updated_at DESC
                 LIMIT %s
                 """
 
                 cur.execute(main_query, tuple(params))
-                rows = cur.fetchall()
+                main_rows = cur.fetchall()
 
-                # Process results
                 results = []
-                for row in rows:
-                    # Parse time_list back to list
-                    time_list = []
-                    if row[6]:  # time_list
-                        time_list = [int(t) for t in row[6].split(',') if t.strip()]
+                for main_row in main_rows:
+                    option_exchange_oi_history_id = main_row[0]
 
-                    # Parse exchange_data back to dict
-                    exchange_data = {}
-                    if row[7]:  # exchange_data
-                        for item in row[7].split(','):
-                            if ':' in item:
-                                key, value = item.split(':', 1)
-                                try:
-                                    exchange_data[key.strip()] = float(value.strip())
-                                except ValueError:
-                                    exchange_data[key.strip()] = value.strip()
+                    # Get time_list for this record
+                    time_query = """
+                    SELECT time_value
+                    FROM cg_option_exchange_oi_history_time_list
+                    WHERE option_exchange_oi_history_id = %s
+                    ORDER BY time_value
+                    """
+                    cur.execute(time_query, (option_exchange_oi_history_id,))
+                    time_rows = cur.fetchall()
+                    time_list = [row[0] for row in time_rows]
+
+                    # Get exchange_data for this record organized by exchange and timestamp
+                    exchange_query = """
+                    SELECT exchange_name, timestamp_value, oi_value
+                    FROM cg_option_exchange_oi_history_exchange_data
+                    WHERE option_exchange_oi_history_id = %s
+                    ORDER BY exchange_name, timestamp_value
+                    """
+                    cur.execute(exchange_query, (option_exchange_oi_history_id,))
+                    exchange_rows = cur.fetchall()
+
+                    # Build data_map structure
+                    data_map = {}
+                    for exchange_row in exchange_rows:
+                        exchange_name = exchange_row[0]
+                        timestamp_value = exchange_row[1]
+                        oi_value = float(exchange_row[2])
+
+                        if exchange_name not in data_map:
+                            data_map[exchange_name] = []
+
+                        # Find the index of this timestamp in time_list and place oi_value accordingly
+                        if timestamp_value in time_list:
+                            index = time_list.index(timestamp_value)
+                            # Ensure array is long enough
+                            while len(data_map[exchange_name]) <= index:
+                                data_map[exchange_name].append(None)
+                            data_map[exchange_name][index] = oi_value
 
                     result_dict = {
-                        'id': row[0],
-                        'symbol': row[1],
-                        'unit': row[2],
-                        'range': row[3],
-                        'created_at': row[4],
-                        'updated_at': row[5],
+                        'id': main_row[0],
+                        'symbol': main_row[1],
+                        'unit': main_row[2],
+                        'range': main_row[3],
+                        'created_at': main_row[4],
+                        'updated_at': main_row[5],
                         'time_list': time_list,
-                        'exchange_data': exchange_data
+                        'data_map': data_map
                     }
                     results.append(result_dict)
 
