@@ -3,10 +3,9 @@ from typing import Dict, Any, List, Optional
 from urllib.parse import urlencode
 from app.core.logging import setup_logger
 from app.core.config import Settings
-from app.providers.coinglass.spot_client import SpotClientMixin
 
 
-class CoinglassClient(SpotClientMixin):
+class CoinglassClient:
     """Coinglass API v4 Client"""
 
     BASE_URL = "https://open-api-v4.coinglass.com/api"
@@ -555,13 +554,6 @@ class CoinglassClient(SpotClientMixin):
         return self._make_request("etf/bitcoin/flow-history") or []
 
 
-    def get_etf_flows_history(self) -> List[Dict[str, Any]]:
-        """
-        Get ETF Flows History - Historical flow data for Bitcoin ETFs including daily net inflows/outflows.
-        """
-        return self._make_request("etf/bitcoin/flow-history") or []
-
-
     # ---------- Ethereum ETF ----------
     # DISABLED - Not documented
     # def get_eth_etf_netassets_history(self):
@@ -575,42 +567,6 @@ class CoinglassClient(SpotClientMixin):
     # def get_eth_etf_flows_history(self):
     #     return self._make_request("etf/ethereum/flow-history") or []
 
-    # ---------- Spot Markets ----------
-    # def get_spot_pairs_markets(self, symbol: str) -> List[Dict]:
-    #     """
-    #     Get spot pairs market data for a symbol (e.g., BTC).
-    #     Returns performance data across multiple timeframes (1h, 4h, 12h, 24h, 1w).
-    #     """
-    #     return self._make_request("spot/pairs-markets", {"symbol": symbol}) or []
-
-    def get_spot_price_ohlc(
-        self,
-        exchange: str,
-        symbol: str,  # e.g. BTCUSDT
-        interval: str = "5m",
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-    ) -> List[Dict]:
-        """
-        Get spot price OHLC history.
-
-        Args:
-            exchange: Exchange name (e.g., Binance, OKX)
-            symbol: Trading pair (e.g., BTCUSDT)
-            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
-            start_time: Start timestamp in milliseconds
-            end_time: End timestamp in milliseconds
-        """
-        params: Dict[str, Any] = {
-            "exchange": exchange,
-            "symbol": symbol,
-            "interval": interval,
-        }
-        if start_time:
-            params["start_time"] = start_time
-        if end_time:
-            params["end_time"] = end_time
-        return self._make_request("spot/price/history", params) or []
 
     # ---------- Options (DISABLED) ----------
     # def get_option_max_pain(self, symbol: str, exchange: str = "Deribit") -> List[Dict]:
@@ -635,162 +591,33 @@ class CoinglassClient(SpotClientMixin):
     #     return self._make_request("option/info", params) or []
 
     # ---------- Spot Orderbook ----------
-# DISABLED - Commented out as per user request
-# def get_spot_orderbook_ask_bids_history(
-#     self,
-#     exchange: str,
-#     symbol: str,
-#     interval: str,
-#     limit: Optional[int] = None,
-#     start_time: Optional[int] = None,
-#     end_time: Optional[int] = None,
-#     range_percent: Optional[str] = None,
-# ) -> List[Dict]:
-#     """
-#     Get spot orderbook ask & bids history.
-#
-#     Args:
-#         exchange: Exchange name (e.g., Binance)
-#         symbol: Trading pair (e.g., BTCUSDT)
-#         interval: Data aggregation interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
-#         limit: Number of results (default: 1000, max: 1000)
-#         start_time: Start timestamp in milliseconds
-#         end_time: End timestamp in milliseconds
-#         range_percent: Depth percentage (0.25, 0.5, 0.75, 1, 2, 3, 5, 10)
-#     """
-#     params: Dict[str, Any] = {
-#         "exchange": exchange,
-#         "symbol": symbol,
-#         "interval": interval,
-#     }
-#     if limit:
-#         params["limit"] = int(limit)
-#     if start_time:
-#         params["start_time"] = int(start_time)
-#     if end_time:
-#         params["end_time"] = int(end_time)
-#     if range_percent:
-#         params["range"] = range_percent
-#     return self._make_request("spot/orderbook/ask-bids-history", params) or []
-#
-# def get_spot_orderbook_aggregated_history(
-#     self,
-#     exchange_list: str,
-#     symbol: str,
-#     interval: str,
-#     limit: Optional[int] = None,
-#     start_time: Optional[int] = None,
-#     end_time: Optional[int] = None,
-#     range_percent: Optional[str] = None,
-# ) -> List[Dict]:
-#     """
-#     Get spot orderbook aggregated history.
-#
-#     Args:
-#         exchange_list: List of exchange names (e.g., 'Binance,OKX,Bybit' or 'ALL')
-#         symbol: Trading coin (e.g., BTC)
-#         interval: Data aggregation interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
-#         limit: Number of results (default: 10, max: 1000)
-#         start_time: Start timestamp in milliseconds
-#         end_time: End timestamp in milliseconds
-#         range_percent: Depth percentage (0.25, 0.5, 0.75, 1, 2, 3, 5, 10)
-#     """
-#     params: Dict[str, Any] = {
-#         "exchange_list": exchange_list,
-#         "symbol": symbol,
-#         "interval": interval,
-#     }
-#     if limit:
-#         params["limit"] = int(limit)
-#     if start_time:
-#         params["start_time"] = int(start_time)
-#     if end_time:
-#         params["end_time"] = int(end_time)
-#     if range_percent:
-#         params["range"] = range_percent
-#     return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
-
-    # ---------- Spot Market ----------
-    # def get_spot_supported_exchange_pairs(self) -> Dict[str, List[Dict[str, Any]]]:
-    #     """
-    #     Get supported exchanges and their trading pairs for spot market.
-
-    #     Returns:
-    #         Dict mapping exchange names to list of trading pairs with:
-    #         - instrument_id: Spot pair (e.g., BTCUSD_USDT)
-    #         - base_asset: Base asset (e.g., BTC)
-    #         - quote_asset: Quote asset (e.g., USDT)
-    #     """
-    #     return self._make_request("spot/supported-exchange-pairs") or {}
-
-    # def get_spot_coins_markets(
-    #     self,
-    #     per_page: Optional[int] = None,
-    #     page: Optional[int] = None,
-    # ) -> List[Dict]:
-    #     """
-    #     Get spot coins markets performance data.
-
-    #     Returns comprehensive market data for all available coins including:
-    #     - Current price and market cap
-    #     - Price changes across multiple timeframes (5m to 1w)
-    #     - Trading volume data and changes
-    #     - Buy/sell volume analysis and net flows
-
-    #     Args:
-    #         per_page: Number of results per page (default: 10)
-    #         page: Page number for pagination (default: 1)
-    #     """
-    #     params: Dict[str, Any] = {}
-    #     if per_page:
-    #         params["per_page"] = per_page
-    #     if page:
-    #         params["page"] = page
-    #     return self._make_request("spot/coins-markets", params) or []
-
-    # def get_spot_pairs_markets(self, symbol: str) -> List[Dict]:
-    #     """
-    #     Get spot pairs market data for a specific symbol.
-
-    #     Returns performance data for trading pairs of a symbol across exchanges:
-    #     - Current price and price changes (1h, 4h, 12h, 24h, 1w)
-    #     - Trading volume and buy/sell analysis
-    #     - Volume changes and net flows across timeframes
-
-    #     Args:
-    #         symbol: Trading coin (e.g., BTC). Use supported-coins API to get available symbols.
-    #     """
-    #     return self._make_request("spot/pairs-markets", {"symbol": symbol}) or []
-
-    def get_spot_price_history(
+    def get_spot_orderbook_history(
         self,
         exchange: str,
-        symbol: str,  # e.g., BTCUSDT
-        interval: str = "1h",
-        limit: Optional[int] = None,
+        pair: str,
+        interval: str = "1m",
+        range_percent: str = "0.25",
+        limit: int = None,
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
-        Get spot price OHLC history.
-
-        Returns historical price data with OHLC values and trading volume.
-        Real-time data for all API plans, with interval limits based on plan.
+        Get Spot Orderbook History - Historical orderbook data for spot trading.
 
         Args:
-            exchange: Spot exchange name (e.g., Binance, OKX). Use supported-exchange-pair API.
-            symbol: Trading pair (e.g., BTCUSDT). Use supported-exchange-pair API.
-            interval: Data aggregation time interval.
-                      Supported: 1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w
-                      Plan limits: Hobbyist >=4h, Startup >=30m, others no limit
-            limit: Number of results (default: 10, max: 1000)
-            start_time: Start timestamp in milliseconds (e.g., 1641522717000)
-            end_time: End timestamp in milliseconds (e.g., 1641522717000)
+            exchange: Exchange name (e.g., Binance, OKX)
+            pair: Trading pair (e.g., BTCUSDT)
+            interval: Data aggregation interval
+            range_percent: Price range percentage (e.g., "0.25", "0.5")
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
         """
         params: Dict[str, Any] = {
             "exchange": exchange,
-            "symbol": symbol,
+            "symbol": pair,
             "interval": interval,
+            "range": range_percent,
         }
         if limit:
             params["limit"] = str(limit)
@@ -798,7 +625,165 @@ class CoinglassClient(SpotClientMixin):
             params["start_time"] = str(start_time)
         if end_time:
             params["end_time"] = str(end_time)
+        return self._make_request("spot/orderbook/history", params) or []
+
+    def get_spot_orderbook_aggregated(
+        self,
+        exchange_list: str,
+        symbol: str,
+        interval: str = "1m",
+        range_percent: str = "0.25",
+        limit: int = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Orderbook Aggregated - Aggregated orderbook data across multiple exchanges.
+
+        Args:
+            exchange_list: Comma-separated exchange names (e.g., "Binance,OKX")
+            symbol: Trading symbol (e.g., BTC)
+            interval: Data aggregation interval
+            range_percent: Price range percentage
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+            "range": range_percent,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("spot/orderbook/aggregated", params) or []
+
+    # ---------- Spot Markets ----------
+    def get_spot_supported_exchange_pairs(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get Spot Supported Exchange Pairs - Reference data for supported spot trading pairs.
+
+        Returns:
+            Dictionary mapping exchange names to list of supported pairs
+        """
+        return self._make_request("spot/supported-exchange-pairs") or {}
+
+    def get_spot_coins_markets(
+        self,
+        symbols: Optional[List[str]] = None,
+        per_page: int = 100,
+        page: int = 1,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Coins Markets - Comprehensive spot market data for multiple coins.
+
+        Args:
+            symbols: List of coin symbols to fetch
+            per_page: Number of results per page (max 100)
+            page: Page number
+        """
+        params: Dict[str, Any] = {
+            "per_page": str(per_page),
+            "page": str(page),
+        }
+        if symbols:
+            params["symbols"] = ",".join(symbols)
+        return self._make_request("spot/coins/markets", params) or []
+
+    def get_spot_pairs_markets(
+        self,
+        symbol: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Pairs Markets - Trading pair market data for spot markets.
+
+        Args:
+            symbol: Trading symbol (e.g., BTC, ETH)
+        """
+        params: Dict[str, Any] = {
+            "symbol": symbol,
+        }
+        return self._make_request("spot/pairs-markets", params) or []
+
+    def get_spot_price_history(
+        self,
+        exchange: str,
+        symbol: str,
+        interval: str = "1h",
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Price OHLC History - Historical OHLC price data for spot trading.
+
+        Args:
+            exchange: Exchange name (e.g., Binance, OKX)
+            symbol: Trading pair (e.g., BTCUSDT)
+            interval: Data aggregation time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": symbol,
+            "interval": interval,
+        }
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
         return self._make_request("spot/price/history", params) or []
+
+    # ---------- Open Interest Aggregated Stablecoin History ----------
+    def get_open_interest_aggregated_stablecoin_history(
+        self,
+        exchange_list: str,
+        symbol: str,
+        interval: str = "1d",
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get OHLC Aggregated Stablecoin Margin History - OHLC data for aggregated stablecoin margin open interest.
+
+        Args:
+            exchange_list: Comma-separated exchange names (e.g., "Binance,OKX,Bybit")
+            symbol: Trading coin (e.g., BTC)
+            interval: Time interval for data aggregation (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+        }
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("futures/open-interest/aggregated-stablecoin-history", params) or []
+
+    # ---------- Exchange Rank ----------
+    def get_exchange_rank(
+        self,
+        symbol: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Exchange Rank - Exchange rankings by open interest, volume, and liquidations.
+
+        Args:
+            symbol: Trading symbol (e.g., BTC)
+        """
+        params: Dict[str, Any] = {
+            "symbol": symbol,
+        }
+        return self._make_request("futures/exchange-rank", params) or []
 
     # ---------- Macro Overlay ----------
     def get_bitcoin_vs_global_m2_growth(self) -> List[Dict[str, Any]]:

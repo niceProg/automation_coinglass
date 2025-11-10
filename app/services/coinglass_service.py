@@ -464,12 +464,12 @@ class CoinglassService:
                     # ("exchange_assets", "cg_exchange_assets"),  # DISABLED
                     # ("exchange_balance_list", "cg_exchange_balance_list"),  # DISABLED - Not documented
                     # ("exchange_onchain_transfers", "cg_exchange_onchain_transfers"),  # DISABLED
-                    # ("spot_orderbook", "cg_spot_orderbook_history"),  # DISABLED
-                    # ("spot_orderbook_aggregated", "cg_spot_orderbook_aggregated"),  # DISABLED
+                    ("spot_orderbook", "cg_spot_orderbook_history"),
+                    ("spot_orderbook_aggregated", "cg_spot_orderbook_aggregated"),
                     # Spot Market Tables
                     # ("spot_supported_exchange_pairs", "cg_spot_supported_exchange_pairs"),  # DISABLED
-                    # ("spot_coins_markets", "cg_spot_coins_markets"),  # DISABLED
-                    # ("spot_pairs_markets", "cg_spot_pairs_markets"),  # DISABLED
+                    ("spot_coins_markets", "cg_spot_coins_markets"),
+                    ("spot_pairs_markets", "cg_spot_pairs_markets"),
                     ("spot_price_history", "cg_spot_price_history"),
                     # Bitcoin ETF Tables
                     ("bitcoin_etf_list", "cg_bitcoin_etf_list"),
@@ -497,9 +497,9 @@ class CoinglassService:
                         # elif table == "cg_exchange_balance_list":  # DISABLED - Not documented
                         #     # These tables don't have a time column, use updated_at instead
                         #     cur.execute(f"SELECT COUNT(*) as count, MAX(UNIX_TIMESTAMP(updated_at) * 1000) as latest_time FROM {table}")
-                        # elif table in ["cg_spot_supported_exchange_pairs", "cg_spot_coins_markets", "cg_spot_pairs_markets"]:  # DISABLED
-                        #     # These tables don't have a time column, use updated_at instead
-                        #     cur.execute(f"SELECT COUNT(*) as count, MAX(UNIX_TIMESTAMP(updated_at) * 1000) as latest_time FROM {table}")
+                        elif table in ["cg_spot_coins_markets", "cg_spot_pairs_markets"]:
+                            # These tables don't have a time column, use updated_at instead
+                            cur.execute(f"SELECT COUNT(*) as count, MAX(UNIX_TIMESTAMP(updated_at) * 1000) as latest_time FROM {table}")
                         else:
                             cur.execute(f"SELECT COUNT(*) as count, MAX(time) as latest_time FROM {table}")
 
