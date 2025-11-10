@@ -1,0 +1,82 @@
+# app/providers/coinglass/pipelines/options.py
+import logging
+from typing import Any, Dict, List
+from app.repositories.coinglass_repository import CoinglassRepository
+
+logger = logging.getLogger(__name__)
+
+
+def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Options Pipeline
+    Cadence: every 1-30 minutes
+    Endpoints:
+    - Option Max Pain
+    - Options Info
+    """
+    repo = CoinglassRepository(conn, logger)
+
+    # Options specific parameters
+    SYMBOLS = params.get("symbols", ["BTC", "ETH"])
+    EXCHANGES = params.get("exchanges", ["Deribit"])  # Default to Deribit for options
+
+    summary = {
+        "option_max_pain": 0,
+        "option_info": 0,
+        "option_max_pain_fetches": 0,
+        "option_info_fetches": 0,
+    }
+
+    # 1) Option Max Pain
+    for exchange in EXCHANGES:
+        for symbol in SYMBOLS:
+            try:
+                rows = client.get_option_max_pain(symbol=symbol, exchange=exchange)
+                if rows:
+                    saved = repo.upsert_option_max_pain(
+                        symbol=symbol, exchange=exchange, rows=rows
+                    )
+                    logger.info(
+                        f"✅ option_max_pain[{exchange}:{symbol}]: "
+                        f"received={len(rows)}, saved={saved}"
+                    )
+                    summary["option_max_pain"] += saved
+                else:
+                    logger.info(
+                        f"⚠️ option_max_pain[{exchange}:{symbol}]: No data (skipped)"
+                    )
+                summary["option_max_pain_fetches"] += 1
+            except Exception as e:
+                logger.warning(
+                    f"⚠️ option_max_pain[{exchange}:{symbol}]: Exception: {e} (skipped)"
+                )
+                summary["option_max_pain_fetches"] += 1
+                continue
+
+    # 2) Options Info
+    for symbol in SYMBOLS:
+        try:
+            rows = client.get_option_info(symbol=symbol)
+            if rows:
+                saved = repo.upsert_option_info(symbol=symbol, rows=rows)
+                logger.info(
+                    f"✅ option_info[{symbol}]: "
+                    f"received={len(rows)}, saved={saved}"
+                )
+                summary["option_info"] += saved
+            else:
+                logger.info(f"⚠️ option_info[{symbol}]: No data (skipped)")
+            summary["option_info_fetches"] += 1
+        except Exception as e:
+            logger.warning(f"⚠️ option_info[{symbol}]: Exception: {e} (skipped)")
+            summary["option_info_fetches"] += 1
+            continue
+
+    total_saved = summary["option_max_pain"] + summary["option_info"]
+    logger.info(
+        f"📦 Options summary -> total_saved={total_saved} | "
+        f"max_pain:{summary['option_max_pain']} (fetches:{summary['option_max_pain_fetches']}), "
+        f"info:{summary['option_info']} (fetches:{summary['option_info_fetches']})"
+    )
+
+    return summary

@@ -1,0 +1,757 @@
+services:
+  # =============================================================================
+  # SYSTEM ADMINISTRATION
+  # =============================================================================
+  setup:
+    build: .
+    container_name: coinglass_setup
+    env_file:
+      - .env
+    command: ["python", "main.py", "--setup"]
+    restart: "no"
+    profiles:
+      - setup
+    networks:
+      - coinglass_network
+
+  status:
+    build: .
+    container_name: coinglass_status
+    env_file:
+      - .env
+    command: ["python", "main.py", "--status"]
+    restart: "no"
+    profiles:
+      - monitoring
+    networks:
+      - coinglass_network
+
+  freshness:
+    build: .
+    container_name: coinglass_freshness
+    env_file:
+      - .env
+    command: ["python", "main.py", "--freshness"]
+    restart: "no"
+    profiles:
+      - monitoring
+    networks:
+      - coinglass_network
+
+  # =============================================================================
+  # LONG SHORT RATIO (5s delay) - Binance, Bybit
+  # =============================================================================
+  long_short_ratio_binance:
+    build: .
+    container_name: coinglass_long_short_ratio_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=5
+      - PIPELINE=long_short_ratio
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  long_short_ratio_bybit:
+    build: .
+    container_name: coinglass_long_short_ratio_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=5
+      - PIPELINE=long_short_ratio
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # FUNDING RATE (5s delay) - Binance, Bybit, CoinEx
+  # =============================================================================
+  funding_rate_binance:
+    build: .
+    container_name: coinglass_funding_rate_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=5
+      - PIPELINE=funding_rate
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  funding_rate_bybit:
+    build: .
+    container_name: coinglass_funding_rate_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=5
+      - PIPELINE=funding_rate
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  funding_rate_coinex:
+    build: .
+    container_name: coinglass_funding_rate_coinex
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=CoinEx
+      - DELAY=5
+      - PIPELINE=funding_rate
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # OPEN INTEREST (15s delay) - Binance, Bybit, CoinEx [DISABLED]
+  # =============================================================================
+  # open_interest_binance:
+  #   build: .
+  #   container_name: coinglass_open_interest_binance
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Binance
+  #     - DELAY=15
+  #     - PIPELINE=open_interest
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - derivatives
+  #     - production
+  #
+  # open_interest_bybit:
+  #   build: .
+  #   container_name: coinglass_open_interest_bybit
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Bybit
+  #     - DELAY=15
+  #     - PIPELINE=open_interest
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - derivatives
+  #     - production
+  #
+  # open_interest_coinex:
+  #   build: .
+  #   container_name: coinglass_open_interest_coinex
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=CoinEx
+  #     - DELAY=15
+  #     - PIPELINE=open_interest
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - derivatives
+  #     - production
+
+  # =============================================================================
+  # EXCHANGE ASSETS (15s delay) - Binance, Bybit, CoinEx [DISABLED]
+  # =============================================================================
+  # exchange_assets_binance:
+  #   build: .
+  #   container_name: coinglass_exchange_assets_binance
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Binance
+  #     - DELAY=15
+  #     - PIPELINE=exchange_assets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - exchange
+  #     - production
+
+  # exchange_assets_bybit:
+  #   build: .
+  #   container_name: coinglass_exchange_assets_bybit
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Bybit
+  #     - DELAY=15
+  #     - PIPELINE=exchange_assets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - exchange
+  #     - production
+
+  # exchange_assets_coinex:
+  #   build: .
+  #   container_name: coinglass_exchange_assets_coinex
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=CoinEx
+  #     - DELAY=15
+  #     - PIPELINE=exchange_assets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - exchange
+  #     - production
+
+  # =============================================================================
+  # SPOT ORDERBOOK (25s delay) - Binance, Bybit [DISABLED]
+  # =============================================================================
+  # spot_orderbook_binance:
+  #   build: .
+  #   container_name: coinglass_spot_orderbook_binance
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Binance
+  #     - DELAY=25
+  #     - PIPELINE=spot_orderbook
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+  #
+  # spot_orderbook_bybit:
+  #   build: .
+  #   container_name: coinglass_spot_orderbook_bybit
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Bybit
+  #     - DELAY=25
+  #     - PIPELINE=spot_orderbook
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # =============================================================================
+  # PAIRS MARKETS (25s delay) - No exchange filter [DISABLED]
+  # =============================================================================
+  # pairs_markets:
+  #   build: .
+  #   container_name: coinglass_pairs_markets
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=25
+  #     - PIPELINE=pairs_markets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - trading
+  #     - production
+
+  # =============================================================================
+  # SPOT PRICE HISTORY (25s delay) - Binance, Bybit
+  # =============================================================================
+  spot_price_history_binance:
+    build: .
+    container_name: coinglass_spot_price_history_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=25
+      - PIPELINE=spot_price_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_price_history_bybit:
+    build: .
+    container_name: coinglass_spot_price_history_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=25
+      - PIPELINE=spot_price_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  # =============================================================================
+  # OPTIONS (35s delay) - Binance, Bybit, OKX, Deribit
+  # =============================================================================
+  options_binance:
+    build: .
+    container_name: coinglass_options_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=35
+      - PIPELINE=options
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  options_bybit:
+    build: .
+    container_name: coinglass_options_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=35
+      - PIPELINE=options
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  options_okx:
+    build: .
+    container_name: coinglass_options_okx
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=OKX
+      - DELAY=35
+      - PIPELINE=options
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  options_deribit:
+    build: .
+    container_name: coinglass_options_deribit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Deribit
+      - DELAY=35
+      - PIPELINE=options
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # EXCHANGE BALANCE LIST (35s delay) - No exchange filter
+  # =============================================================================
+  exchange_balance_list:
+    build: .
+    container_name: coinglass_exchange_balance_list
+    env_file:
+      - .env
+    environment:
+      - DELAY=35
+      - PIPELINE=exchange_balance_list
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - exchange
+      - production
+
+  # =============================================================================
+  # EXCHANGE ONCHAIN TRANSFERS (35s delay) - No exchange filter [DISABLED]
+  # =============================================================================
+  # exchange_onchain_transfers:
+  #   build: .
+  #   container_name: coinglass_exchange_onchain_transfers
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=35
+  #     - PIPELINE=exchange_onchain_transfers
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - exchange
+  #     - production
+
+  # =============================================================================
+  # SPOT ORDERBOOK AGGREGATED (35s delay) - Binance, Bybit [DISABLED]
+  # =============================================================================
+  # spot_orderbook_aggregated_binance:
+  #   build: .
+  #   container_name: coinglass_spot_orderbook_aggregated_binance
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Binance
+  #     - DELAY=35
+  #     - PIPELINE=spot_orderbook_aggregated
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+  #
+  # spot_orderbook_aggregated_bybit:
+  #   build: .
+  #   container_name: coinglass_spot_orderbook_aggregated_bybit
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - EXCHANGE_FILTER=Bybit
+  #     - DELAY=35
+  #     - PIPELINE=spot_orderbook_aggregated
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # =============================================================================
+  # SPOT COINS MARKETS (35s delay) - No exchange filter [DISABLED]
+  # =============================================================================
+  # spot_coins_markets:
+  #   build: .
+  #   container_name: coinglass_spot_coins_markets
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=35
+  #     - PIPELINE=spot_coins_markets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # =============================================================================
+  # SPOT PAIRS MARKETS (35s delay) - No exchange filter [DISABLED]
+  # =============================================================================
+  # spot_pairs_markets:
+  #   build: .
+  #   container_name: coinglass_spot_pairs_markets
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=35
+  #     - PIPELINE=spot_pairs_markets
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # =============================================================================
+  # COINS MARKETS (45s delay) - Binance, Bybit, CoinEx, OKX, Bitget, Crypto.com, BingX, Coinbase, KuCoin
+  # =============================================================================
+  coins_markets_binance:
+    build: .
+    container_name: coinglass_coins_markets_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_bybit:
+    build: .
+    container_name: coinglass_coins_markets_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_coinex:
+    build: .
+    container_name: coinglass_coins_markets_coinex
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=CoinEx
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_okx:
+    build: .
+    container_name: coinglass_coins_markets_okx
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=OKX
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_bitget:
+    build: .
+    container_name: coinglass_coins_markets_bitget
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bitget
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_crypto_com:
+    build: .
+    container_name: coinglass_coins_markets_crypto_com
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Crypto.com
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_bingx:
+    build: .
+    container_name: coinglass_coins_markets_bingx
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=BingX
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_coinbase:
+    build: .
+    container_name: coinglass_coins_markets_coinbase
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Coinbase
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  coins_markets_kucoin:
+    build: .
+    container_name: coinglass_coins_markets_kucoin
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=KuCoin
+      - DELAY=45
+      - PIPELINE=coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - trading
+      - production
+
+  # =============================================================================
+  # BITCOIN ETF PIPELINES (55s delay) - No exchange filter
+  # =============================================================================
+  bitcoin_etf_list:
+    build: .
+    container_name: coinglass_bitcoin_etf_list
+    env_file:
+      - .env
+    environment:
+      - DELAY=55
+      - PIPELINE=bitcoin_etf_list
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  # DISABLED - Endpoint not documented in API markdown
+  # bitcoin_etf_history:
+  #   build: .
+  #   container_name: coinglass_bitcoin_etf_history
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=55
+  #     - PIPELINE=bitcoin_etf_history
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - etf
+  #     - production
+
+  bitcoin_etf_premium_discount_history:
+    build: .
+    container_name: coinglass_bitcoin_etf_premium_discount_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=55
+      - PIPELINE=bitcoin_etf_premium_discount_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  # =============================================================================
+  # REFERENCE DATA PIPELINES (No continuous execution needed) [DISABLED]
+  # =============================================================================
+  # spot_supported_exchange_pairs:
+  #   build: .
+  #   container_name: coinglass_spot_supported_exchange_pairs
+  #   env_file:
+  #     - .env
+  #   command: ["python", "main.py", "--server", "spot_supported_exchange_pairs"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # supported_exchange_pairs:
+  #   build: .
+  #   container_name: coinglass_supported_exchange_pairs
+  #   env_file:
+  #     - .env
+  #   command: ["python", "main.py", "--server", "supported_exchange_pairs"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   profiles:
+  #     - trading
+  #     - production
+
+networks:
+  coinglass_network:
+    driver: bridge
+    name: coinglass_automation_network
