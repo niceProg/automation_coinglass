@@ -23,6 +23,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     summary = {
         "lsr_global_account_ratio": 0,
+        "lsr_global_account_ratio_duplicates": 0,
         "lsr_global_account_fetches": 0
     }
 
@@ -41,9 +42,16 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         )
                         logger.info(
                             f"✅ lsr_global_account[{exchange}:{pair}:{interval}]: "
-                            f"received={len(rows)}, saved={saved}"
+                            f"received={len(rows)}, saved={saved.get('lsr_global_account_ratio', 0)}, duplicates={saved.get('lsr_global_account_ratio_duplicates', 0)}"
                         )
-                        summary["lsr_global_account_ratio"] += saved
+                        # Handle both old integer format and new dict format for backward compatibility
+                        if isinstance(saved, dict):
+                            summary["lsr_global_account_ratio"] += saved.get("lsr_global_account_ratio", 0)
+                            # Add duplicate info to summary if available
+                            if saved.get("lsr_global_account_ratio_duplicates", 0) > 0:
+                                summary["lsr_global_account_ratio_duplicates"] = summary.get("lsr_global_account_ratio_duplicates", 0) + saved.get("lsr_global_account_ratio_duplicates", 0)
+                        else:
+                            summary["lsr_global_account_ratio"] += saved
                     else:
                         logger.info(
                             f"⚠️ lsr_global_account[{exchange}:{pair}:{interval}]: No data (skipped)"
@@ -56,9 +64,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     summary["lsr_global_account_fetches"] += 1
                     continue
 
-    logger.info(
-        f"📦 Long/Short Ratio (Global Account) summary -> total_saved={summary['lsr_global_account_ratio']} | "
-        f"global_account:{summary['lsr_global_account_ratio']} (fetches:{summary['lsr_global_account_fetches']})"
-    )
+    if summary.get("lsr_global_account_ratio_duplicates", 0) > 0:
+        logger.info(
+            f"📦 Long/Short Ratio (Global Account) summary -> saved={summary['lsr_global_account_ratio']}, "
+            f"duplicates={summary['lsr_global_account_ratio_duplicates']} (fetches:{summary['lsr_global_account_fetches']})"
+        )
+    else:
+        logger.info(
+            f"📦 Long/Short Ratio (Global Account) summary -> saved={summary['lsr_global_account_ratio']} (fetches:{summary['lsr_global_account_fetches']})"
+        )
 
     return summary

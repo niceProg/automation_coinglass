@@ -377,6 +377,17 @@ def show_help():
 
     # Derivatives Market
     logger.info("\n📈 DERIVATIVES MARKET:")
+
+    # Open Interest Info Logger
+    logger.info("\n🔍 OPEN INTEREST ANALYSIS:")
+    logger.info("  📊 Comprehensive Open Interest Data Coverage:")
+    logger.info("     • Current OI snapshots by exchange and symbol")
+    logger.info("     • Historical OI OHLC data across multiple timeframes")
+    logger.info("     • Aggregated OI data across multiple exchanges")
+    logger.info("     • Stablecoin margin OI analysis (USDT/USDC backed positions)")
+    logger.info("     • OI metrics: Open interest value, quantity, and rankings")
+    logger.info("     • Exchange rankings by OI volume and market share")
+
     logger.info("  funding_rate                OHLC funding rate data (8h + 1h snapshots)")
     # logger.info("  oi_history                  Open interest OHLC history by exchange/symbol/interval [DISABLED]")
     logger.info("  oi_exchange_list           Current open interest data by exchange")
@@ -417,7 +428,7 @@ def show_help():
     logger.info("  bitcoin_etf_premium_discount_history  Premium/discount tracking")
 
     # Trading Market
-    logger.info("\n📊 TRADING MARKET:")
+    # logger.info("\n📊 TRADING MARKET:")
     # logger.info("  supported_exchange_pairs    Supported trading pairs reference")
     # logger.info("  pairs_markets               Trading pair market data")
     # logger.info("  coins_markets               Cryptocurrency market data [DISABLED]")

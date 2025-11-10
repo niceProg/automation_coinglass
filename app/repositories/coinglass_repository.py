@@ -531,10 +531,15 @@ class CoinglassRepository:
     # ===== ACTIVE METHODS BELOW =====
 
     # ===== LONG/SHORT RATIO =====
-    def upsert_lsr_global_account_ratio(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> int:
+    def upsert_lsr_global_account_ratio(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert global long/short account ratio."""
+        result = {
+            "lsr_global_account_ratio": 0,
+            "lsr_global_account_ratio_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_long_short_global_account_ratio_history (
@@ -557,22 +562,32 @@ class CoinglassRepository:
                         row.get("global_account_short_percent"),
                         row.get("global_account_long_short_ratio")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["lsr_global_account_ratio"] += 1
+                    elif cur.rowcount == 2:
+                        result["lsr_global_account_ratio_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error upserting lsr_global_account_ratio: {e}")
-            return 0
+            return result
 
-    def upsert_lsr_top_account_ratio(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> int:
+    def upsert_lsr_top_account_ratio(self, exchange: str, pair: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
         """
         Upsert Top Account Long/Short Ratio history.
 
         Endpoint: /api/futures/top-long-short-account-ratio/history
         Table: cg_long_short_top_account_ratio_history
         """
+        result = {
+            "lsr_top_account_ratio": 0,
+            "lsr_top_account_ratio_duplicates": 0
+        }
+
         if not rows:
-            return 0
+            return result
 
         sql = """
         INSERT INTO cg_long_short_top_account_ratio_history (
@@ -595,8 +610,13 @@ class CoinglassRepository:
                         row.get("top_account_short_percent"),
                         row.get("top_account_long_short_ratio")
                     ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["lsr_top_account_ratio"] += 1
+                    elif cur.rowcount == 2:
+                        result["lsr_top_account_ratio_duplicates"] += 1
             self.conn.commit()
-            return len(rows)
+            return result
         except pymysql.Error as e:
             self.conn.rollback()
             error_code = e.args[0] if e.args else 'unknown'
@@ -605,14 +625,14 @@ class CoinglassRepository:
                 f"Database error upserting lsr_top_account_ratio [{exchange}:{pair}:{interval}] - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
-            return 0
+            return result
         except Exception as e:
             self.conn.rollback()
             self.logger.error(
                 f"Unexpected error upserting lsr_top_account_ratio [{exchange}:{pair}:{interval}] - "
                 f"Type: {type(e).__name__}, Message: {str(e)}"
             )
-            return 0
+            return result
 
     # ===== LIQUIDATION =====
     def upsert_liquidation_aggregated_history(self, symbol: str, interval: str, rows: List[Dict]) -> Dict[str, int]:
