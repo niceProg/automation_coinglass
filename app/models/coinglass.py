@@ -335,22 +335,6 @@ COINGLASS_TABLES = {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     # ----- Spot Market Tables -----
-    "cg_spot_supported_exchange_pairs": """
-    CREATE TABLE IF NOT EXISTS cg_spot_supported_exchange_pairs (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        exchange_name VARCHAR(50) NOT NULL,
-        instrument_id VARCHAR(100) NOT NULL,
-        base_asset VARCHAR(20) NOT NULL,
-        quote_asset VARCHAR(20) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_exchange_instrument (exchange_name, instrument_id),
-        INDEX idx_exchange_name (exchange_name),
-        INDEX idx_base_asset (base_asset),
-        INDEX idx_quote_asset (quote_asset),
-        INDEX idx_instrument_id (instrument_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    """,
     "cg_spot_coins_markets": """
     CREATE TABLE IF NOT EXISTS cg_spot_coins_markets (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,

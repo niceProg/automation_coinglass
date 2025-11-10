@@ -35,7 +35,6 @@ COMMAND CATEGORIES:
 💰 SPOT MARKET:
     spot_orderbook                   Real-time orderbook snapshots for trading pairs
     spot_orderbook_aggregated        Aggregated orderbook data across exchanges
-    # spot_supported_exchange_pairs  Reference data for supported pairs (DISABLED)
     spot_coins_markets               Comprehensive coin market data
     spot_pairs_markets               Trading pair market data
     spot_price_history               Historical OHLC price data
@@ -401,7 +400,6 @@ def show_help():
         "  spot_orderbook              Real-time orderbook snapshots (all mandatory pairs)"
     )
     logger.info("  spot_orderbook_aggregated   Aggregated orderbook data (all symbols)")
-    # logger.info("  spot_supported_exchange_pairs  Reference data for supported pairs [DISABLED]")
     logger.info("  spot_coins_markets          Comprehensive coin market data")
     logger.info("  spot_pairs_markets          Trading pair market data")
     logger.info(
@@ -540,7 +538,7 @@ def main():
         help="Specific pipelines to run by category:\n"
         "Derivatives: funding_rate, oi_exchange_list, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis\n"
         "Exchange: exchange_assets [DISABLED], exchange_balance_list [DISABLED], exchange_onchain_transfers [DISABLED]\n"
-        "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history (spot_supported_exchange_pairs [DISABLED])\n"
+        "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history\n"
         "Bitcoin ETF: bitcoin_etf_list, bitcoin_etf_flows_history, bitcoin_etf_premium_discount_history\n"
         "Trading: supported_exchange_pairs [DISABLED], pairs_markets [DISABLED], coins_markets [DISABLED]\n"
         "Macro: bitcoin_vs_global_m2_growth\n"

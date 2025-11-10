@@ -664,15 +664,6 @@ class CoinglassClient:
         return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
 
     # ---------- Spot Markets ----------
-    def get_spot_supported_exchange_pairs(self) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Get Spot Supported Exchange Pairs - Reference data for supported spot trading pairs.
-
-        Returns:
-            Dictionary mapping exchange names to list of supported pairs
-        """
-        return self._make_request("spot/supported-exchange-pairs") or {}
-
     def get_spot_coins_markets(
         self,
         symbols: Optional[List[str]] = None,
@@ -858,3 +849,155 @@ class CoinglassClient:
         if end_time:
             params["end_time"] = str(end_time)
         return self._make_request("chain/whale-transfer", params) or []
+
+    # ===== NEW ENDPOINTS =====
+
+    def get_futures_footprint_history(
+        self,
+        exchange: str,
+        symbol: str,
+        interval: str = "1h",
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Futures Volume Footprint History - Shows taker buy/sell volumes at different price ranges.
+
+        Args:
+            exchange: Exchange name (Binance, OKX, Bybit, Hyperliquid)
+            symbol: Trading pair (e.g., BTCUSDT)
+            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": symbol,
+            "interval": interval,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("futures/volume/footprint-history", params) or []
+
+    def get_spot_large_orderbook_history(
+        self,
+        exchange: str,
+        symbol: str,
+        start_time: int,
+        end_time: int,
+        state: str = "1",
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Large Orderbook History - Historical data for large limit orders.
+
+        Args:
+            exchange: Exchange name (e.g., Binance)
+            symbol: Trading pair (e.g., BTCUSDT)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+            state: Order state (1=In Progress, 2=Finish, 3=Revoke)
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": symbol,
+            "start_time": str(start_time),
+            "end_time": str(end_time),
+            "state": state,
+        }
+        return self._make_request("spot/orderbook/large-limit-order-history", params) or []
+
+    def get_spot_large_orderbook(
+        self,
+        exchange: str,
+        symbol: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Large Orderbook - Current large limit orders.
+
+        Args:
+            exchange: Exchange name (e.g., Binance)
+            symbol: Trading pair (e.g., BTCUSDT)
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": symbol,
+        }
+        return self._make_request("spot/orderbook/large-limit-order", params) or []
+
+    def get_spot_aggregated_taker_volume_history(
+        self,
+        exchange_list: str,
+        symbol: str,
+        interval: str = "h1",
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        unit: str = "usd",
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Aggregated Taker Buy/Sell Volume History - Aggregated data across multiple exchanges.
+
+        Args:
+            exchange_list: List of exchange names (e.g., "Binance, OKX, Bybit")
+            symbol: Trading coin (e.g., BTC)
+            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+            unit: Data unit (usd or coin)
+        """
+        params: Dict[str, Any] = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+            "unit": unit,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("spot/aggregated-taker-buy-sell-volume/history", params) or []
+
+    def get_spot_taker_volume_history(
+        self,
+        exchange: str,
+        symbol: str,
+        interval: str = "1h",
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        unit: str = "usd",
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Taker Buy/Sell Volume History - Single exchange taker volume data.
+
+        Args:
+            exchange: Exchange name (e.g., Binance)
+            symbol: Trading coin (e.g., BTC)
+            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+            unit: Data unit (usd or coin)
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": symbol,
+            "interval": interval,
+            "unit": unit,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("spot/taker-buy-sell-volume/history", params) or []

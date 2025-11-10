@@ -1194,39 +1194,6 @@ class CoinglassRepository:
     #         return 0
 
     # ===== SPOT MARKET =====
-    # def upsert_spot_supported_exchange_pairs(self, data: Dict) -> int:
-    #     """Upsert spot supported exchange pairs data."""
-    #     if not data:
-    #         return 0
-
-    #     sql = """
-    #     INSERT INTO cg_spot_supported_exchange_pairs (
-    #         exchange_name, instrument_id, base_asset, quote_asset
-    #     ) VALUES (%s, %s, %s, %s)
-    #     ON DUPLICATE KEY UPDATE
-    #         base_asset=VALUES(base_asset),
-    #         quote_asset=VALUES(quote_asset),
-    #         updated_at=CURRENT_TIMESTAMP
-    #     """
-
-    #     try:
-    #         saved = 0
-    #         with self.conn.cursor() as cur:
-    #             for exchange_name, pairs in data.items():
-    #                 for pair in pairs:
-    #                     cur.execute(sql, (
-    #                         exchange_name,
-    #                         pair.get("instrument_id"),
-    #                         pair.get("base_asset"),
-    #                         pair.get("quote_asset")
-    #                     ))
-    #                     saved += 1
-    #         self.conn.commit()
-    #         return saved
-    #     except Exception as e:
-    #         self.conn.rollback()
-    #         self.logger.error(f"Error upserting spot_supported_exchange_pairs: {e}")
-    #         return 0
 
     # def upsert_spot_coins_markets(self, rows: List[Dict]) -> int:
     #     """Upsert spot coins markets data."""

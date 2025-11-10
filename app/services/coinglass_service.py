@@ -22,10 +22,15 @@ from app.providers.coinglass.pipelines import (
     # exchange_onchain_transfers,  # DISABLED
     spot_orderbook,
     spot_orderbook_aggregated,
-    # spot_supported_exchange_pairs,  # DISABLED - Reference data
     spot_coins_markets,
     spot_pairs_markets,
     spot_price_history,
+    # ===== NEW ENDPOINTS =====
+    futures_footprint_history,
+    spot_large_orderbook_history,
+    spot_large_orderbook,
+    spot_aggregated_taker_volume_history,
+    spot_taker_volume_history,
     bitcoin_etf_list,
     # bitcoin_etf_history,  # DISABLED - Endpoint not documented in API markdown
     bitcoin_etf_flows_history,
@@ -200,10 +205,6 @@ class CoinglassService:
             #     },
             # },
             # Spot Market Pipelines with mandatory requirements
-            # "spot_supported_exchange_pairs": {
-            #     "func": spot_supported_exchange_pairs.run,
-            #     "params": {},  # Reference data, no specific params needed
-            # },
             # "spot_coins_markets": {
             #     "func": spot_coins_markets.run,
             #     "params": {"symbols": ["BTC"], "per_page": 100, "page": 1},
@@ -329,6 +330,55 @@ class CoinglassService:
                 "func": whale_transfer.run,
                 "params": {
                     "symbols": ["BTC", "ETH", "SOL", "XRP", "DOGE"],
+                },
+            },
+            # ===== NEW ENDPOINTS =====
+            "futures_footprint_history": {
+                "func": futures_footprint_history.run,
+                "params": {
+                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "limit": 1000,
+                    "hours_back": 24,
+                },
+            },
+            "spot_large_orderbook_history": {
+                "func": spot_large_orderbook_history.run,
+                "params": {
+                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+                    "states": ["1", "2", "3"],  # All states: In Progress, Finish, Revoke
+                    "hours_back": 24,
+                },
+            },
+            "spot_large_orderbook": {
+                "func": spot_large_orderbook.run,
+                "params": {
+                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+                },
+            },
+            "spot_aggregated_taker_volume_history": {
+                "func": spot_aggregated_taker_volume_history.run,
+                "params": {
+                    "exchange_lists": ["Binance", "Binance,Bybit"],
+                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "limit": 1000,
+                    "unit": "usd",
+                    "hours_back": 24,
+                },
+            },
+            "spot_taker_volume_history": {
+                "func": spot_taker_volume_history.run,
+                "params": {
+                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "limit": 1000,
+                    "unit": "usd",
+                    "hours_back": 24,
                 },
             },
         }
@@ -467,7 +517,6 @@ class CoinglassService:
                     ("spot_orderbook", "cg_spot_orderbook_history"),
                     ("spot_orderbook_aggregated", "cg_spot_orderbook_aggregated"),
                     # Spot Market Tables
-                    # ("spot_supported_exchange_pairs", "cg_spot_supported_exchange_pairs"),  # DISABLED
                     ("spot_coins_markets", "cg_spot_coins_markets"),
                     ("spot_pairs_markets", "cg_spot_pairs_markets"),
                     ("spot_price_history", "cg_spot_price_history"),

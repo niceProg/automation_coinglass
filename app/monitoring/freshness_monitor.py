@@ -99,7 +99,6 @@ class DataFreshnessMonitor:
             "spot_orderbook_aggregated": FreshnessConfig(
                 "cg_spot_orderbook_aggregated", "time"
             ),
-            # "spot_supported_exchange_pairs": FreshnessConfig("cg_spot_supported_exchange_pairs", "updated_at", "datetime"),  # DISABLED - Reference data
             "spot_coins_markets": FreshnessConfig(
                 "cg_spot_coins_markets", "updated_at", "datetime"
             ),
@@ -107,6 +106,12 @@ class DataFreshnessMonitor:
                 "cg_spot_pairs_markets", "updated_at", "datetime"
             ),
             "spot_price_history": FreshnessConfig("cg_spot_price_history", "time"),
+            # ===== NEW ENDPOINTS =====
+            "futures_footprint_history": FreshnessConfig("cg_futures_footprint_history", "time"),
+            "spot_large_orderbook_history": FreshnessConfig("cg_spot_large_orderbook_history", "start_time"),
+            "spot_large_orderbook": FreshnessConfig("cg_spot_large_orderbook", "current_time"),
+            "spot_aggregated_taker_volume_history": FreshnessConfig("cg_spot_aggregated_taker_volume_history", "time"),
+            "spot_taker_volume_history": FreshnessConfig("cg_spot_taker_volume_history", "time"),
             # Bitcoin ETF Data
             "bitcoin_etf_list": FreshnessConfig(
                 "cg_bitcoin_etf_list", "update_timestamp"

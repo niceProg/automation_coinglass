@@ -16,10 +16,15 @@ from . import (
     # exchange_onchain_transfers,  # DISABLED
     spot_orderbook,
     spot_orderbook_aggregated,
-    # spot_supported_exchange_pairs,  # DISABLED - Reference data, can be enabled if needed
     spot_coins_markets,
     spot_pairs_markets,
     spot_price_history,
+    # ===== NEW ENDPOINTS =====
+    futures_footprint_history,
+    spot_large_orderbook_history,
+    spot_large_orderbook,
+    spot_aggregated_taker_volume_history,
+    spot_taker_volume_history,
     bitcoin_etf_list,
     # bitcoin_etf_history,  # DISABLED - Endpoint not documented in API markdown
     bitcoin_etf_flows_history,
@@ -51,10 +56,15 @@ __all__ = [
     # "exchange_onchain_transfers",  # DISABLED
     "spot_orderbook",
     "spot_orderbook_aggregated",
-    # "spot_supported_exchange_pairs",  # DISABLED - Reference data
     "spot_coins_markets",
     "spot_pairs_markets",
     "spot_price_history",
+    # ===== NEW ENDPOINTS =====
+    "futures_footprint_history",
+    "spot_large_orderbook_history",
+    "spot_large_orderbook",
+    "spot_aggregated_taker_volume_history",
+    "spot_taker_volume_history",
     "bitcoin_etf_list",
     # "bitcoin_etf_history",  # DISABLED - Endpoint not documented in API markdown
     "bitcoin_etf_flows_history",
