@@ -17,20 +17,4 @@ CRYPTOQUANT_TABLES = {
         INDEX idx_interval (`interval`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
-
-    # ----- Bitcoin Market Price Tables -----
-    "cq_btc_market_price": """
-    CREATE TABLE IF NOT EXISTS cq_btc_market_price (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        date DATE NOT NULL,
-        open DECIMAL(18,8),
-        high DECIMAL(18,8),
-        low DECIMAL(18,8),
-        close DECIMAL(18,8),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_date (date),
-        INDEX idx_date (date)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    """,
 }

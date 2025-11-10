@@ -7,7 +7,6 @@ from app.database.connection import get_connection
 from app.providers.cryptoquant.client import CryptoQuantClient
 from app.providers.cryptoquant.pipelines import (
     exchange_inflow_cdd,
-    btc_market_price,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,7 +53,6 @@ class CryptoQuantService:
             # Map pipeline names to pipeline functions
             pipelines = {
                 "exchange_inflow_cdd": exchange_inflow_cdd,
-                "btc_market_price": btc_market_price,
             }
 
             if pipeline_name not in pipelines:
@@ -94,7 +92,7 @@ class CryptoQuantService:
         if params is None:
             params = {}
 
-        pipelines = ["exchange_inflow_cdd", "btc_market_price"]
+        pipelines = ["exchange_inflow_cdd"]
         results = {}
 
         try:
@@ -147,33 +145,7 @@ class CryptoQuantService:
         finally:
             self._close()
 
-    def get_btc_market_price_data(self, start_date: str = None, end_date: str = None,
-                                limit: int = 100) -> List[Dict[str, Any]]:
-        """
-        Get Bitcoin market price data from database
-
-        Args:
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
-            limit: Maximum number of records to return
-
-        Returns:
-            List of dictionaries with price data
-        """
-        self._initialize()
-
-        try:
-            from app.repositories.cryptoquant_repository import CryptoQuantRepository
-            repo = CryptoQuantRepository(self.conn, self.logger)
-
-            return repo.get_btc_market_price_data(
-                start_date=start_date,
-                end_date=end_date,
-                limit=limit
-            )
-        finally:
-            self._close()
-
+    
     def get_available_exchanges(self) -> List[str]:
         """
         Get list of available exchanges for CDD data

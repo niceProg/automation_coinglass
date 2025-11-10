@@ -68,7 +68,6 @@ COMMAND CATEGORIES:
 
 🔬 CRYPTOQUANT ANALYTICS:
     exchange_inflow_cdd              Exchange Inflow CDD (Coin Days Destroyed) data
-    btc_market_price                 Bitcoin market price data (OHLC) for price overlay
 
 Usage Examples:
     # System Administration
@@ -620,7 +619,7 @@ def main():
         "Macro: bitcoin_vs_global_m2_growth\n"
         "Options: option_exchange_oi_history\n"
         "Sentiment: fear_greed_index, hyperliquid_whale_alert, whale_transfer\n"
-        "CryptoQuant: exchange_inflow_cdd, btc_market_price",
+        "CryptoQuant: exchange_inflow_cdd",
     )
 
     args = parser.parse_args()
@@ -653,7 +652,7 @@ def main():
 
     elif args.pipelines:
         # Check if any CryptoQuant pipelines are requested
-        cryptoquant_pipelines = ["exchange_inflow_cdd", "btc_market_price"]
+        cryptoquant_pipelines = ["exchange_inflow_cdd"]
         requested_cryptoquant = [p for p in args.pipelines if p in cryptoquant_pipelines]
         requested_coinglass = [p for p in args.pipelines if p not in cryptoquant_pipelines]
 
