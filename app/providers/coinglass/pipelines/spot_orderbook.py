@@ -61,13 +61,13 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                             )
                             logger.info(
                                 f"✅ spot_orderbook[{exchange}:{symbol}:{interval}:{range_percent}]: "
-                                f"received={len(rows)}, saved={saved.get('spot_orderbook', 0)}, duplicates={saved.get('spot_orderbook_duplicates', 0)}"
+                                f"received={len(rows)}, saved={saved.get('spot_orderbook_history', 0)}, duplicates={saved.get('spot_orderbook_history_duplicates', 0)}"
                             )
                             # Handle both old int format and new dict format for backward compatibility
                             if isinstance(saved, dict):
-                                summary["spot_orderbook"] += saved.get("spot_orderbook", 0)
-                                if saved.get("spot_orderbook_duplicates", 0) > 0:
-                                    summary["spot_orderbook_duplicates"] = summary.get("spot_orderbook_duplicates", 0) + saved.get("spot_orderbook_duplicates", 0)
+                                summary["spot_orderbook"] += saved.get("spot_orderbook_history", 0)
+                                if saved.get("spot_orderbook_history_duplicates", 0) > 0:
+                                    summary["spot_orderbook_duplicates"] = summary.get("spot_orderbook_duplicates", 0) + saved.get("spot_orderbook_history_duplicates", 0)
                             else:
                                 summary["spot_orderbook"] += saved
                         else:
