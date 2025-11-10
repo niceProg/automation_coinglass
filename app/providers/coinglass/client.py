@@ -990,7 +990,7 @@ class CoinglassClient:
         """
         params: Dict[str, Any] = {
             "exchange": exchange,
-            "symbol": symbol,
+            "instrument": symbol,  # Try "instrument" instead of "symbol"
             "interval": interval,
             "unit": unit,
         }

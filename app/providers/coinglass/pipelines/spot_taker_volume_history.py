@@ -23,7 +23,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     # Pipeline parameters
     EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])  # Only Binance and Bybit supported
-    SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])  # Base assets
+    SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])  # Base assets (same as aggregated)
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     LIMIT = params.get("limit", 1000)  # Default limit
     UNIT = params.get("unit", "usd")  # Default to USD
@@ -50,8 +50,9 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 try:
                     logger.info(f"Fetching taker volume history for {exchange} {symbol} {interval}")
 
-                    data = client.get_spot_taker_volume_history(
-                        exchange=exchange,
+                    # Use aggregated endpoint with single exchange as workaround
+                    data = client.get_spot_aggregated_taker_volume_history(
+                        exchange_list=exchange,
                         symbol=symbol,
                         interval=interval,
                         start_time=start_time,
