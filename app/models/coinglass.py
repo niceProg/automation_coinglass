@@ -857,12 +857,14 @@ COINGLASS_TABLES = {
     CREATE TABLE IF NOT EXISTS cg_option_exchange_oi_history_time_list (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         option_exchange_oi_history_id BIGINT NOT NULL,
-        time_value BIGINT NOT NULL,
+        timestamp_index INT NOT NULL,
+        timestamp BIGINT NOT NULL,
+        price DECIMAL(20, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (option_exchange_oi_history_id) REFERENCES cg_option_exchange_oi_history(id) ON DELETE CASCADE,
+        UNIQUE KEY uk_history_id_timestamp_index (option_exchange_oi_history_id, timestamp_index),
         INDEX idx_option_exchange_oi_history_id (option_exchange_oi_history_id),
-        INDEX idx_time_value (time_value),
-        UNIQUE KEY uk_oi_history_time (option_exchange_oi_history_id, time_value)
+        INDEX idx_timestamp (timestamp)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 
@@ -870,15 +872,15 @@ COINGLASS_TABLES = {
     CREATE TABLE IF NOT EXISTS cg_option_exchange_oi_history_exchange_data (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         option_exchange_oi_history_id BIGINT NOT NULL,
-        exchange_name VARCHAR(50) NOT NULL,
-        oi_value DECIMAL(20,8) NOT NULL,
-        timestamp_value BIGINT NOT NULL,
+        timestamp_index INT NOT NULL,
+        exchange VARCHAR(50) NOT NULL,
+        open_interest DECIMAL(30, 8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (option_exchange_oi_history_id) REFERENCES cg_option_exchange_oi_history(id) ON DELETE CASCADE,
+        UNIQUE KEY uk_history_id_timestamp_exchange (option_exchange_oi_history_id, timestamp_index, exchange),
         INDEX idx_option_exchange_oi_history_id (option_exchange_oi_history_id),
-        INDEX idx_exchange_name (exchange_name),
-        INDEX idx_timestamp_value (timestamp_value),
-        UNIQUE KEY uk_oi_history_exchange_time (option_exchange_oi_history_id, exchange_name, timestamp_value)
+        INDEX idx_exchange (exchange),
+        INDEX idx_timestamp_index (timestamp_index)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 

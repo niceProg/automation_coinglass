@@ -1850,7 +1850,7 @@ class CoinglassRepository:
     def upsert_option_exchange_oi_history(
         self, symbol: str, unit: str, range_param: str, data: Dict
     ) -> Dict[str, int]:
-        """Upsert Option Exchange OI History data with relational structure and duplicate detection."""
+        """Upsert Option Exchange OI History data with relational structure."""
         result = {
             "option_exchange_oi_history": 0,
             "option_exchange_oi_history_duplicates": 0,
@@ -1858,7 +1858,7 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
-                # Step 1: Insert or update main record
+                # First, insert/upsert the main record
                 main_sql = """
                 INSERT INTO cg_option_exchange_oi_history (
                     symbol, unit, `range`
@@ -1870,78 +1870,67 @@ class CoinglassRepository:
 
                 cur.execute(main_sql, (symbol, unit, range_param))
 
-                # Get the main record ID
+                # Get the ID of the main record
                 if cur.rowcount == 1:
                     # New insert
-                    main_affected = 1
                     option_exchange_oi_history_id = cur.lastrowid
-                else:
-                    # Update - get existing ID
-                    main_affected = 2
-                    get_id_sql = "SELECT id FROM cg_option_exchange_oi_history WHERE symbol = %s AND unit = %s AND `range` = %s"
-                    cur.execute(get_id_sql, (symbol, unit, range_param))
-                    result_row = cur.fetchone()
-                    option_exchange_oi_history_id = result_row[0] if result_row else None
-
-                if not option_exchange_oi_history_id:
-                    raise Exception("Failed to get option_exchange_oi_history_id")
-
-                # Step 2: Delete existing child records for updates
-                if main_affected == 2:
-                    delete_time_sql = "DELETE FROM cg_option_exchange_oi_history_time_list WHERE option_exchange_oi_history_id = %s"
-                    delete_exchange_sql = "DELETE FROM cg_option_exchange_oi_history_exchange_data WHERE option_exchange_oi_history_id = %s"
-                    cur.execute(delete_time_sql, (option_exchange_oi_history_id,))
-                    cur.execute(delete_exchange_sql, (option_exchange_oi_history_id,))
-
-                # Step 3: Extract data from API response structure
-                # The API response structure: data.data_map contains arrays of OI values
-                time_list = []
-                if isinstance(data, dict) and "data" in data and len(data["data"]) > 0:
-                    main_data = data["data"][0]  # Get first data object
-
-                    # Extract time_list and data_map from the correct location
-                    time_list = main_data.get("time_list", [])
-                    data_map = main_data.get("data_map", {})
-
-                    # Step 4: Insert time_list data
-                    if isinstance(time_list, list) and time_list:
-                        time_values = [(option_exchange_oi_history_id, time_val) for time_val in time_list]
-                        time_sql = """
-                        INSERT INTO cg_option_exchange_oi_history_time_list (
-                            option_exchange_oi_history_id, time_value
-                        )
-                        VALUES (%s, %s)
-                        """
-                        cur.executemany(time_sql, time_values)
-
-                    # Step 5: Insert exchange_data from data_map
-                    if isinstance(data_map, dict):
-                        for exchange_name, oi_values in data_map.items():
-                            if isinstance(oi_values, list):
-                                # Insert each OI value with its corresponding timestamp
-                                for i, oi_value in enumerate(oi_values):
-                                    if i < len(time_list):  # Ensure we have corresponding timestamp
-                                        try:
-                                            # Convert to decimal
-                                            oi_decimal = float(oi_value) if oi_value else 0.0
-                                            timestamp = time_list[i]
-
-                                            exchange_sql = """
-                                            INSERT INTO cg_option_exchange_oi_history_exchange_data (
-                                                option_exchange_oi_history_id, exchange_name, oi_value, timestamp_value
-                                            )
-                                            VALUES (%s, %s, %s, %s)
-                                            """
-                                            cur.execute(exchange_sql, (option_exchange_oi_history_id, exchange_name, oi_decimal, timestamp))
-                                        except (ValueError, TypeError):
-                                            # Skip invalid numeric values
-                                            continue
-
-                # Update result counts
-                if main_affected == 1:
                     result["option_exchange_oi_history"] = 1
                 else:
+                    # Update - get existing ID
+                    cur.execute(
+                        "SELECT id FROM cg_option_exchange_oi_history WHERE symbol = %s AND unit = %s AND `range` = %s",
+                        (symbol, unit, range_param)
+                    )
+                    option_exchange_oi_history_id = cur.fetchone()[0]
                     result["option_exchange_oi_history_duplicates"] = 1
+
+                # Delete existing child records to refresh data
+                cur.execute(
+                    "DELETE FROM cg_option_exchange_oi_history_time_list WHERE option_exchange_oi_history_id = %s",
+                    (option_exchange_oi_history_id,)
+                )
+                cur.execute(
+                    "DELETE FROM cg_option_exchange_oi_history_exchange_data WHERE option_exchange_oi_history_id = %s",
+                    (option_exchange_oi_history_id,)
+                )
+
+                # Extract data from JSON
+                time_list = data.get("time_list", [])
+                price_list = data.get("price_list", [])
+                data_map = data.get("data_map", {})
+
+                # Insert time list and price data
+                time_list_sql = """
+                INSERT INTO cg_option_exchange_oi_history_time_list (
+                    option_exchange_oi_history_id, timestamp_index, timestamp, price
+                )
+                VALUES (%s, %s, %s, %s)
+                """
+
+                time_list_data = []
+                for i, timestamp in enumerate(time_list):
+                    price = price_list[i] if i < len(price_list) else None
+                    time_list_data.append((option_exchange_oi_history_id, i, timestamp, price))
+
+                if time_list_data:
+                    cur.executemany(time_list_sql, time_list_data)
+
+                # Insert exchange data
+                exchange_data_sql = """
+                INSERT INTO cg_option_exchange_oi_history_exchange_data (
+                    option_exchange_oi_history_id, timestamp_index, exchange, open_interest
+                )
+                VALUES (%s, %s, %s, %s)
+                """
+
+                exchange_data_list = []
+                for exchange, oi_values in data_map.items():
+                    for i, oi_value in enumerate(oi_values):
+                        if i < len(time_list):  # Only insert if timestamp exists
+                            exchange_data_list.append((option_exchange_oi_history_id, i, exchange, oi_value))
+
+                if exchange_data_list:
+                    cur.executemany(exchange_data_sql, exchange_data_list)
 
             self.conn.commit()
             return result
@@ -1954,114 +1943,6 @@ class CoinglassRepository:
             self.conn.rollback()
             self.logger.error(f"Unexpected error upserting option_exchange_oi_history: {e}")
             return result
-
-    def get_option_exchange_oi_history_with_relations(
-        self, symbol: str = None, unit: str = None, range_param: str = None, limit: int = 100
-    ) -> list:
-        """
-        Retrieve Option Exchange OI History data with time_list and exchange_data relations.
-
-        Args:
-            symbol: Filter by symbol (optional)
-            unit: Filter by unit (optional)
-            range_param: Filter by range (optional)
-            limit: Maximum number of main records to return
-
-        Returns:
-            List of dictionaries with complete relational data
-        """
-        try:
-            with self.conn.cursor() as cur:
-                # Build WHERE clause
-                conditions = []
-                params = []
-
-                if symbol:
-                    conditions.append("h.symbol = %s")
-                    params.append(symbol)
-                if unit:
-                    conditions.append("h.unit = %s")
-                    params.append(unit)
-                if range_param:
-                    conditions.append("h.`range` = %s")
-                    params.append(range_param)
-
-                where_clause = " AND ".join(conditions) if conditions else "1=1"
-                params.append(limit)
-
-                # Get main records first
-                main_query = f"""
-                SELECT
-                    h.id, h.symbol, h.unit, h.`range`, h.created_at, h.updated_at
-                FROM cg_option_exchange_oi_history h
-                WHERE {where_clause}
-                ORDER BY h.updated_at DESC
-                LIMIT %s
-                """
-
-                cur.execute(main_query, tuple(params))
-                main_rows = cur.fetchall()
-
-                results = []
-                for main_row in main_rows:
-                    option_exchange_oi_history_id = main_row[0]
-
-                    # Get time_list for this record
-                    time_query = """
-                    SELECT time_value
-                    FROM cg_option_exchange_oi_history_time_list
-                    WHERE option_exchange_oi_history_id = %s
-                    ORDER BY time_value
-                    """
-                    cur.execute(time_query, (option_exchange_oi_history_id,))
-                    time_rows = cur.fetchall()
-                    time_list = [row[0] for row in time_rows]
-
-                    # Get exchange_data for this record organized by exchange and timestamp
-                    exchange_query = """
-                    SELECT exchange_name, timestamp_value, oi_value
-                    FROM cg_option_exchange_oi_history_exchange_data
-                    WHERE option_exchange_oi_history_id = %s
-                    ORDER BY exchange_name, timestamp_value
-                    """
-                    cur.execute(exchange_query, (option_exchange_oi_history_id,))
-                    exchange_rows = cur.fetchall()
-
-                    # Build data_map structure
-                    data_map = {}
-                    for exchange_row in exchange_rows:
-                        exchange_name = exchange_row[0]
-                        timestamp_value = exchange_row[1]
-                        oi_value = float(exchange_row[2])
-
-                        if exchange_name not in data_map:
-                            data_map[exchange_name] = []
-
-                        # Find the index of this timestamp in time_list and place oi_value accordingly
-                        if timestamp_value in time_list:
-                            index = time_list.index(timestamp_value)
-                            # Ensure array is long enough
-                            while len(data_map[exchange_name]) <= index:
-                                data_map[exchange_name].append(None)
-                            data_map[exchange_name][index] = oi_value
-
-                    result_dict = {
-                        'id': main_row[0],
-                        'symbol': main_row[1],
-                        'unit': main_row[2],
-                        'range': main_row[3],
-                        'created_at': main_row[4],
-                        'updated_at': main_row[5],
-                        'time_list': time_list,
-                        'data_map': data_map
-                    }
-                    results.append(result_dict)
-
-                return results
-
-        except Exception as e:
-            self.logger.error(f"Error retrieving option_exchange_oi_history with relations: {e}")
-            return []
 
     # ========== Sentiment ==========
     def upsert_fear_greed_index(self, data: Dict) -> Dict[str, int]:

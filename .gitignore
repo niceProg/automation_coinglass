@@ -34,7 +34,7 @@ logs/
 
 # Data
 data/
-*.json
+# *.json
 *.csv
 
 # IDE
