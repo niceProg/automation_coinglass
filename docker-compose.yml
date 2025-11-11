@@ -48,7 +48,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=5
+      - DELAY=30
       - PIPELINE=long_short_ratio
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=5
+      - DELAY=30
       - PIPELINE=long_short_ratio
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -85,7 +85,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=5
+      - DELAY=10
       - PIPELINE=funding_rate
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -102,7 +102,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=5
+      - DELAY=10
       - PIPELINE=funding_rate
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -119,7 +119,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=CoinEx
-      - DELAY=5
+      - DELAY=10
       - PIPELINE=funding_rate
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -303,7 +303,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=25
+      - DELAY=60
       - PIPELINE=spot_price_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -320,7 +320,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=25
+      - DELAY=60
       - PIPELINE=spot_price_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -340,7 +340,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=35
+      - DELAY=10
       - PIPELINE=options
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -357,7 +357,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=35
+      - DELAY=10
       - PIPELINE=options
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -374,7 +374,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=OKX
-      - DELAY=35
+      - DELAY=10
       - PIPELINE=options
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -391,7 +391,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Deribit
-      - DELAY=35
+      - DELAY=10
       - PIPELINE=options
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -440,60 +440,60 @@ services:
   #     - production
 
   # =============================================================================
-  # SPOT ORDERBOOK AGGREGATED (35s delay) - Binance, Bybit [DISABLED]
+  # SPOT ORDERBOOK AGGREGATED (35s delay) - Binance, Bybit
   # =============================================================================
-  # spot_orderbook_aggregated_binance:
-  #   build: .
-  #   container_name: coinglass_spot_orderbook_aggregated_binance
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - EXCHANGE_FILTER=Binance
-  #     - DELAY=35
-  #     - PIPELINE=spot_orderbook_aggregated
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
-  #
-  # spot_orderbook_aggregated_bybit:
-  #   build: .
-  #   container_name: coinglass_spot_orderbook_aggregated_bybit
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - EXCHANGE_FILTER=Bybit
-  #     - DELAY=35
-  #     - PIPELINE=spot_orderbook_aggregated
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
+  spot_orderbook_aggregated_binance:
+    build: .
+    container_name: coinglass_spot_orderbook_aggregated_binance
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Binance
+      - DELAY=10
+      - PIPELINE=spot_orderbook_aggregated
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
+
+  spot_orderbook_aggregated_bybit:
+    build: .
+    container_name: coinglass_spot_orderbook_aggregated_bybit
+    env_file:
+      - .env
+    environment:
+      - EXCHANGE_FILTER=Bybit
+      - DELAY=10
+      - PIPELINE=spot_orderbook_aggregated
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
 
   # =============================================================================
-  # SPOT COINS MARKETS (35s delay) - No exchange filter [DISABLED]
+  # SPOT COINS MARKETS (35s delay) - No exchange filter
   # =============================================================================
-  # spot_coins_markets:
-  #   build: .
-  #   container_name: coinglass_spot_coins_markets
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - DELAY=35
-  #     - PIPELINE=spot_coins_markets
-  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-  #   restart: unless-stopped
-  #   networks:
-  #     - coinglass_network
-  #   profiles:
-  #     - spot
-  #     - production
+  spot_coins_markets:
+    build: .
+    container_name: coinglass_spot_coins_markets
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=spot_coins_markets
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - spot
+      - production
 
   # =============================================================================
   # SPOT PAIRS MARKETS (35s delay) - No exchange filter [ENABLED]
@@ -504,7 +504,7 @@ services:
     env_file:
       - .env
     environment:
-      - DELAY=35
+      - DELAY=60
       - PIPELINE=spot_pairs_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -523,7 +523,7 @@ services:
     env_file:
       - .env
     environment:
-      - DELAY=60
+      - DELAY=900
       - PIPELINE=exchange_inflow_cdd
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -543,7 +543,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -560,7 +560,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -577,7 +577,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=CoinEx
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -594,7 +594,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=OKX
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -611,7 +611,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bitget
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -628,7 +628,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Crypto.com
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -645,7 +645,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=BingX
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -662,7 +662,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Coinbase
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -679,7 +679,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=KuCoin
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -698,7 +698,7 @@ services:
     env_file:
       - .env
     environment:
-      - DELAY=55
+      - DELAY=30
       - PIPELINE=bitcoin_etf_list
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -715,7 +715,7 @@ services:
   #   env_file:
   #     - .env
   #   environment:
-  #     - DELAY=55
+  #     - DELAY=30
   #     - PIPELINE=bitcoin_etf_history
   #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
   #   restart: unless-stopped
@@ -731,8 +731,24 @@ services:
     env_file:
       - .env
     environment:
-      - DELAY=55
+      - DELAY=30
       - PIPELINE=bitcoin_etf_premium_discount_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  bitcoin_etf_flows_history:
+    build: .
+    container_name: coinglass_bitcoin_etf_flows_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=bitcoin_etf_flows_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -788,7 +804,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=futures_footprint_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -805,7 +821,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=45
+      - DELAY=30
       - PIPELINE=futures_footprint_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -862,7 +878,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=25
+      - DELAY=15
       - PIPELINE=spot_large_orderbook
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -879,7 +895,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=25
+      - DELAY=15
       - PIPELINE=spot_large_orderbook
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -898,7 +914,7 @@ services:
     env_file:
       - .env
     environment:
-      - DELAY=30
+      - DELAY=60
       - PIPELINE=spot_aggregated_taker_volume_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -918,7 +934,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Binance
-      - DELAY=30
+      - DELAY=60
       - PIPELINE=spot_taker_volume_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -935,7 +951,7 @@ services:
       - .env
     environment:
       - EXCHANGE_FILTER=Bybit
-      - DELAY=30
+      - DELAY=60
       - PIPELINE=spot_taker_volume_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
@@ -943,6 +959,130 @@ services:
       - coinglass_network
     profiles:
       - spot
+      - production
+
+  # =============================================================================
+  # SENTIMENT & ON-CHAIN PIPELINES
+  # =============================================================================
+  fear_greed_index:
+    build: .
+    container_name: coinglass_fear_greed_index
+    env_file:
+      - .env
+    environment:
+      - DELAY=3600
+      - PIPELINE=fear_greed_index
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  hyperliquid_whale_alert:
+    build: .
+    container_name: coinglass_hyperliquid_whale_alert
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=hyperliquid_whale_alert
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  whale_transfer:
+    build: .
+    container_name: coinglass_whale_transfer
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=whale_transfer
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - etf
+      - production
+
+  # =============================================================================
+  # LIQUIDATION PIPELINES
+  # =============================================================================
+  liquidation_aggregated:
+    build: .
+    container_name: coinglass_liquidation_aggregated
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=liquidation_aggregated
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  liquidation_heatmap:
+    build: .
+    container_name: coinglass_liquidation_heatmap
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=liquidation_heatmap
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # FUTURES BASIS PIPELINE
+  # =============================================================================
+  futures_basis:
+    build: .
+    container_name: coinglass_futures_basis
+    env_file:
+      - .env
+    environment:
+      - DELAY=45
+      - PIPELINE=futures_basis
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # OPEN INTEREST AGGREGATED HISTORY PIPELINE
+  # =============================================================================
+  oi_aggregated_history:
+    build: .
+    container_name: coinglass_oi_aggregated_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=20
+      - PIPELINE=oi_aggregated_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    profiles:
+      - derivatives
       - production
 
   # =============================================================================
