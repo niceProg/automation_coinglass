@@ -41,8 +41,11 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
             result = repo.upsert_bitcoin_etf_flows_history(rows)
             flows_saved = result.get("bitcoin_etf_flows", 0)
             flows_duplicates = result.get("bitcoin_etf_flows_duplicates", 0)
+            flows_received = result.get("bitcoin_etf_flows_received", 0)
+
             details_saved = result.get("bitcoin_etf_flows_details", 0)
             details_duplicates = result.get("bitcoin_etf_flows_details_duplicates", 0)
+            details_received = result.get("bitcoin_etf_flows_details_received", 0)
 
             summary["bitcoin_etf_flows"] += flows_saved
             summary["bitcoin_etf_flows_duplicates"] += flows_duplicates
@@ -50,8 +53,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
             summary["bitcoin_etf_flows_details_duplicates"] += details_duplicates
 
             logger.info(
-                f"✅ ETF flows: received={len(rows)}, saved={flows_saved}, duplicates={flows_duplicates} | "
-                f"Details: saved={details_saved}, duplicates={details_duplicates} ✅"
+                f"✅ Flows history: received={flows_received}, saved={flows_saved}, duplicates={flows_duplicates} | "
+                f"Flows details: received={details_received}, saved={details_saved}, duplicates={details_duplicates} ✅"
             )
         else:
             logger.warning("No data returned for ETF flows history")

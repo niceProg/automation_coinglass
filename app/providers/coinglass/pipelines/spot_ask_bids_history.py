@@ -64,10 +64,23 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                             result = repo.upsert_spot_ask_bids_history_batch(
                                 exchange, symbol, interval, range_percent, data
                             )
-                            logger.info(
-                                f"✅ ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                f"received={len(data)}, saved={result['spot_ask_bids_history']}, duplicates={result['spot_ask_bids_history_duplicates']}"
-                            )
+                            received_count = len(data)
+                            saved_count = result['spot_ask_bids_history']
+                            duplicates_count = result['spot_ask_bids_history_duplicates']
+
+                            # Only log if there's activity
+                            if received_count > 0:
+                                logger.info(
+                                    f"✅ ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
+                                    f"received={received_count}, saved={saved_count}, duplicates={duplicates_count}"
+                                )
+
+                                # Log detailed breakdown if there are many duplicates
+                                if duplicates_count > 100:
+                                    logger.info(
+                                        f"📊 High duplicate rate: {duplicates_count}/{received_count} ({duplicates_count/received_count*100:.1f}%) "
+                                        f"- This is normal if multiple records have the same timestamp"
+                                    )
                             summary["ask_bids_history"] += result['spot_ask_bids_history']
                             summary["ask_bids_history_duplicates"] += result['spot_ask_bids_history_duplicates']
                         else:

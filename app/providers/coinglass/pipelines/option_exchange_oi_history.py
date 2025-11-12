@@ -30,22 +30,33 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     data = client.get_option_exchange_oi_history(
                         symbol=symbol, unit=unit, range_param=range_param
                     )
-                    if data:
-                        result = repo.upsert_option_exchange_oi_history(
-                            symbol=symbol, unit=unit, range_param=range_param, data=data
+                    if data and isinstance(data, dict) and data.get("data_map"):
+                        # Check if there's actual data in data_map
+                        data_map = data.get("data_map", {})
+                        has_valid_data = any(
+                            data_map.get(exchange) for exchange in data_map
                         )
-                        saved = result.get("option_exchange_oi_history", 0)
-                        duplicates = result.get("option_exchange_oi_history_duplicates", 0)
 
-                        logger.info(
-                            f"✅ option_exchange_oi_history[{symbol}:{unit}:{range_param}]: "
-                            f"saved={saved}, duplicates={duplicates}"
-                        )
-                        summary["option_exchange_oi_history"] += saved
-                        summary["option_exchange_oi_history_duplicates"] += duplicates
+                        if has_valid_data:
+                            result = repo.upsert_option_exchange_oi_history(
+                                symbol=symbol, unit=unit, range_param=range_param, data=data
+                            )
+                            saved = result.get("option_exchange_oi_history", 0)
+                            duplicates = result.get("option_exchange_oi_history_duplicates", 0)
+
+                            logger.info(
+                                f"✅ option_exchange_oi_history[{symbol}:{unit}:{range_param}]: "
+                                f"saved={saved}, duplicates={duplicates}"
+                            )
+                            summary["option_exchange_oi_history"] += saved
+                            summary["option_exchange_oi_history_duplicates"] += duplicates
+                        else:
+                            logger.info(
+                                f"⚠️ option_exchange_oi_history[{symbol}:{unit}:{range_param}]: Empty data_map (skipped)"
+                            )
                     else:
                         logger.info(
-                            f"⚠️ option_exchange_oi_history[{symbol}:{unit}:{range_param}]: No data (skipped)"
+                            f"⚠️ option_exchange_oi_history[{symbol}:{unit}:{range_param}]: Invalid or no data (skipped)"
                         )
                     summary["fetches"] += 1
                 except Exception as e:

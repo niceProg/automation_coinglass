@@ -1608,26 +1608,31 @@ class CoinglassRepository:
             updated_at=CURRENT_TIMESTAMP
         """
 
-        total_flows_inserted = 0
-        total_flows_updated = 0
-        total_details_inserted = 0
-        total_details_updated = 0
-
         try:
             with self.conn.cursor() as cur:
+                # Track records for accurate counting
+                total_main_flow_records = 0
+                main_flows_inserted = 0
+                main_flows_updated = 0
+
+                total_detail_records = 0
+                details_inserted = 0
+                details_updated = 0
+
                 for row in rows:
-                    # Skip if flow_usd is None or 0.00000000
+                    # Process main flows record
                     flow_usd = row.get("flow_usd")
                     if flow_usd is not None and flow_usd != 0:
-                        # Insert main flows record
-                        cur.execute(sql, (row.get("timestamp"), flow_usd))
+                        timestamp = row.get("timestamp")
+                        total_main_flow_records += 1
+
+                        cur.execute(sql, (timestamp, flow_usd))
 
                         # Get affected rows count for main flows (1 = insert, 2 = update)
-                        affected_rows = cur.rowcount
-                        if affected_rows == 1:
-                            total_flows_inserted += 1
-                        elif affected_rows == 2:
-                            total_flows_updated += 1
+                        if cur.rowcount == 1:
+                            main_flows_inserted += 1
+                        elif cur.rowcount == 2:
+                            main_flows_updated += 1
 
                     # Insert individual ETF flows
                     etf_flows = row.get("etf_flows", [])
@@ -1635,34 +1640,34 @@ class CoinglassRepository:
                         etf_flow_usd = etf_flow.get("flow_usd")
                         # Skip if flow_usd is None or 0.00000000
                         if etf_flow_usd is not None and etf_flow_usd != 0:
-                            cur.execute(
-                                etf_flows_sql,
-                                (
-                                    row.get("timestamp"),
-                                    etf_flow.get("etf_ticker"),
-                                    etf_flow_usd,
-                                ),
-                            )
+                            timestamp = row.get("timestamp")
+                            etf_ticker = etf_flow.get("etf_ticker")
+                            total_detail_records += 1
+
+                            cur.execute(etf_flows_sql, (timestamp, etf_ticker, etf_flow_usd))
 
                             # Get affected rows count for details (1 = insert, 2 = update)
-                            affected_rows = cur.rowcount
-                            if affected_rows == 1:
-                                total_details_inserted += 1
-                            elif affected_rows == 2:
-                                total_details_updated += 1
+                            if cur.rowcount == 1:
+                                details_inserted += 1
+                            elif cur.rowcount == 2:
+                                details_updated += 1
 
             self.conn.commit()
 
-            # Set the results
-            result["bitcoin_etf_flows"] = total_flows_inserted
-            result["bitcoin_etf_flows_duplicates"] = total_flows_updated
-            result["bitcoin_etf_flows_details"] = total_details_inserted
-            result["bitcoin_etf_flows_details_duplicates"] = total_details_updated
+            # Set the results with actual database operation counts
+            result["bitcoin_etf_flows"] = main_flows_inserted
+            result["bitcoin_etf_flows_duplicates"] = main_flows_updated
+            result["bitcoin_etf_flows_details"] = details_inserted
+            result["bitcoin_etf_flows_details_duplicates"] = details_updated
 
-            if total_flows_updated > 0 or total_details_updated > 0:
+            # Include the actual counts of records processed for each endpoint
+            result["bitcoin_etf_flows_received"] = total_main_flow_records
+            result["bitcoin_etf_flows_details_received"] = total_detail_records
+
+            if main_flows_updated > 0 or details_updated > 0:
                 self.logger.info(
-                    f"ETF Flows: Inserted {total_flows_inserted} fresh records, updated {total_flows_updated} existing records. "
-                    f"Details: Inserted {total_details_inserted} fresh records, updated {total_details_updated} existing records"
+                    f"ETF Flows: Inserted {main_flows_inserted} fresh records, updated {main_flows_updated} existing records. "
+                    f"Details: Inserted {details_inserted} fresh records, updated {details_updated} existing records"
                 )
 
             return result
@@ -1856,6 +1861,11 @@ class CoinglassRepository:
             "option_exchange_oi_history_duplicates": 0,
         }
 
+        # Return early if no data
+        if not data or not isinstance(data, dict):
+            logger.debug(f"No data provided for {symbol}:{unit}:{range_param}")
+            return result
+
         try:
             with self.conn.cursor() as cur:
                 # First, insert/upsert the main record
@@ -1941,7 +1951,7 @@ class CoinglassRepository:
             return result
         except Exception as e:
             self.conn.rollback()
-            self.logger.error(f"Unexpected error upserting option_exchange_oi_history: {e}")
+            self.logger.error(f"Unexpected error upserting option_exchange_oi_history for {symbol}:{unit}:{range_param}: {e}")
             return result
 
     # ========== Sentiment ==========
@@ -2702,18 +2712,31 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
+                # Track unique timestamps to calculate duplicates correctly
+                unique_timestamps = set()
+
                 for row in data:
+                    timestamp = row.get("time")
+
+                    # Track unique timestamps regardless of insert/update
+                    unique_timestamps.add(timestamp)
+
                     cur.execute(sql, (
                         exchange_name, symbol, interval, unit,
-                        row.get("time"),
+                        timestamp,
                         row.get("aggregated_buy_volume_usd"),
                         row.get("aggregated_sell_volume_usd")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
-                        result["saved"] += 1
-                    elif cur.rowcount == 2:
-                        result["duplicates"] += 1
+
+                # Calculate the correct number of records based on unique timestamps
+                total_records = len(data)
+                unique_records = len(unique_timestamps)
+
+                # All unique records are either new or updated, count them as "saved"
+                result["saved"] = unique_records
+                # The rest are duplicates
+                result["duplicates"] = total_records - unique_records
+
             self.conn.commit()
             return result
         except Exception as e:
@@ -2743,18 +2766,31 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
+                # Track unique timestamps to calculate duplicates correctly
+                unique_timestamps = set()
+
                 for row in data:
+                    timestamp = row.get("time")
+
+                    # Track unique timestamps regardless of insert/update
+                    unique_timestamps.add(timestamp)
+
                     cur.execute(sql, (
                         exchange, symbol, interval, unit,
-                        row.get("time"),
+                        timestamp,
                         row.get("aggregated_buy_volume_usd"),
                         row.get("aggregated_sell_volume_usd")
                     ))
-                    # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
-                        result["saved"] += 1
-                    elif cur.rowcount == 2:
-                        result["duplicates"] += 1
+
+                # Calculate the correct number of records based on unique timestamps
+                total_records = len(data)
+                unique_records = len(unique_timestamps)
+
+                # All unique records are either new or updated, count them as "saved"
+                result["saved"] = unique_records
+                # The rest are duplicates
+                result["duplicates"] = total_records - unique_records
+
             self.conn.commit()
             return result
         except Exception as e:
@@ -2786,6 +2822,9 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
+                # Track unique timestamps to calculate duplicates correctly
+                unique_timestamps = set()
+
                 for row in data:
                     # For now, use simple parsing - this could be improved later
                     base_asset = symbol.replace('USDT', '').replace('USD', '')
@@ -2793,19 +2832,35 @@ class CoinglassRepository:
                     if 'USD' not in symbol:
                         quote_asset = 'BTC'
 
+                    timestamp = row.get("time")
+
+                    # Check if this timestamp is unique
+                    is_new_record = timestamp not in unique_timestamps
+                    unique_timestamps.add(timestamp)
+
                     cur.execute(sql, (
                         exchange, symbol, base_asset, quote_asset, interval, range_percent,
-                        row.get("time"),
+                        timestamp,
                         row.get("bids_usd"),
                         row.get("bids_quantity"),
                         row.get("asks_usd"),
                         row.get("asks_quantity")
                     ))
+
                     # Get affected rows count (1 = insert, 2 = update)
                     if cur.rowcount == 1:
                         result["spot_ask_bids_history"] += 1
                     elif cur.rowcount == 2:
                         result["spot_ask_bids_history_duplicates"] += 1
+
+                # Calculate the correct number of duplicates
+                total_records = len(data)
+                unique_records = len(unique_timestamps)
+                actual_duplicates = total_records - unique_records
+
+                # Update the duplicates count to reflect the real number of duplicate records
+                result["spot_ask_bids_history_duplicates"] = actual_duplicates
+
             self.conn.commit()
             return result
         except Exception as e:
