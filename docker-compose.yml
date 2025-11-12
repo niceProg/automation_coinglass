@@ -39,17 +39,16 @@ services:
       - coinglass_network
 
   # =============================================================================
-  # LONG SHORT RATIO (5s delay) - Binance, Bybit
+  # LONG SHORT RATIO GLOBAL (30s delay) - Binance, Bybit
   # =============================================================================
-  long_short_ratio_binance:
+  long_short_ratio_global:
     build: .
-    container_name: coinglass_long_short_ratio_binance
+    container_name: coinglass_long_short_ratio_global
     env_file:
       - .env
     environment:
-      - EXCHANGE_FILTER=Binance
       - DELAY=30
-      - PIPELINE=long_short_ratio
+      - PIPELINE=long_short_ratio_global
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -61,15 +60,16 @@ services:
       - derivatives
       - production
 
-  long_short_ratio_bybit:
+  # LONG SHORT RATIO TOP (30s delay) - Binance, Bybit
+  # =============================================================================
+  long_short_ratio_top:
     build: .
-    container_name: coinglass_long_short_ratio_bybit
+    container_name: coinglass_long_short_ratio_top
     env_file:
       - .env
     environment:
-      - EXCHANGE_FILTER=Bybit
       - DELAY=30
-      - PIPELINE=long_short_ratio
+      - PIPELINE=long_short_ratio_top
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
