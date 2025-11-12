@@ -347,7 +347,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Binance
       - DELAY=10
-      - PIPELINE=options
+      - PIPELINE=option_exchange_oi_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -364,7 +364,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Bybit
       - DELAY=10
-      - PIPELINE=options
+      - PIPELINE=option_exchange_oi_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -381,7 +381,7 @@ services:
     environment:
       - EXCHANGE_FILTER=OKX
       - DELAY=10
-      - PIPELINE=options
+      - PIPELINE=option_exchange_oi_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -398,32 +398,13 @@ services:
     environment:
       - EXCHANGE_FILTER=Deribit
       - DELAY=10
-      - PIPELINE=options
+      - PIPELINE=option_exchange_oi_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
       - coinglass_network
     profiles:
       - derivatives
-      - production
-
-  # =============================================================================
-  # EXCHANGE BALANCE LIST (35s delay) - No exchange filter
-  # =============================================================================
-  exchange_balance_list:
-    build: .
-    container_name: coinglass_exchange_balance_list
-    env_file:
-      - .env
-    environment:
-      - DELAY=35
-      - PIPELINE=exchange_balance_list
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    profiles:
-      - exchange
       - production
 
   # =============================================================================
@@ -554,7 +535,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Binance
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -571,7 +552,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Bybit
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -588,7 +569,7 @@ services:
     environment:
       - EXCHANGE_FILTER=CoinEx
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -605,7 +586,7 @@ services:
     environment:
       - EXCHANGE_FILTER=OKX
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -622,7 +603,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Bitget
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -639,7 +620,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Crypto.com
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -656,7 +637,7 @@ services:
     environment:
       - EXCHANGE_FILTER=BingX
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -673,7 +654,7 @@ services:
     environment:
       - EXCHANGE_FILTER=Coinbase
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -690,7 +671,7 @@ services:
     environment:
       - EXCHANGE_FILTER=KuCoin
       - DELAY=30
-      - PIPELINE=coins_markets
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
