@@ -409,6 +409,46 @@ services:
       - spot
       - production
 
+  # Spot Ask Bids History
+  spot_ask_bids_history:
+    build: .
+    container_name: coinglass_spot_ask_bids_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=spot_ask_bids_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
+  # Spot Aggregated Ask Bids History
+  spot_aggregated_ask_bids_history:
+    build: .
+    container_name: coinglass_spot_aggregated_ask_bids_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=45
+      - PIPELINE=spot_aggregated_ask_bids_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
   # =============================================================================
   # BITCOIN ETF PIPELINES
   # =============================================================================

@@ -2761,3 +2761,100 @@ class CoinglassRepository:
             self.conn.rollback()
             self.logger.error(f"Error inserting spot taker volume history: {e}")
             return result
+
+    def upsert_spot_ask_bids_history_batch(self, exchange: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert spot ask bids history data in batch."""
+        result = {
+            "spot_ask_bids_history": 0,
+            "spot_ask_bids_history_duplicates": 0,
+        }
+
+        if not data:
+            return result
+
+        sql = """
+        INSERT INTO cg_spot_ask_bids_history (
+            exchange_name, symbol, base_asset, quote_asset, `interval`, range_percent,
+            time, bids_usd, bids_quantity, asks_usd, asks_quantity
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            bids_usd=VALUES(bids_usd),
+            bids_quantity=VALUES(bids_quantity),
+            asks_usd=VALUES(asks_usd),
+            asks_quantity=VALUES(asks_quantity)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    # Parse symbol to get base and quote assets
+                    symbol = row.get("symbol", "")
+                    base_asset = self._extract_base_asset(symbol)
+                    quote_asset = self._extract_quote_asset(symbol)
+
+                    cur.execute(sql, (
+                        exchange, symbol, base_asset, quote_asset, interval, range_percent,
+                        row.get("time"),
+                        row.get("bids_usd"),
+                        row.get("bids_quantity"),
+                        row.get("asks_usd"),
+                        row.get("asks_quantity")
+                    ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_ask_bids_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_ask_bids_history_duplicates"] += 1
+            self.conn.commit()
+            return result
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error upserting spot ask bids history batch: {e}")
+            return result
+
+    def upsert_spot_aggregated_ask_bids_history_batch(self, exchange_list: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert spot aggregated ask bids history data in batch."""
+        result = {
+            "spot_aggregated_ask_bids_history": 0,
+            "spot_aggregated_ask_bids_history_duplicates": 0,
+        }
+
+        if not data:
+            return result
+
+        sql = """
+        INSERT INTO cg_spot_aggregated_ask_bids_history (
+            exchange_list, symbol, base_asset, `interval`, range_percent,
+            time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            aggregated_bids_usd=VALUES(aggregated_bids_usd),
+            aggregated_bids_quantity=VALUES(aggregated_bids_quantity),
+            aggregated_asks_usd=VALUES(aggregated_asks_usd),
+            aggregated_asks_quantity=VALUES(aggregated_asks_quantity)
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                for row in data:
+                    base_asset = self._extract_base_asset(symbol)
+
+                    cur.execute(sql, (
+                        exchange_list, symbol, base_asset, interval, range_percent,
+                        row.get("time"),
+                        row.get("aggregated_bids_usd"),
+                        row.get("aggregated_bids_quantity"),
+                        row.get("aggregated_asks_usd"),
+                        row.get("aggregated_asks_quantity")
+                    ))
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
+                        result["spot_aggregated_ask_bids_history"] += 1
+                    elif cur.rowcount == 2:
+                        result["spot_aggregated_ask_bids_history_duplicates"] += 1
+            self.conn.commit()
+            return result
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error upserting spot aggregated ask bids history batch: {e}")
+            return result

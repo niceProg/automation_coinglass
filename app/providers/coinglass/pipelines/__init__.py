@@ -35,6 +35,9 @@ from . import (
     fear_greed_index,
     hyperliquid_whale_alert,
     whale_transfer,
+    # ===== ASK BIDS ENDPOINTS =====
+    spot_ask_bids_history,
+    spot_aggregated_ask_bids_history,
 )
 
 __all__ = [
@@ -73,4 +76,7 @@ __all__ = [
     "fear_greed_index",
     "hyperliquid_whale_alert",
     "whale_transfer",
+    # ===== ASK BIDS ENDPOINTS =====
+    "spot_ask_bids_history",
+    "spot_aggregated_ask_bids_history",
 ]
