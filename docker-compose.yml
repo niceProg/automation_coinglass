@@ -1128,8 +1128,5 @@ networks:
   coinglass_network:
     driver: bridge
     name: coinglass_automation_network
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
     driver_opts:
       com.docker.network.bridge.name: coinglass-br0
