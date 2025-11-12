@@ -21,8 +21,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     """
     repo = CoinglassRepository(conn, logger)
 
-    # Pipeline parameters
-    EXCHANGE_LISTS = params.get("exchange_lists", ["Binance", "Binance,Bybit"])  # Single and multiple exchanges
+    # Pipeline parameters - Individual exchanges instead of comma-separated lists
+    EXCHANGES = params.get("exchanges", ["Binance", "Bybit", "OKX"])  # Individual exchanges
     SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])  # Base assets
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     LIMIT = params.get("limit", 1000)  # Default limit
@@ -43,16 +43,16 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         "errors": 0
     }
 
-    logger.info(f"Starting Spot Aggregated Taker Volume History pipeline for symbols: {SYMBOLS}")
+    logger.info(f"Starting Spot Aggregated Taker Volume History pipeline for exchanges: {EXCHANGES}")
 
-    for exchange_list in EXCHANGE_LISTS:
+    for exchange in EXCHANGES:
         for symbol in SYMBOLS:
             for interval in INTERVALS:
                 try:
-                    logger.info(f"Fetching aggregated taker volume history for exchanges={exchange_list} {symbol} {interval}")
+                    logger.info(f"Fetching aggregated taker volume history for {exchange} {symbol} {interval}")
 
                     data = client.get_spot_aggregated_taker_volume_history(
-                        exchange_list=exchange_list,
+                        exchange_list=exchange,  # Use single exchange name
                         symbol=symbol,
                         interval=interval,
                         start_time=start_time,
@@ -63,23 +63,23 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
                     if data:
                         # Process and insert data with duplicate checking
-                        result = repo.insert_spot_aggregated_taker_volume_history(exchange_list, symbol, interval, UNIT, data)
+                        result = repo.insert_spot_aggregated_taker_volume_history(exchange, symbol, interval, UNIT, data)
                         logger.info(
-                            f"✅ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: "
+                            f"✅ spot_aggregated_taker_volume_history[{exchange}:{symbol}:{interval}]: "
                             f"received={len(data)}, saved={result['saved']}, duplicates={result['duplicates']}"
                         )
                         summary["aggregated_taker_volume_history"] += result['saved']
                         summary["aggregated_taker_volume_history_duplicates"] += result['duplicates']
                     else:
                         logger.info(
-                            f"⚠️ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: No data (skipped)"
+                            f"⚠️ spot_aggregated_taker_volume_history[{exchange}:{symbol}:{interval}]: No data (skipped)"
                         )
 
                     summary["fetches"] += 1
 
                 except Exception as e:
                     logger.warning(
-                        f"⚠️ spot_aggregated_taker_volume_history[{exchange_list}:{symbol}:{interval}]: Exception: {e} (skipped)"
+                        f"⚠️ spot_aggregated_taker_volume_history[{exchange}:{symbol}:{interval}]: Exception: {e} (skipped)"
                     )
                     summary["errors"] += 1
                     continue

@@ -2591,7 +2591,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_large_orderbook_history (
-            id, exchange_name, symbol, base_asset, quote_asset, price,
+            order_id, exchange_name, symbol, base_asset, quote_asset, limit_price,
             start_time, start_quantity, start_usd_value, current_quantity,
             current_usd_value, `current_time`, executed_volume, executed_usd_value,
             trade_count, order_side, order_state, order_end_time
@@ -2612,7 +2612,7 @@ class CoinglassRepository:
                 for row in data:
                     cur.execute(sql, (
                         row.get("id"), row.get("exchange_name"), row.get("symbol"),
-                        row.get("base_asset"), row.get("quote_asset"), row.get("price"),
+                        row.get("base_asset"), row.get("quote_asset"), row.get("limit_price"),
                         row.get("start_time"), row.get("start_quantity"), row.get("start_usd_value"),
                         row.get("current_quantity"), row.get("current_usd_value"), row.get("current_time"),
                         row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
@@ -2642,7 +2642,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_large_orderbook (
-            id, exchange_name, symbol, base_asset, quote_asset, price,
+            order_id, exchange_name, symbol, base_asset, quote_asset, limit_price,
             start_time, start_quantity, start_usd_value, current_quantity,
             current_usd_value, `current_time`, executed_volume, executed_usd_value,
             trade_count, order_side, order_state
@@ -2662,7 +2662,7 @@ class CoinglassRepository:
                 for row in data:
                     cur.execute(sql, (
                         row.get("id"), row.get("exchange_name"), row.get("symbol"),
-                        row.get("base_asset"), row.get("quote_asset"), row.get("price"),
+                        row.get("base_asset"), row.get("quote_asset"), row.get("limit_price"),
                         row.get("start_time"), row.get("start_quantity"), row.get("start_usd_value"),
                         row.get("current_quantity"), row.get("current_usd_value"), row.get("current_time"),
                         row.get("executed_volume"), row.get("executed_usd_value"), row.get("trade_count"),
@@ -2680,8 +2680,8 @@ class CoinglassRepository:
             self.logger.error(f"Error inserting spot large orderbook: {e}")
             return result
 
-    def insert_spot_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
-        """Insert spot aggregated taker volume history data."""
+    def insert_spot_aggregated_taker_volume_history(self, exchange_name: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
+        """Insert spot aggregated taker volume history data for individual exchanges."""
         result = {
             "saved": 0,
             "duplicates": 0
@@ -2692,7 +2692,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_aggregated_taker_volume_history (
-            exchange_list, symbol, `interval`, unit, time,
+            exchange_name, symbol, `interval`, unit, time,
             aggregated_buy_volume_usd, aggregated_sell_volume_usd
         ) VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
@@ -2704,7 +2704,7 @@ class CoinglassRepository:
             with self.conn.cursor() as cur:
                 for row in data:
                     cur.execute(sql, (
-                        exchange_list, symbol, interval, unit,
+                        exchange_name, symbol, interval, unit,
                         row.get("time"),
                         row.get("aggregated_buy_volume_usd"),
                         row.get("aggregated_sell_volume_usd")
