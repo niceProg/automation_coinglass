@@ -54,6 +54,9 @@ services:
     restart: unless-stopped
     networks:
       - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     profiles:
       - derivatives
       - production
@@ -71,6 +74,9 @@ services:
     restart: unless-stopped
     networks:
       - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     profiles:
       - derivatives
       - production
@@ -529,6 +535,10 @@ services:
     restart: unless-stopped
     networks:
       - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     profiles:
       - cryptoquant
       - production
@@ -1118,3 +1128,8 @@ networks:
   coinglass_network:
     driver: bridge
     name: coinglass_automation_network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: coinglass-br0

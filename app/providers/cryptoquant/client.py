@@ -28,27 +28,53 @@ class CryptoQuantClient:
 
         try:
             self.logger.debug(f"[CryptoQuant] GET {url}")
-            # Timeout 10 detik untuk avoid stuck
-            resp = requests.get(url, headers=self.headers, timeout=10)
-            resp.raise_for_status()
-            payload = resp.json()
 
-            # CryptoQuant API response structure
-            if payload.get("status", {}).get("code") == 200:
-                return payload.get("result", {})
+            # Try with different timeout strategies
+            for attempt in range(3):
+                try:
+                    # Progressive timeout: 15s -> 20s -> 25s
+                    timeout = 15 + (attempt * 5)
+                    self.logger.debug(f"[CryptoQuant] Attempt {attempt + 1}/3 with timeout {timeout}s")
 
-            # API error - log warning dan return None untuk skip
-            error_msg = payload.get("status", {}).get("message", "Unknown error")
-            self.logger.warning(
-                f"API error {endpoint}: {error_msg} - Skipping..."
-            )
-            return None
-        except requests.exceptions.Timeout:
-            self.logger.warning(f"Request timeout (10s) {endpoint} - Skipping...")
-            return None
-        except requests.exceptions.RequestException as e:
-            self.logger.warning(f"Request failed {endpoint}: {e} - Skipping...")
-            return None
+                    resp = requests.get(
+                        url,
+                        headers=self.headers,
+                        timeout=timeout,
+                        verify=True,  # Ensure SSL verification
+                        allow_redirects=True
+                    )
+                    resp.raise_for_status()
+                    payload = resp.json()
+
+                    # CryptoQuant API response structure
+                    if payload.get("status", {}).get("code") == 200:
+                        return payload.get("result", {})
+
+                    # API error - log warning dan return None untuk skip
+                    error_msg = payload.get("status", {}).get("message", "Unknown error")
+                    self.logger.warning(
+                        f"API error {endpoint}: {error_msg} - Skipping..."
+                    )
+                    return None
+
+                except requests.exceptions.Timeout:
+                    if attempt < 2:
+                        self.logger.warning(f"Request timeout ({timeout}s) {endpoint} - Retrying... ({attempt + 1}/3)")
+                        continue
+                    else:
+                        self.logger.warning(f"Request timeout ({timeout}s) {endpoint} - Skipping after 3 attempts...")
+                        return None
+                except requests.exceptions.ConnectionError as e:
+                    if attempt < 2:
+                        self.logger.warning(f"Connection error {endpoint}: {e} - Retrying... ({attempt + 1}/3)")
+                        continue
+                    else:
+                        self.logger.warning(f"Connection failed {endpoint}: {e} - Skipping after 3 attempts...")
+                        return None
+                except requests.exceptions.RequestException as e:
+                    self.logger.warning(f"Request failed {endpoint}: {e} - Skipping...")
+                    return None
+
         except Exception as e:
             self.logger.warning(f"Unexpected error {endpoint}: {e} - Skipping...")
             return None
