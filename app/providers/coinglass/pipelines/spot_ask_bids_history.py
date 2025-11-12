@@ -62,14 +62,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         if data:
                             # Process and insert data with duplicate checking
                             result = repo.upsert_spot_ask_bids_history_batch(
-                                exchange, interval, range_percent, data
+                                exchange, symbol, interval, range_percent, data
                             )
                             logger.info(
                                 f"✅ ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                f"received={len(data)}, saved={result['ask_bids_history']}, duplicates={result['ask_bids_history_duplicates']}"
+                                f"received={len(data)}, saved={result['spot_ask_bids_history']}, duplicates={result['spot_ask_bids_history_duplicates']}"
                             )
-                            summary["ask_bids_history"] += result['ask_bids_history']
-                            summary["ask_bids_history_duplicates"] += result['ask_bids_history_duplicates']
+                            summary["ask_bids_history"] += result['spot_ask_bids_history']
+                            summary["ask_bids_history_duplicates"] += result['spot_ask_bids_history_duplicates']
                         else:
                             logger.info(
                                 f"⚠️ ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"

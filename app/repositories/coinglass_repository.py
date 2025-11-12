@@ -2762,7 +2762,7 @@ class CoinglassRepository:
             self.logger.error(f"Error inserting spot taker volume history: {e}")
             return result
 
-    def upsert_spot_ask_bids_history_batch(self, exchange: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+    def upsert_spot_ask_bids_history_batch(self, exchange: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
         """Upsert spot ask bids history data in batch."""
         result = {
             "spot_ask_bids_history": 0,
@@ -2787,10 +2787,11 @@ class CoinglassRepository:
         try:
             with self.conn.cursor() as cur:
                 for row in data:
-                    # Parse symbol to get base and quote assets
-                    symbol = row.get("symbol", "")
-                    base_asset = self._extract_base_asset(symbol)
-                    quote_asset = self._extract_quote_asset(symbol)
+                    # For now, use simple parsing - this could be improved later
+                    base_asset = symbol.replace('USDT', '').replace('USD', '')
+                    quote_asset = 'USDT'
+                    if 'USD' not in symbol:
+                        quote_asset = 'BTC'
 
                     cur.execute(sql, (
                         exchange, symbol, base_asset, quote_asset, interval, range_percent,
@@ -2837,7 +2838,8 @@ class CoinglassRepository:
         try:
             with self.conn.cursor() as cur:
                 for row in data:
-                    base_asset = self._extract_base_asset(symbol)
+                    # For now, use simple parsing - this could be improved later
+                    base_asset = symbol.replace('USDT', '').replace('USD', '')
 
                     cur.execute(sql, (
                         exchange_list, symbol, base_asset, interval, range_percent,

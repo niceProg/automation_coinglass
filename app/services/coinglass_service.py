@@ -49,6 +49,9 @@ from app.providers.coinglass.pipelines import (
     fear_greed_index,
     hyperliquid_whale_alert,
     whale_transfer,
+    # ===== ASK BIDS ENDPOINTS =====
+    spot_ask_bids_history,
+    spot_aggregated_ask_bids_history,
 )
 from app.repositories.coinglass_repository import CoinglassRepository
 from app.core.config import settings
@@ -361,6 +364,27 @@ class CoinglassService:
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
                     "unit": "usd",
+                    "hours_back": 24,
+                },
+            },
+            # ===== ASK BIDS ENDPOINTS =====
+            "spot_ask_bids_history": {
+                "func": spot_ask_bids_history.run,
+                "params": {
+                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "ranges": ["0.25", "0.5"],
+                    "hours_back": 24,
+                },
+            },
+            "spot_aggregated_ask_bids_history": {
+                "func": spot_aggregated_ask_bids_history.run,
+                "params": {
+                    "exchange_lists": ["Binance", "Binance,Bybit"],
+                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "ranges": ["0.25", "0.5"],
                     "hours_back": 24,
                 },
             },
