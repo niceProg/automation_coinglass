@@ -381,7 +381,7 @@ class CoinglassService:
             "spot_aggregated_ask_bids_history": {
                 "func": spot_aggregated_ask_bids_history.run,
                 "params": {
-                    "exchange_lists": ["Binance", "Binance,Bybit"],
+                    "exchanges": ["Binance", "Bybit"],
                     "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "ranges": ["0.25", "0.5"],

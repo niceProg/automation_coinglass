@@ -2774,9 +2774,9 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_ask_bids_history (
-            id_order, exchange_name, symbol, base_asset, quote_asset, `interval`, range_percent,
+            exchange_name, symbol, base_asset, quote_asset, `interval`, range_percent,
             time, bids_usd, bids_quantity, asks_usd, asks_quantity
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             bids_usd=VALUES(bids_usd),
             bids_quantity=VALUES(bids_quantity),
@@ -2794,7 +2794,6 @@ class CoinglassRepository:
                         quote_asset = 'BTC'
 
                     cur.execute(sql, (
-                        row.get("id"),
                         exchange, symbol, base_asset, quote_asset, interval, range_percent,
                         row.get("time"),
                         row.get("bids_usd"),
@@ -2814,7 +2813,7 @@ class CoinglassRepository:
             self.logger.error(f"Error upserting spot ask bids history batch: {e}")
             return result
 
-    def upsert_spot_aggregated_ask_bids_history_batch(self, exchange_list: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+    def upsert_spot_aggregated_ask_bids_history_batch(self, exchange_name: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
         """Upsert spot aggregated ask bids history data in batch."""
         result = {
             "spot_aggregated_ask_bids_history": 0,
@@ -2826,7 +2825,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_aggregated_ask_bids_history (
-            exchange_list, symbol, base_asset, `interval`, range_percent,
+            exchange_name, symbol, base_asset, `interval`, range_percent,
             time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
@@ -2843,7 +2842,7 @@ class CoinglassRepository:
                     base_asset = symbol.replace('USDT', '').replace('USD', '')
 
                     cur.execute(sql, (
-                        exchange_list, symbol, base_asset, interval, range_percent,
+                        exchange_name, symbol, base_asset, interval, range_percent,
                         row.get("time"),
                         row.get("aggregated_bids_usd"),
                         row.get("aggregated_bids_quantity"),

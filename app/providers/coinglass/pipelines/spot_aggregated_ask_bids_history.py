@@ -22,11 +22,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGE_LISTS = params.get("exchange_lists", [
-        "ALL",  # All supported exchanges
-        "Binance,OKX,Bybit",  # Top 3 exchanges
-        "Binance,OKX,Bybit,Bitfinex,Kucoin",  # Top 5 exchanges
-    ])
+    EXCHANGES = params.get("exchanges", ["Binance", "Bybit", "OKX"])  # Individual exchanges
     SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL"])  # Base assets for aggregated data
     INTERVALS = params.get("intervals", ["h1", "h4", "h24", "d1"])  # Use API format
     RANGES = params.get("ranges", ["0.5", "1", "2", "5"])
@@ -45,17 +41,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         "errors": 0
     }
 
-    logger.info(f"Starting Spot Aggregated Ask Bids History pipeline for exchange lists: {EXCHANGE_LISTS}")
+    logger.info(f"Starting Spot Aggregated Ask Bids History pipeline for exchanges: {EXCHANGES}")
 
-    for exchange_list in EXCHANGE_LISTS:
+    for exchange in EXCHANGES:
         for symbol in SYMBOLS:
             for interval in INTERVALS:
                 for range_percent in RANGES:
                     try:
-                        logger.info(f"Fetching aggregated ask bids history for {exchange_list} {symbol} {interval} range={range_percent}")
+                        logger.info(f"Fetching aggregated ask bids history for {exchange} {symbol} {interval} range={range_percent}")
 
                         data = client.get_spot_aggregated_ask_bids_history(
-                            exchange_list=exchange_list,
+                            exchange_list=exchange,  # Use single exchange name
                             symbol=symbol,
                             interval=interval,
                             start_time=start_time,
@@ -66,24 +62,24 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         if data:
                             # Process and insert data with duplicate checking
                             result = repo.upsert_spot_aggregated_ask_bids_history_batch(
-                                exchange_list, symbol, interval, range_percent, data
+                                exchange, symbol, interval, range_percent, data
                             )
                             logger.info(
-                                f"✅ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: "
+                                f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
                                 f"received={len(data)}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
                             )
                             summary["aggregated_ask_bids_history"] += result['spot_aggregated_ask_bids_history']
                             summary["aggregated_ask_bids_history_duplicates"] += result['spot_aggregated_ask_bids_history_duplicates']
                         else:
                             logger.info(
-                                f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
+                                f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
                             )
 
                         summary["fetches"] += 1
 
                     except Exception as e:
                         logger.warning(
-                            f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
+                            f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
                         )
                         summary["errors"] += 1
                         continue
