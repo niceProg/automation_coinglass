@@ -39,358 +39,21 @@ services:
       - coinglass_network
 
   # =============================================================================
-  # COINGLASS ENDPOINTS - 1 SERVICE PER TABLE
+  # COINGLASS PIPELINES - 1 SERVICE PER ENDPOINT
   # =============================================================================
 
-  # Bitcoin ETF Flows Details
-  cg_bitcoin_etf_flows_details:
-    build: .
-    container_name: coinglass_bitcoin_etf_flows_details
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=bitcoin_etf_flows_details
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
+  # DERIVATIVES MARKET PIPELINES
+  # =============================================================================
 
-  # Bitcoin ETF Flows History
-  cg_bitcoin_etf_flows_history:
+  # Funding Rate
+  funding_rate:
     build: .
-    container_name: coinglass_bitcoin_etf_flows_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=bitcoin_etf_flows_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
-
-  # Bitcoin ETF List
-  cg_bitcoin_etf_list:
-    build: .
-    container_name: coinglass_bitcoin_etf_list
+    container_name: coinglass_funding_rate
     env_file:
       - .env
     environment:
       - DELAY=30
-      - PIPELINE=bitcoin_etf_list
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
-
-  # Bitcoin ETF Premium Discount History
-  cg_bitcoin_etf_premium_discount_history:
-    build: .
-    container_name: coinglass_bitcoin_etf_premium_discount_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=bitcoin_etf_premium_discount_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
-
-  # Fear Greed Index
-  cg_fear_greed_index:
-    build: .
-    container_name: coinglass_fear_greed_index
-    env_file:
-      - .env
-    environment:
-      - DELAY=3600
-      - PIPELINE=fear_greed_index
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
-
-  # Fear Greed Index Data List
-  cg_fear_greed_index_data_list:
-    build: .
-    container_name: coinglass_fear_greed_index_data_list
-    env_file:
-      - .env
-    environment:
-      - DELAY=3600
-      - PIPELINE=fear_greed_index_data_list
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - etf
-      - production
-
-  # Funding Rate Exchange List
-  cg_funding_rate_exchange_list:
-    build: .
-    container_name: coinglass_funding_rate_exchange_list
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=funding_rate_exchange_list
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Funding Rate History
-  cg_funding_rate_history:
-    build: .
-    container_name: coinglass_funding_rate_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=funding_rate_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Futures Basis History
-  cg_futures_basis_history:
-    build: .
-    container_name: coinglass_futures_basis_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=45
-      - PIPELINE=futures_basis_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Futures Footprint History
-  cg_future_footprint_history:
-    build: .
-    container_name: coinglass_future_footprint_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=futures_footprint_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Hyperliquid Whale Alert
-  cg_hyperliquid_whale_alert:
-    build: .
-    container_name: coinglass_hyperliquid_whale_alert
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=hyperliquid_whale_alert
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Liquidation Aggregated History
-  cg_liquidation_aggregated_history:
-    build: .
-    container_name: coinglass_liquidation_aggregated_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=liquidation_aggregated_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Liquidation Heatmap
-  cg_liquidation_heatmap:
-    build: .
-    container_name: coinglass_liquidation_heatmap
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=liquidation_heatmap
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Liquidation Heatmap Leverage Data
-  cg_liquidation_heatmap_leverage_data:
-    build: .
-    container_name: coinglass_liquidation_heatmap_leverage_data
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=liquidation_heatmap_leverage_data
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Liquidation Heatmap Price Candlesticks
-  cg_liquidation_heatmap_price_candlesticks:
-    build: .
-    container_name: coinglass_liquidation_heatmap_price_candlesticks
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=liquidation_heatmap_price_candlesticks
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Liquidation Heatmap Y Axis
-  cg_liquidation_heatmap_y_axis:
-    build: .
-    container_name: coinglass_liquidation_heatmap_y_axis
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=liquidation_heatmap_y_axis
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Long Short Global Account Ratio History
-  cg_long_short_global_account_ratio_history:
-    build: .
-    container_name: coinglass_long_short_global_account_ratio_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=long_short_global_account_ratio_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - derivatives
-      - production
-
-  # Long Short Top Account Ratio History
-  cg_long_short_top_account_ratio_history:
-    build: .
-    container_name: coinglass_long_short_top_account_ratio_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=long_short_top_account_ratio_history
+      - PIPELINE=funding_rate
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -403,14 +66,14 @@ services:
       - production
 
   # Open Interest Aggregated History
-  cg_open_interest_aggregated_history:
+  oi_aggregated_history:
     build: .
-    container_name: coinglass_open_interest_aggregated_history
+    container_name: coinglass_oi_aggregated_history
     env_file:
       - .env
     environment:
       - DELAY=20
-      - PIPELINE=open_interest_aggregated_history
+      - PIPELINE=oi_aggregated_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -423,7 +86,7 @@ services:
       - production
 
   # Open Interest Aggregated Stablecoin History
-  cg_open_interest_aggregated_stablecoin_history:
+  open_interest_aggregated_stablecoin_history:
     build: .
     container_name: coinglass_open_interest_aggregated_stablecoin_history
     env_file:
@@ -442,15 +105,15 @@ services:
       - derivatives
       - production
 
-  # Option Exchange OI History
-  cg_option_exchange_oi_history:
+  # Long Short Ratio Global
+  long_short_ratio_global:
     build: .
-    container_name: coinglass_option_exchange_oi_history
+    container_name: coinglass_long_short_ratio_global
     env_file:
       - .env
     environment:
       - DELAY=30
-      - PIPELINE=option_exchange_oi_history
+      - PIPELINE=long_short_ratio_global
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -462,15 +125,15 @@ services:
       - derivatives
       - production
 
-  # Option Exchange OI History Exchange Data
-  cg_option_exchange_oi_history_exchange_data:
+  # Long Short Ratio Top
+  long_short_ratio_top:
     build: .
-    container_name: coinglass_option_exchange_oi_history_exchange_data
+    container_name: coinglass_long_short_ratio_top
     env_file:
       - .env
     environment:
       - DELAY=30
-      - PIPELINE=option_exchange_oi_history_exchange_data
+      - PIPELINE=long_short_ratio_top
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -482,15 +145,15 @@ services:
       - derivatives
       - production
 
-  # Option Exchange OI History Time List
-  cg_option_exchange_oi_history_time_list:
+  # Liquidation Aggregated
+  liquidation_aggregated:
     build: .
-    container_name: coinglass_option_exchange_oi_history_time_list
+    container_name: coinglass_liquidation_aggregated
     env_file:
       - .env
     environment:
       - DELAY=30
-      - PIPELINE=option_exchange_oi_history_time_list
+      - PIPELINE=liquidation_aggregated
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -502,15 +165,15 @@ services:
       - derivatives
       - production
 
-  # Spot Aggregated Taker Volume History
-  cg_spot_aggregated_taker_volume_history:
+  # Liquidation Heatmap
+  liquidation_heatmap:
     build: .
-    container_name: coinglass_spot_aggregated_taker_volume_history
+    container_name: coinglass_liquidation_heatmap
     env_file:
       - .env
     environment:
       - DELAY=60
-      - PIPELINE=spot_aggregated_taker_volume_history
+      - PIPELINE=liquidation_heatmap
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -519,18 +182,38 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     profiles:
-      - spot
+      - derivatives
       - production
 
-  # Spot Coins Markets
-  cg_spot_coins_markets:
+  # Futures Basis
+  futures_basis:
     build: .
-    container_name: coinglass_spot_coins_markets
+    container_name: coinglass_futures_basis
+    env_file:
+      - .env
+    environment:
+      - DELAY=45
+      - PIPELINE=futures_basis
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - derivatives
+      - production
+
+  # Futures Footprint History
+  futures_footprint_history:
+    build: .
+    container_name: coinglass_futures_footprint_history
     env_file:
       - .env
     environment:
       - DELAY=60
-      - PIPELINE=spot_coins_markets
+      - PIPELINE=futures_footprint_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -539,38 +222,22 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     profiles:
-      - spot
+      - derivatives
       - production
 
-  # Spot Large Orderbook
-  cg_spot_large_orderbook:
+  # =============================================================================
+  # SPOT MARKET PIPELINES
+  # =============================================================================
+
+  # Spot Orderbook
+  spot_orderbook:
     build: .
-    container_name: coinglass_spot_large_orderbook
+    container_name: coinglass_spot_orderbook
     env_file:
       - .env
     environment:
       - DELAY=25
-      - PIPELINE=spot_large_orderbook
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - spot
-      - production
-
-  # Spot Large Orderbook History
-  cg_spot_large_orderbook_history:
-    build: .
-    container_name: coinglass_spot_large_orderbook_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=spot_large_orderbook_history
+      - PIPELINE=spot_orderbook
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -583,7 +250,7 @@ services:
       - production
 
   # Spot Orderbook Aggregated
-  cg_spot_orderbook_aggregated:
+  spot_orderbook_aggregated:
     build: .
     container_name: coinglass_spot_orderbook_aggregated
     env_file:
@@ -602,15 +269,15 @@ services:
       - spot
       - production
 
-  # Spot Orderbook History
-  cg_spot_orderbook_history:
+  # Spot Coins Markets
+  spot_coins_markets:
     build: .
-    container_name: coinglass_spot_orderbook_history
+    container_name: coinglass_spot_coins_markets
     env_file:
       - .env
     environment:
       - DELAY=60
-      - PIPELINE=spot_orderbook_history
+      - PIPELINE=spot_coins_markets
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -623,7 +290,7 @@ services:
       - production
 
   # Spot Pairs Markets
-  cg_spot_pairs_markets:
+  spot_pairs_markets:
     build: .
     container_name: coinglass_spot_pairs_markets
     env_file:
@@ -643,7 +310,7 @@ services:
       - production
 
   # Spot Price History
-  cg_spot_price_history:
+  spot_price_history:
     build: .
     container_name: coinglass_spot_price_history
     env_file:
@@ -662,8 +329,68 @@ services:
       - spot
       - production
 
+  # Spot Large Orderbook
+  spot_large_orderbook:
+    build: .
+    container_name: coinglass_spot_large_orderbook
+    env_file:
+      - .env
+    environment:
+      - DELAY=25
+      - PIPELINE=spot_large_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
+  # Spot Large Orderbook History
+  spot_large_orderbook_history:
+    build: .
+    container_name: coinglass_spot_large_orderbook_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=spot_large_orderbook_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
+  # Spot Aggregated Taker Volume History
+  spot_aggregated_taker_volume_history:
+    build: .
+    container_name: coinglass_spot_aggregated_taker_volume_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=spot_aggregated_taker_volume_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
   # Spot Taker Volume History
-  cg_spot_taker_volume_history:
+  spot_taker_volume_history:
     build: .
     container_name: coinglass_spot_taker_volume_history
     env_file:
@@ -682,8 +409,160 @@ services:
       - spot
       - production
 
+  # =============================================================================
+  # BITCOIN ETF PIPELINES
+  # =============================================================================
+
+  # Bitcoin ETF List
+  bitcoin_etf_list:
+    build: .
+    container_name: coinglass_bitcoin_etf_list
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=bitcoin_etf_list
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - etf
+      - production
+
+  # Bitcoin ETF Flows History
+  bitcoin_etf_flows_history:
+    build: .
+    container_name: coinglass_bitcoin_etf_flows_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=60
+      - PIPELINE=bitcoin_etf_flows_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - etf
+      - production
+
+  # Bitcoin ETF Premium Discount History
+  bitcoin_etf_premium_discount_history:
+    build: .
+    container_name: coinglass_bitcoin_etf_premium_discount_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=bitcoin_etf_premium_discount_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - etf
+      - production
+
+  # =============================================================================
+  # MACRO & OPTIONS PIPELINES
+  # =============================================================================
+
+  # Bitcoin vs Global M2 Growth
+  bitcoin_vs_global_m2_growth:
+    build: .
+    container_name: coinglass_bitcoin_vs_global_m2_growth
+    env_file:
+      - .env
+    environment:
+      - DELAY=3600
+      - PIPELINE=bitcoin_vs_global_m2_growth
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - macro
+      - production
+
+  # Option Exchange OI History
+  option_exchange_oi_history:
+    build: .
+    container_name: coinglass_option_exchange_oi_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=option_exchange_oi_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - derivatives
+      - production
+
+  # =============================================================================
+  # SENTIMENT & ON-CHAIN PIPELINES
+  # =============================================================================
+
+  # Fear Greed Index
+  fear_greed_index:
+    build: .
+    container_name: coinglass_fear_greed_index
+    env_file:
+      - .env
+    environment:
+      - DELAY=3600
+      - PIPELINE=fear_greed_index
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - sentiment
+      - production
+
+  # Hyperliquid Whale Alert
+  hyperliquid_whale_alert:
+    build: .
+    container_name: coinglass_hyperliquid_whale_alert
+    env_file:
+      - .env
+    environment:
+      - DELAY=30
+      - PIPELINE=hyperliquid_whale_alert
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - sentiment
+      - production
+
   # Whale Transfer
-  cg_whale_transfer:
+  whale_transfer:
     build: .
     container_name: coinglass_whale_transfer
     env_file:
@@ -699,7 +578,7 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     profiles:
-      - derivatives
+      - sentiment
       - production
 
   # =============================================================================
