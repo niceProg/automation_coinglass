@@ -294,7 +294,7 @@ COINGLASS_TABLES = {
     "cg_spot_orderbook_aggregated": """
     CREATE TABLE IF NOT EXISTS cg_spot_orderbook_aggregated (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        exchange_list VARCHAR(200),
+        exchange_name VARCHAR(50),
         symbol VARCHAR(20) NOT NULL,
         `interval` VARCHAR(10) NOT NULL,
         range_percent VARCHAR(10),
@@ -305,8 +305,8 @@ COINGLASS_TABLES = {
         aggregated_asks_quantity DECIMAL(38,8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_exchange_list_symbol_interval_range_time (exchange_list, symbol, `interval`, range_percent, time),
-        INDEX idx_exchange_list (exchange_list),
+        UNIQUE KEY uk_exchange_name_symbol_interval_range_time (exchange_name, symbol, `interval`, range_percent, time),
+        INDEX idx_exchange_name (exchange_name),
         INDEX idx_symbol (symbol),
         INDEX idx_interval (`interval`),
         INDEX idx_time (time),
@@ -1108,6 +1108,7 @@ COINGLASS_TABLES = {
     "cg_spot_ask_bids_history": """
     CREATE TABLE IF NOT EXISTS cg_spot_ask_bids_history (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        id_order BIGINT,
         exchange_name VARCHAR(50) NOT NULL,
         symbol VARCHAR(50) NOT NULL,
         base_asset VARCHAR(20) NOT NULL,
@@ -1126,7 +1127,8 @@ COINGLASS_TABLES = {
         INDEX idx_symbol (symbol),
         INDEX idx_base_asset (base_asset),
         INDEX idx_interval (`interval`),
-        INDEX idx_time (time)
+        INDEX idx_time (time),
+        INDEX idx_id_order (id_order)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 

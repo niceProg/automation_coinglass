@@ -2201,7 +2201,7 @@ class CoinglassRepository:
             )
             return result
 
-    def upsert_spot_orderbook_aggregated(self, exchange_list: str, symbol: str, interval: str, range_percent: str, rows: List[Dict]) -> Dict[str, int]:
+    def upsert_spot_orderbook_aggregated(self, exchange_name: str, symbol: str, interval: str, range_percent: str, rows: List[Dict]) -> Dict[str, int]:
         """Upsert spot orderbook aggregated data."""
         result = {
             "spot_orderbook_aggregated": 0,
@@ -2213,7 +2213,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_orderbook_aggregated (
-            exchange_list, symbol, `interval`, range_percent, time,
+            exchange_name, symbol, `interval`, range_percent, time,
             aggregated_bids_usd, aggregated_bids_quantity,
             aggregated_asks_usd, aggregated_asks_quantity
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -2227,7 +2227,7 @@ class CoinglassRepository:
             with self.conn.cursor() as cur:
                 for row in rows:
                     cur.execute(sql, (
-                        exchange_list, symbol, interval, range_percent, row.get("time"),
+                        exchange_name, symbol, interval, range_percent, row.get("time"),
                         row.get("aggregated_bids_usd"), row.get("aggregated_bids_quantity"),
                         row.get("aggregated_asks_usd"), row.get("aggregated_asks_quantity")
                     ))
@@ -2774,9 +2774,9 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_spot_ask_bids_history (
-            exchange_name, symbol, base_asset, quote_asset, `interval`, range_percent,
+            id_order, exchange_name, symbol, base_asset, quote_asset, `interval`, range_percent,
             time, bids_usd, bids_quantity, asks_usd, asks_quantity
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             bids_usd=VALUES(bids_usd),
             bids_quantity=VALUES(bids_quantity),
@@ -2794,6 +2794,7 @@ class CoinglassRepository:
                         quote_asset = 'BTC'
 
                     cur.execute(sql, (
+                        row.get("id"),
                         exchange, symbol, base_asset, quote_asset, interval, range_percent,
                         row.get("time"),
                         row.get("bids_usd"),
