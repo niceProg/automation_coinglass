@@ -160,17 +160,21 @@ def initial_scrape(months: int = 1):
 
             # Display detailed breakdown
             if pipeline_duplicates > 0:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh, {pipeline_duplicates} duplicates (total: {pipeline_total})")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records, {pipeline_duplicates} duplicates")
             else:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} records")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records")
 
     # Overall summary
     logger.info("-" * 60)
     if total_duplicates > 0:
-        logger.info(f"📈 INITIAL SCRAPE TOTAL: {total_fresh} fresh records, {total_duplicates} duplicates detected")
-        logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        if total_fresh > 0:
+            logger.info(f"📈 INITIAL SCRAPE TOTAL: {total_fresh} fresh records saved, {total_duplicates} duplicates found")
+            logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        else:
+            logger.info(f"📈 INITIAL SCRAPE TOTAL: {total_duplicates} duplicates found (no fresh records)")
+            logger.info(f"📊 All data already exists in database")
     else:
-        logger.info(f"📈 INITIAL SCRAPE TOTAL: {total_fresh} records saved")
+        logger.info(f"📈 INITIAL SCRAPE TOTAL: {total_fresh} fresh records saved")
 
     logger.info("=" * 60)
 
@@ -208,7 +212,8 @@ def run_pipelines(pipelines=None):
             pipeline_duplicates = 0
 
             for key, value in result.items():
-                if isinstance(value, int) and key != "fetches":
+                # Count only fresh records (non-duplicate keys, exclude fetches and duplicate keys)
+                if isinstance(value, int) and key != "fetches" and not key.endswith("_duplicates") and not key.endswith("_filtered"):
                     pipeline_fresh += value
                 elif key.endswith("_duplicates"):
                     pipeline_duplicates += value
@@ -220,17 +225,21 @@ def run_pipelines(pipelines=None):
 
             # Display detailed breakdown
             if pipeline_duplicates > 0:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh, {pipeline_duplicates} duplicates (total: {pipeline_total})")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records, {pipeline_duplicates} duplicates")
             else:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} records")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records")
 
     # Overall summary
     logger.info("-" * 60)
     if total_duplicates > 0:
-        logger.info(f"📈 OVERALL: {total_fresh} fresh records, {total_duplicates} duplicates detected")
-        logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        if total_fresh > 0:
+            logger.info(f"📈 OVERALL: {total_fresh} fresh records saved, {total_duplicates} duplicates found")
+            logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        else:
+            logger.info(f"📈 OVERALL: {total_duplicates} duplicates found (no fresh records)")
+            logger.info(f"📊 All data already exists in database")
     else:
-        logger.info(f"📈 OVERALL: {total_fresh} fresh records processed")
+        logger.info(f"📈 OVERALL: {total_fresh} fresh records saved")
 
     logger.info("=" * 60)
 
@@ -542,7 +551,8 @@ def run_cryptoquant_pipelines(pipelines=None):
             pipeline_duplicates = 0
 
             for key, value in result.items():
-                if isinstance(value, int) and key != "fetches":
+                # Count only fresh records (non-duplicate keys, exclude fetches and duplicate keys)
+                if isinstance(value, int) and key != "fetches" and not key.endswith("_duplicates") and not key.endswith("_filtered"):
                     pipeline_fresh += value
                 elif key.endswith("_duplicates"):
                     pipeline_duplicates += value
@@ -554,17 +564,21 @@ def run_cryptoquant_pipelines(pipelines=None):
 
             # Display detailed breakdown
             if pipeline_duplicates > 0:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh, {pipeline_duplicates} duplicates (total: {pipeline_total})")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records, {pipeline_duplicates} duplicates")
             else:
-                logger.info(f"✅ {pipeline}: {pipeline_fresh} records")
+                logger.info(f"✅ {pipeline}: {pipeline_fresh} fresh records")
 
     # Overall summary
     logger.info("-" * 60)
     if total_duplicates > 0:
-        logger.info(f"📈 OVERALL: {total_fresh} fresh records, {total_duplicates} duplicates detected")
-        logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        if total_fresh > 0:
+            logger.info(f"📈 OVERALL: {total_fresh} fresh records saved, {total_duplicates} duplicates found")
+            logger.info(f"📊 Freshness Rate: {(total_fresh/total_processed*100):.1f}% ({total_fresh}/{total_processed})")
+        else:
+            logger.info(f"📈 OVERALL: {total_duplicates} duplicates found (no fresh records)")
+            logger.info(f"📊 All data already exists in database")
     else:
-        logger.info(f"📈 OVERALL: {total_fresh} fresh records processed")
+        logger.info(f"📈 OVERALL: {total_fresh} fresh records saved")
 
     logger.info("=" * 60)
 
