@@ -486,6 +486,11 @@ class CoinglassService:
         pipeline_config["params"]["start_time"] = start_time
         pipeline_config["params"]["end_time"] = end_time
 
+        # CRITICAL: Override timeframes to only use the specified interval
+        # This ensures we only retrieve data for the requested interval
+        pipeline_config["params"]["timeframes"] = [interval]
+        pipeline_config["params"]["intervals"] = [interval]  # Some pipelines use 'intervals' instead
+
         try:
             result = pipeline_func(
                 conn=self.conn,
