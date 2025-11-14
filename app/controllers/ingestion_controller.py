@@ -46,18 +46,6 @@ class IngestionController:
             if "service" in locals():
                 service.close()
 
-    def run_pipeline_with_interval(self, pipeline_name: str, interval: str, days: int):
-        """Run a specific pipeline with interval-based historical data retrieval."""
-        try:
-            service = CoinglassService(ensure_tables=False)
-            return service.run_pipeline_with_interval(pipeline_name, interval, days)
-        except Exception as e:
-            self.logger.error(f"Pipeline {pipeline_name} failed: {e}", exc_info=True)
-            return {"error": str(e)}
-        finally:
-            if "service" in locals():
-                service.close()
-
     def get_status(self):
         """Get ingestion status."""
         try:

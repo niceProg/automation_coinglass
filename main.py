@@ -8,8 +8,6 @@ COMMAND CATEGORIES:
     --setup                          Setup database tables and schema
     --status                         Check ingestion status and record counts
     --freshness                      Check data freshness for all pipelines
-    --intervals                      Show data retrieval intervals for all endpoints
-    --retrieve INTERVAL              Retrieve historical data for specified interval
 
 📊 DATA COLLECTION MODES:
     --continuous                     Run continuous automation (10s intervals)
@@ -360,182 +358,6 @@ def show_freshness():
     logger.info("=" * 80)
 
 
-def retrieve_historical_data(interval: str):
-    """Retrieve historical data for a specified interval across all endpoints."""
-    # Validate interval
-    valid_intervals = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '8h', '12h', '1d']
-    if interval not in valid_intervals:
-        logger.error(f"❌ Invalid interval '{interval}'. Valid intervals: {', '.join(valid_intervals)}")
-        return False
-
-    # Calculate days based on interval
-    interval_days = {
-        '1m': 12, '3m': 40, '5m': 60, '15m': 180, '30m': 360,
-        '1h': 720, '2h': 720, '4h': 720, '6h': 720, '8h': 720, '12h': 720,
-        '1d': 3650  # ~10 years for "all-time"
-    }
-
-    days = interval_days.get(interval, 30)
-    logger.info("=" * 80)
-    logger.info(f"📊 HISTORICAL DATA RETRIEVAL")
-    logger.info("=" * 80)
-    logger.info(f"🕐 Interval: {interval}")
-    logger.info(f"📅 Coverage: {days} days" if interval != '1d' else "📅 Coverage: All-time historical data")
-    logger.info(f"🚀 Starting data retrieval...")
-    logger.info("=" * 80)
-
-    try:
-        from app.controllers.ingestion_controller import IngestionController
-        controller = IngestionController()
-
-        # Get all available endpoints
-        endpoints = [
-            'funding_rate', 'oi_aggregated_history', 'long_short_ratio_global', 'long_short_ratio_top',
-            'liquidation_aggregated', 'liquidation_heatmap', 'futures_basis', 'spot_price_history',
-            'spot_orderbook', 'spot_orderbook_aggregated', 'spot_coins_markets', 'spot_pairs_markets',
-            'bitcoin_etf_list', 'bitcoin_etf_flows_history', 'bitcoin_etf_premium_discount_history',
-            'bitcoin_vs_global_m2_growth', 'option_exchange_oi_history', 'open_interest_aggregated_stablecoin_history',
-            'fear_greed_index', 'hyperliquid_whale_alert', 'whale_transfer', 'futures_footprint_history',
-            'spot_large_orderbook_history', 'spot_large_orderbook', 'spot_aggregated_taker_volume_history',
-            'spot_taker_volume_history', 'spot_ask_bids_history', 'spot_aggregated_ask_bids_history'
-        ]
-
-        # Run each pipeline with interval-specific parameters
-        results = {}
-        for endpoint in endpoints:
-            logger.info(f"🔄 Processing {endpoint}...")
-            try:
-                # Use existing controller method but with interval-specific parameters
-                result = controller.run_pipeline_with_interval(endpoint, interval, days)
-                results[endpoint] = result
-            except Exception as e:
-                logger.error(f"❌ {endpoint}: {e}")
-                results[endpoint] = {"error": str(e)}
-
-        # Summary
-        total_success = 0
-        total_errors = 0
-
-        logger.info("\n📊 RETRIEVAL SUMMARY:")
-        logger.info("=" * 80)
-
-        for endpoint, result in results.items():
-            if "error" in result:
-                logger.error(f"❌ {endpoint}: {result['error']}")
-                total_errors += 1
-            else:
-                logger.info(f"✅ {endpoint}: Success")
-                total_success += 1
-
-        logger.info("=" * 80)
-        logger.info(f"📈 RESULTS: {total_success} successful, {total_errors} failed")
-        logger.info(f"🕐 Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.info("=" * 80)
-
-        return total_errors == 0
-
-    except Exception as e:
-        logger.error(f"❌ Data retrieval failed: {e}")
-        return False
-
-
-def show_data_intervals_help():
-    """Show data retrieval intervals for all endpoints."""
-    now = datetime.now()
-    session_id = f"session_{now.strftime('%Y%m%d_%H%M%S')}"
-
-    logger.info("=" * 80)
-    logger.info("📊 DATA RETRIEVAL INTERVALS")
-    logger.info("=" * 80)
-    logger.info(f"🆔 Session ID: {session_id}")
-    logger.info(f"🕐 Start Time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-
-    logger.info("\n📅 INTERVAL COVERAGE:")
-    logger.info("=" * 50)
-    intervals_data = [
-        ("1m", "12 days"),
-        ("3m", "40 days"),
-        ("5m", "60 days"),
-        ("15m", "180 days"),
-        ("30m", "360 days"),
-        ("1h", "720 days"),
-        ("2h", "720 days"),
-        ("4h", "720 days"),
-        ("6h", "720 days"),
-        ("8h", "720 days"),
-        ("12h", "720 days"),
-        ("1d", "all-time historical data")
-    ]
-
-    for interval, coverage in intervals_data:
-        logger.info(f"  {interval:>4} -> {coverage}")
-
-    logger.info("\n📈 AVAILABLE ENDPOINTS:")
-    logger.info("=" * 50)
-
-    endpoints = [
-        'funding_rate', 'oi_aggregated_history', 'long_short_ratio_global', 'long_short_ratio_top',
-        'liquidation_aggregated', 'liquidation_heatmap', 'futures_basis', 'spot_price_history',
-        'spot_orderbook', 'spot_orderbook_aggregated', 'spot_coins_markets', 'spot_pairs_markets',
-        'bitcoin_etf_list', 'bitcoin_etf_flows_history', 'bitcoin_etf_premium_discount_history',
-        'bitcoin_vs_global_m2_growth', 'option_exchange_oi_history', 'open_interest_aggregated_stablecoin_history',
-        'fear_greed_index', 'hyperliquid_whale_alert', 'whale_transfer', 'futures_footprint_history',
-        'spot_large_orderbook_history', 'spot_large_orderbook', 'spot_aggregated_taker_volume_history',
-        'spot_taker_volume_history', 'spot_ask_bids_history', 'spot_aggregated_ask_bids_history'
-    ]
-
-    # Group endpoints by category for better readability
-    categories = {
-        "📊 DERIVATIVES": [
-            'funding_rate', 'oi_aggregated_history', 'long_short_ratio_global', 'long_short_ratio_top',
-            'liquidation_aggregated', 'liquidation_heatmap', 'futures_basis', 'futures_footprint_history'
-        ],
-        "💰 SPOT MARKET": [
-            'spot_price_history', 'spot_orderbook', 'spot_orderbook_aggregated', 'spot_coins_markets',
-            'spot_pairs_markets', 'spot_large_orderbook_history', 'spot_large_orderbook',
-            'spot_aggregated_taker_volume_history', 'spot_taker_volume_history',
-            'spot_ask_bids_history', 'spot_aggregated_ask_bids_history'
-        ],
-        "₿ BITCOIN ETF": [
-            'bitcoin_etf_list', 'bitcoin_etf_flows_history', 'bitcoin_etf_premium_discount_history'
-        ],
-        "🌍 MACRO & OPTIONS": [
-            'bitcoin_vs_global_m2_growth', 'option_exchange_oi_history',
-            'open_interest_aggregated_stablecoin_history'
-        ],
-        "📈 SENTIMENT & ALERTS": [
-            'fear_greed_index', 'hyperliquid_whale_alert', 'whale_transfer'
-        ]
-    }
-
-    for category, category_endpoints in categories.items():
-        logger.info(f"\n{category}:")
-        for endpoint in category_endpoints:
-            if endpoint in endpoints:
-                logger.info(f"  • {endpoint}")
-
-    logger.info("\n💡 USAGE EXAMPLES:")
-    logger.info("=" * 50)
-    logger.info("  python main.py --intervals                     # Show this help")
-    logger.info("  python main.py funding_rate                     # Get funding rate data")
-    logger.info("  python main.py spot_orderbook spot_coins_markets # Run multiple endpoints")
-    logger.info("  python main.py --continuous                     # Run all continuously")
-
-    logger.info("\n📝 NOTES:")
-    logger.info("=" * 50)
-    logger.info("  • Intervals determine how much historical data each endpoint can retrieve")
-    logger.info("  • '1d' interval provides all-time historical data for most endpoints")
-    logger.info("  • Shorter intervals (1m-15m) have limited historical coverage")
-    logger.info("  • Not all endpoints support all interval types")
-    logger.info("  • Use individual endpoint names to run specific data collection")
-
-    logger.info("=" * 80)
-    logger.info(f"✅ INTERVAL HELP COMPLETED")
-    logger.info(f"🕐 End Time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info(f"🆔 Session ID: {session_id}")
-    logger.info("=" * 80)
-
-
 def show_help():
     """Show help information when no arguments are provided."""
     now = datetime.now()
@@ -558,8 +380,6 @@ def show_help():
     logger.info("  --setup                     Setup database tables and schema")
     logger.info("  --status                    Show ingestion status and record counts")
     logger.info("  --freshness                 Check data freshness for all pipelines")
-    logger.info("  --intervals                 Show data retrieval intervals for all endpoints")
-    logger.info("  --retrieve INTERVAL         Retrieve historical data for specified interval")
 
     # Data Collection Modes
     logger.info("\n📊 DATA COLLECTION MODES:")
@@ -649,8 +469,6 @@ def show_help():
     logger.info("  python main.py --setup")
     logger.info("  python main.py --status")
     logger.info("  python main.py --freshness")
-    logger.info("  python main.py --intervals")
-    logger.info("  python main.py --retrieve 1d")
 
     logger.info("\n📊 Data Collection:")
     logger.info("  python main.py --initial-scrape --months 12")
@@ -805,13 +623,6 @@ def main():
         "--freshness", action="store_true", help="Check data freshness for all pipelines"
     )
     parser.add_argument(
-        "--intervals", action="store_true", help="Show data retrieval intervals for all endpoints"
-    )
-    parser.add_argument(
-        "--retrieve", type=str,
-        help="Retrieve historical data for specified interval (1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d)"
-    )
-    parser.add_argument(
         "pipelines",
         nargs="*",
         help="Specific pipelines to run by category:\n"
@@ -853,13 +664,6 @@ def main():
 
     elif args.freshness:
         show_freshness()
-
-    elif args.intervals:
-        show_data_intervals_help()
-
-    elif args.retrieve:
-        success = retrieve_historical_data(args.retrieve)
-        sys.exit(0 if success else 1)
 
     elif args.pipelines:
         # Check if any CryptoQuant pipelines are requested

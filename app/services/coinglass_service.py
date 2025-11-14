@@ -462,46 +462,6 @@ class CoinglassService:
                 results[name] = {"error": str(e)}
         return results
 
-    def run_pipeline_with_interval(self, pipeline_name: str, interval: str, days: int) -> Dict[str, Any]:
-        """Run a specific pipeline with interval-based historical data retrieval."""
-        if pipeline_name not in self.pipelines:
-            return {"error": f"Pipeline '{pipeline_name}' not found"}
-
-        pipeline_config = self.pipelines[pipeline_name].copy()
-        pipeline_func = pipeline_config["func"]
-
-        # Override interval and historical data parameters
-        if "params" not in pipeline_config:
-            pipeline_config["params"] = {}
-
-        # Set interval-specific parameters
-        pipeline_config["params"]["interval"] = interval
-        pipeline_config["params"]["days_back"] = days
-
-        # Calculate start_time based on days
-        from datetime import datetime, timedelta
-        end_time = int(datetime.now().timestamp() * 1000)
-        start_time = int((datetime.now() - timedelta(days=days)).timestamp() * 1000)
-
-        pipeline_config["params"]["start_time"] = start_time
-        pipeline_config["params"]["end_time"] = end_time
-
-        # CRITICAL: Override timeframes to only use the specified interval
-        # This ensures we only retrieve data for the requested interval
-        pipeline_config["params"]["timeframes"] = [interval]
-        pipeline_config["params"]["intervals"] = [interval]  # Some pipelines use 'intervals' instead
-
-        try:
-            result = pipeline_func(
-                conn=self.conn,
-                client=self.client,
-                params=pipeline_config["params"]
-            )
-            return result
-        except Exception as e:
-            logger.error(f"Pipeline '{pipeline_name}' failed with interval {interval}: {e}", exc_info=True)
-            return {"error": str(e)}
-
     def run_all_pipelines(self, check_freshness: bool = True) -> Dict[str, Any]:
         """Run all pipelines with optional freshness monitoring."""
         logger.info("Running all pipelines...")
