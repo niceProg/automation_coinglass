@@ -36,10 +36,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
             for interval in INTERVALS:
                 try:
                     logger.info(f"Fetching spot price history for {exchange} {symbol} {interval}")
+
+                    # Use time parameters if available for historical data retrieval
+                    start_time = params.get("start_time")
+                    end_time = params.get("end_time")
+
                     rows = client.get_spot_price_history(
                         exchange=exchange,
                         symbol=symbol,
                         interval=interval,
+                        start_time=start_time,
+                        end_time=end_time,
                         # limit=LIMIT  # Removed - using API default
                     )
 
