@@ -84,8 +84,6 @@ docker-compose up -d exchange_onchain_transfers
 docker-compose --profile spot up -d
 
 # Individual pipelines
-docker-compose up -d spot_orderbook
-docker-compose up -d spot_orderbook_aggregated
 docker-compose up -d spot_supported_exchange_pairs
 docker-compose up -d spot_coins_markets
 docker-compose up -d spot_pairs_markets

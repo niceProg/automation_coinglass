@@ -94,10 +94,6 @@ class DataFreshnessMonitor:
             # "exchange_balance_list": FreshnessConfig("cg_exchange_balance_list", "updated_at", "datetime"),  # DISABLED - Not documented
             # "exchange_onchain_transfers": FreshnessConfig("cg_exchange_onchain_transfers", "transaction_time"),  # DISABLED
             # Spot Market Data
-            "spot_orderbook": FreshnessConfig("cg_spot_orderbook_history", "time"),
-            "spot_orderbook_aggregated": FreshnessConfig(
-                "cg_spot_orderbook_aggregated", "time"
-            ),
             "spot_coins_markets": FreshnessConfig(
                 "cg_spot_coins_markets", "updated_at", "datetime"
             ),
