@@ -374,16 +374,19 @@ def run_historical_mode(historical_args, pipelines=None):
     # Parse historical arguments
     start_time = None
     end_time = None
+    years_ago = None  # Track years for error messages
 
     if len(historical_args) == 0:
         # Default to 1 year if no arguments provided
         years = 1
+        years_ago = years
         end_time = datetime.now()
         start_time = end_time - timedelta(days=365 * years)
     elif len(historical_args) == 1:
         # Preset mode: --historical 3 (3 years)
         try:
             years = int(historical_args[0])
+            years_ago = years
             end_time = datetime.now()
             start_time = end_time - timedelta(days=365 * years)
         except ValueError:
@@ -450,7 +453,7 @@ def run_historical_mode(historical_args, pipelines=None):
 
     # Run with historical parameters
     try:
-        service = CoinglassService(ensure_tables=True)
+        service = CoinglassService(ensure_tables=False)
         results = {}
 
         for pipeline_name in pipelines:
@@ -480,14 +483,24 @@ def run_historical_mode(historical_args, pipelines=None):
                 # Add the historical parameters directly
                 pipeline_params.update(historical_params)
 
-                result = service.pipelines[pipeline_name]["func"](
-                    conn=service.conn,
-                    client=service.client,
-                    params=pipeline_params
-                )
-                results[pipeline_name] = result
+                try:
+                    result = service.pipelines[pipeline_name]["func"](
+                        conn=service.conn,
+                        client=service.client,
+                        params=pipeline_params
+                    )
+                    results[pipeline_name] = result
 
-                logger.info(f"✅ {pipeline_name} completed")
+                    logger.info(f"✅ {pipeline_name} completed")
+                except Exception as pipeline_error:
+                    # Special handling for funding_rate time errors
+                    if pipeline_name == "funding_rate" and "time error" in str(pipeline_error):
+                        logger.warning(f"⚠️ {pipeline_name}: API time limitation - funding rates may not support {years_ago if 'years_ago' in locals() else 'requested'}-year historical data")
+                        logger.info(f"💡 Try running funding_rate separately with a more recent time range using: --historical {start_timestamp // 1000} {end_timestamp // 1000}")
+                        results[pipeline_name] = {"error": f"API time limitation: {pipeline_error}"}
+                    else:
+                        logger.error(f"❌ {pipeline_name}: {pipeline_error}")
+                        results[pipeline_name] = {"error": str(pipeline_error)}
             else:
                 logger.warning(f"⚠️ {pipeline_name}: Not found in service pipelines")
 

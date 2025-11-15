@@ -145,9 +145,11 @@ class CoinglassClient:
             "unit": unit,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/open-interest/aggregated-history", params) or []
 
     # DISABLED - Not documented
@@ -204,9 +206,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/global-long-short-account-ratio/history", params) or []
 
     def get_lsr_top_account_ratio_history(
@@ -233,9 +237,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/top-long-short-account-ratio/history", params) or []
 
     # ---------- Liquidation ----------
@@ -263,9 +269,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/liquidation/aggregated-history", params) or []
 
     def get_liquidation_aggregated_heatmap(
@@ -311,9 +319,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/basis/history", params) or []
 
     # def get_lsr_top_position_ratio_history(  # DISABLED
@@ -355,9 +365,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = start_time
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = start_time * 1000 if start_time < 1e12 else start_time
         if end_time:
-            params["end_time"] = end_time
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = end_time * 1000 if end_time < 1e12 else end_time
         return self._make_request("futures/funding-rate/history", params) or []
 
     def get_fr_exchange_list(self, symbol: str):
@@ -614,9 +626,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("spot/orderbook/ask-bids-history", params) or []
 
     def get_spot_orderbook_aggregated(
@@ -650,9 +664,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
 
     # ---------- Spot Markets ----------
@@ -717,9 +733,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("spot/price/history", params) or []
 
     # ---------- Open Interest Aggregated Stablecoin History ----------
@@ -747,9 +765,11 @@ class CoinglassClient:
             "interval": interval,
         }
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("futures/open-interest/aggregated-stablecoin-history", params) or []
 
     # ---------- Macro Overlay ----------
@@ -821,9 +841,11 @@ class CoinglassClient:
         if symbol:
             params["symbol"] = symbol
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("chain/whale-transfer", params) or []
 
     # ===== NEW ENDPOINTS =====
@@ -856,9 +878,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("futures/volume/footprint-history", params) or []
 
     def get_spot_large_orderbook_history(
@@ -882,8 +906,8 @@ class CoinglassClient:
         params: Dict[str, Any] = {
             "exchange": exchange,
             "symbol": symbol,
-            "start_time": str(start_time),
-            "end_time": str(end_time),
+            "start_time": str(start_time * 1000 if start_time < 1e12 else start_time),
+            "end_time": str(end_time * 1000 if end_time < 1e12 else end_time),
             "state": state,
         }
         return self._make_request("spot/orderbook/large-limit-order-history", params) or []
@@ -937,9 +961,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("spot/aggregated-taker-buy-sell-volume/history", params) or []
 
     def get_spot_taker_volume_history(
@@ -973,9 +999,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         return self._make_request("spot/taker-buy-sell-volume/history", params) or []
 
     def get_spot_ask_bids_history(
@@ -1008,9 +1036,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         if range_percent:
             params["range"] = range_percent
         return self._make_request("spot/orderbook/ask-bids-history", params) or []
@@ -1045,9 +1075,11 @@ class CoinglassClient:
         if limit:
             params["limit"] = str(limit)
         if start_time:
-            params["start_time"] = str(start_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["start_time"] = str(start_time * 1000 if start_time < 1e12 else start_time)
         if end_time:
-            params["end_time"] = str(end_time)
+            # Convert seconds to milliseconds for API compatibility
+            params["end_time"] = str(end_time * 1000 if end_time < 1e12 else end_time)
         if range_percent:
             params["range"] = range_percent
         return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
