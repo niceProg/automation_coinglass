@@ -229,6 +229,46 @@ services:
   # SPOT MARKET PIPELINES
   # =============================================================================
 
+  # Spot Orderbook
+  spot_orderbook:
+    build: .
+    container_name: coinglass_spot_orderbook
+    env_file:
+      - .env
+    environment:
+      - DELAY=25
+      - PIPELINE=spot_orderbook
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
+  # Spot Orderbook Aggregated
+  spot_orderbook_aggregated:
+    build: .
+    container_name: coinglass_spot_orderbook_aggregated
+    env_file:
+      - .env
+    environment:
+      - DELAY=25
+      - PIPELINE=spot_orderbook_aggregated
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - spot
+      - production
+
   # Spot Coins Markets
   spot_coins_markets:
     build: .

@@ -74,5 +74,5 @@ htmlcov/
 dmypy.json
 
 # *.md
-# *.sql
+*.sql
 *.sqlite

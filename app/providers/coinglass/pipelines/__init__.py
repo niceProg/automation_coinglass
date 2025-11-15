@@ -13,6 +13,8 @@ from . import (
     # exchange_assets,  # DISABLED
     # exchange_balance_list,  # DISABLED - Not documented
     # exchange_onchain_transfers,  # DISABLED
+    spot_orderbook,
+    spot_orderbook_aggregated,
     spot_coins_markets,
     spot_pairs_markets,
     spot_price_history,
@@ -52,6 +54,8 @@ __all__ = [
     # "exchange_assets",  # DISABLED
     # "exchange_balance_list",  # DISABLED - Not documented
     # "exchange_onchain_transfers",  # DISABLED
+    "spot_orderbook",
+    "spot_orderbook_aggregated",
     "spot_coins_markets",
     "spot_pairs_markets",
     "spot_price_history",

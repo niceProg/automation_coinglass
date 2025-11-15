@@ -582,7 +582,79 @@ class CoinglassClient:
     #     params = {"symbol": symbol}
     #     return self._make_request("option/info", params) or []
 
-    
+    # ---------- Spot Orderbook ----------
+    def get_spot_orderbook_history(
+        self,
+        exchange: str,
+        pair: str,
+        interval: str = "1m",
+        range_percent: str = "0.25",
+        limit: int = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Orderbook History - Historical orderbook data for spot trading.
+
+        Args:
+            exchange: Exchange name (e.g., Binance, OKX)
+            pair: Trading pair (e.g., BTCUSDT)
+            interval: Data aggregation interval
+            range_percent: Price range percentage (e.g., "0.25", "0.5")
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange": exchange,
+            "symbol": pair,
+            "interval": interval,
+            "range": range_percent,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("spot/orderbook/ask-bids-history", params) or []
+
+    def get_spot_orderbook_aggregated(
+        self,
+        exchange_list: str,
+        symbol: str,
+        interval: str = "1m",
+        range_percent: str = "0.25",
+        limit: int = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Spot Orderbook Aggregated - Aggregated orderbook data across multiple exchanges.
+
+        Args:
+            exchange_list: Comma-separated exchange names (e.g., "Binance,OKX")
+            symbol: Trading symbol (e.g., BTC)
+            interval: Data aggregation interval
+            range_percent: Price range percentage
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params: Dict[str, Any] = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+            "range": range_percent,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
+
     # ---------- Spot Markets ----------
     def get_spot_coins_markets(
         self,

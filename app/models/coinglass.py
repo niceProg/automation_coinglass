@@ -268,7 +268,52 @@ COINGLASS_TABLES = {
     # ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     # """,
 
-        # ----- Spot Market Tables -----
+    # ----- Spot Orderbook Tables -----
+    "cg_spot_orderbook_history": """
+    CREATE TABLE IF NOT EXISTS cg_spot_orderbook_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange VARCHAR(50) NOT NULL,
+        pair VARCHAR(50) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        range_percent VARCHAR(10),
+        time BIGINT NOT NULL,
+        bids_usd DECIMAL(38,8),
+        bids_quantity DECIMAL(38,8),
+        asks_usd DECIMAL(38,8),
+        asks_quantity DECIMAL(38,8),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_pair_interval_range_time (exchange, pair, `interval`, range_percent, time),
+        INDEX idx_exchange (exchange),
+        INDEX idx_pair (pair),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time),
+        INDEX idx_range_percent (range_percent)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "cg_spot_orderbook_aggregated": """
+    CREATE TABLE IF NOT EXISTS cg_spot_orderbook_aggregated (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange_name VARCHAR(50),
+        symbol VARCHAR(20) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        range_percent VARCHAR(10),
+        time BIGINT NOT NULL,
+        aggregated_bids_usd DECIMAL(38,8),
+        aggregated_bids_quantity DECIMAL(38,8),
+        aggregated_asks_usd DECIMAL(38,8),
+        aggregated_asks_quantity DECIMAL(38,8),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_name_symbol_interval_range_time (exchange_name, symbol, `interval`, range_percent, time),
+        INDEX idx_exchange_name (exchange_name),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time),
+        INDEX idx_range_percent (range_percent)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    # ----- Spot Market Tables -----
     "cg_spot_coins_markets": """
     CREATE TABLE IF NOT EXISTS cg_spot_coins_markets (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
