@@ -363,8 +363,28 @@ def show_freshness():
     logger.info("=" * 80)
 
 
+def create_time_batches(start_ts, end_ts, batch_days=30):
+    """Create time batches for historical data retrieval to avoid API limits."""
+    from datetime import datetime, timedelta
+    import math
+
+    batches = []
+    current_start = start_ts
+    batch_duration = batch_days * 24 * 60 * 60  # Convert days to seconds
+
+    while current_start < end_ts:
+        current_end = min(current_start + batch_duration, end_ts)
+        batches.append({
+            'start_time': current_start * 1000,  # Convert to milliseconds for API
+            'end_time': current_end * 1000
+        })
+        current_start = current_end
+
+    return batches
+
+
 def run_historical_mode(historical_args, pipelines=None):
-    """Run historical data collection with custom time parameters."""
+    """Run historical data collection with custom time parameters and batch processing."""
     from app.services.coinglass_service import CoinglassService
     from datetime import datetime, timedelta
     import logging
@@ -386,43 +406,22 @@ def run_historical_mode(historical_args, pipelines=None):
         # Preset mode: --historical 3 (3 years)
         try:
             years = int(historical_args[0])
-            # Check if it's a reasonable year value (1-100)
-            if 1 <= years <= 100:
-                years_ago = years
-                end_time = datetime.now()
-                start_time = end_time - timedelta(days=365 * years)
-            else:
-                # Treat as timestamp (seconds or milliseconds)
-                timestamp_val = int(historical_args[0])
-                # If timestamp is in milliseconds (> 1e12), convert to seconds
-                if timestamp_val > 1e12:
-                    timestamp_val = timestamp_val / 1000
-                try:
-                    start_time = datetime.fromtimestamp(timestamp_val)
-                    end_time = datetime.now()
-                    years_ago = None
-                except (ValueError, OSError) as e:
-                    logger.error(f"❌ Invalid timestamp format: {historical_args[0]} - {e}")
-                    return
+            years_ago = years
+            end_time = datetime.now()
+            start_time = end_time - timedelta(days=365 * years)
         except ValueError:
-            logger.error(f"❌ Invalid format: {historical_args[0]}. Use years (1-100) or timestamp.")
-            return
+            # If not a number, treat as start timestamp
+            try:
+                start_time = datetime.fromtimestamp(int(historical_args[0]))
+                end_time = datetime.now()
+            except (ValueError, OSError):
+                logger.error(f"❌ Invalid timestamp format: {historical_args[0]}")
+                return
     elif len(historical_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            # Handle both seconds and milliseconds for start_time
-            start_ts = int(historical_args[0])
-            if start_ts > 1e12:  # If milliseconds, convert to seconds
-                start_ts = start_ts / 1000
-            start_time = datetime.fromtimestamp(start_ts)
-
-            # Handle both seconds and milliseconds for end_time
-            end_ts = int(historical_args[1])
-            if end_ts > 1e12:  # If milliseconds, convert to seconds
-                end_ts = end_ts / 1000
-            end_time = datetime.fromtimestamp(end_ts)
-
-            years_ago = None
+            start_time = datetime.fromtimestamp(int(historical_args[0]))
+            end_time = datetime.fromtimestamp(int(historical_args[1]))
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
@@ -431,14 +430,30 @@ def run_historical_mode(historical_args, pipelines=None):
     start_timestamp = int(start_time.timestamp())
     end_timestamp = int(end_time.timestamp())
 
+    # Apply Coinglass API constraints
+    min_timestamp = 1704067200000 // 1000  # January 1, 2024 in seconds
+    if start_timestamp < min_timestamp:
+        logger.info(f"⚠️ Adjusting start_time from {start_timestamp} to {min_timestamp} (January 1, 2024) due to API limitations")
+        start_timestamp = min_timestamp
+        start_time = datetime.fromtimestamp(min_timestamp)
+
     logger.info("=" * 80)
     logger.info("📅 HISTORICAL DATA COLLECTION MODE")
     logger.info("=" * 80)
     logger.info(f"🕐 Time Range: {start_time.strftime('%Y-%m-%d %H:%M:%S')} to {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"🔢 Timestamps: {start_timestamp} to {end_timestamp}")
 
-    # Define intervals that support time parameters
-    time_intervals = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+    # Define intervals that support batch processing (1 hour and above)
+    batch_timeframes = ["1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+    all_time_intervals = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+
+    # Create time batches for historical data
+    time_batches = create_time_batches(start_timestamp, end_timestamp, batch_days=30)
+    logger.info(f"📦 Created {len(time_batches)} time batches (30-day chunks)")
+    for i, batch in enumerate(time_batches):
+        start_dt = datetime.fromtimestamp(batch['start_time'] // 1000)
+        end_dt = datetime.fromtimestamp(batch['end_time'] // 1000)
+        logger.info(f"   Batch {i+1}: {start_dt.strftime('%Y-%m-%d')} to {end_dt.strftime('%Y-%m-%d')}")
 
     # Default pipelines if none specified - only pipelines that support time-based parameters
     if not pipelines:
@@ -458,51 +473,66 @@ def run_historical_mode(historical_args, pipelines=None):
             "spot_aggregated_taker_volume_history",
             "spot_taker_volume_history",
             "spot_ask_bids_history",
-            "spot_aggregated_ask_bids_history"
+            "spot_aggregated_ask_bids_history",
+            # Pipelines with direct time parameter support
+            "whale_transfer"
         ]
         logger.info(f"📊 Using default pipelines: {', '.join(pipelines)}")
 
     logger.info(f"🎯 Running pipelines: {', '.join(pipelines)}")
-    logger.info(f"⏱️  Time parameters applied to intervals: {', '.join(time_intervals)}")
+    logger.info(f"⚡ Batch processing enabled for timeframes: {', '.join(batch_timeframes)}")
     logger.info("=" * 80)
 
-    # Historical parameters to inject
-    historical_params = {
-        "start_time": start_timestamp,
-        "end_time": end_timestamp
-    }
-
-    # Run with historical parameters
+    # Run with batch processing
     try:
         service = CoinglassService(ensure_tables=False)
         results = {}
 
         for pipeline_name in pipelines:
-            if pipeline_name in service.pipelines:
-                logger.info(f"\n🔄 Running {pipeline_name} with historical parameters...")
+            if pipeline_name not in service.pipelines:
+                logger.warning(f"⚠️ {pipeline_name}: Not found in service pipelines")
+                continue
 
-                # Merge historical params with pipeline default params
+            logger.info(f"\n🔄 Running {pipeline_name} with batch processing...")
+            pipeline_total = {"records": 0, "batches": 0, "errors": 0}
+
+            # Process each time batch
+            for batch_idx, batch in enumerate(time_batches):
+                logger.info(f"   📦 Processing batch {batch_idx + 1}/{len(time_batches)} "
+                           f"({datetime.fromtimestamp(batch['start_time'] // 1000).strftime('%Y-%m-%d')} to "
+                           f"{datetime.fromtimestamp(batch['end_time'] // 1000).strftime('%Y-%m-%d')})")
+
+                # Merge batch params with pipeline default params
                 pipeline_params = service.pipelines[pipeline_name]["params"].copy()
-                pipeline_params.update(historical_params)
 
-                # Only apply time parameters to pipelines that support intervals or timeframes
+                # Apply batch time parameters
+                batch_params = {
+                    "start_time": batch['start_time'],
+                    "end_time": batch['end_time']
+                }
+                pipeline_params.update(batch_params)
+
+                # Filter timeframes/intervals based on batch processing rules
                 if "intervals" in pipeline_params:
-                    # Filter intervals to only time-based ones for historical mode
                     original_intervals = pipeline_params["intervals"]
                     if isinstance(original_intervals, list):
-                        pipeline_params["intervals"] = [interval for interval in original_intervals
-                                                   if interval in time_intervals]
-                        logger.info(f"   📝 Filtered intervals: {pipeline_params['intervals']}")
+                        # For batch processing: use all intervals for non-batch timeframes, filter for batch timeframes
+                        filtered_intervals = [interval for interval in original_intervals
+                                            if interval in all_time_intervals]
+                        pipeline_params["intervals"] = filtered_intervals
+                        logger.info(f"      📝 Intervals: {pipeline_params['intervals']}")
                 elif "timeframes" in pipeline_params:
-                    # Filter timeframes to only time-based ones for historical mode
                     original_timeframes = pipeline_params["timeframes"]
                     if isinstance(original_timeframes, list):
-                        pipeline_params["timeframes"] = [timeframe for timeframe in original_timeframes
-                                                      if timeframe in time_intervals]
-                        logger.info(f"   📝 Filtered timeframes: {pipeline_params['timeframes']}")
-
-                # Add the historical parameters directly
-                pipeline_params.update(historical_params)
+                        # For batch processing: only use 1h+ timeframes
+                        filtered_timeframes = [timeframe for timeframe in original_timeframes
+                                             if timeframe in batch_timeframes]
+                        pipeline_params["timeframes"] = filtered_timeframes
+                        logger.info(f"      📝 Timeframes (batch-only): {pipeline_params['timeframes']}")
+                else:
+                    # Pipeline doesn't use intervals/timeframes (e.g., whale_transfer)
+                    # Time parameters are already applied via batch_params
+                    logger.info(f"      📝 Direct time parameters applied (no intervals/timeframes)")
 
                 try:
                     result = service.pipelines[pipeline_name]["func"](
@@ -510,29 +540,58 @@ def run_historical_mode(historical_args, pipelines=None):
                         client=service.client,
                         params=pipeline_params
                     )
-                    results[pipeline_name] = result
 
-                    logger.info(f"✅ {pipeline_name} completed")
+                    # Count records from this batch
+                    if isinstance(result, dict):
+                        batch_records = sum(v for k, v in result.items()
+                                          if isinstance(v, int) and not str(k).endswith("_duplicates"))
+                    else:
+                        batch_records = int(result) if isinstance(result, (int, float)) else 0
+
+                    pipeline_total["records"] += batch_records
+                    pipeline_total["batches"] += 1
+
+                    logger.info(f"      ✅ Batch {batch_idx + 1} completed: {batch_records} records")
+
                 except Exception as pipeline_error:
+                    pipeline_total["errors"] += 1
                     # Special handling for funding_rate time errors
                     if pipeline_name == "funding_rate" and "time error" in str(pipeline_error):
-                        logger.warning(f"⚠️ {pipeline_name}: API time limitation - funding rates may not support {years_ago if 'years_ago' in locals() else 'requested'}-year historical data")
-                        logger.info(f"💡 Try running funding_rate separately with a more recent time range using: --historical {start_timestamp // 1000} {end_timestamp // 1000}")
-                        results[pipeline_name] = {"error": f"API time limitation: {pipeline_error}"}
+                        logger.warning(f"      ⚠️ Batch {batch_idx + 1}: API time limitation (expected for old data)")
                     else:
-                        logger.error(f"❌ {pipeline_name}: {pipeline_error}")
-                        results[pipeline_name] = {"error": str(pipeline_error)}
-            else:
-                logger.warning(f"⚠️ {pipeline_name}: Not found in service pipelines")
+                        logger.error(f"      ❌ Batch {batch_idx + 1}: {pipeline_error}")
+
+            results[pipeline_name] = pipeline_total
+            logger.info(f"✅ {pipeline_name} completed: {pipeline_total['records']} total records "
+                       f"({pipeline_total['batches']} batches, {pipeline_total['errors']} errors)")
 
         logger.info("=" * 80)
         logger.info("📊 HISTORICAL COLLECTION SUMMARY")
         logger.info("=" * 80)
+
+        total_records = 0
+        total_batches = 0
+        total_errors = 0
+
         for pipeline_name, result in results.items():
-            if isinstance(result, dict) and "total" in result:
-                logger.info(f"✅ {pipeline_name}: {result['total']} total records processed")
+            if isinstance(result, dict) and "records" in result:
+                total_records += result["records"]
+                total_batches += result["batches"]
+                total_errors += result["errors"]
+
+                if result["errors"] > 0:
+                    logger.info(f"✅ {pipeline_name}: {result['records']} records ({result['batches']} batches, {result['errors']} errors)")
+                else:
+                    logger.info(f"✅ {pipeline_name}: {result['records']} records ({result['batches']} batches)")
             else:
                 logger.info(f"✅ {pipeline_name}: Completed")
+
+        # Overall summary
+        logger.info("-" * 80)
+        logger.info(f"📈 OVERALL: {total_records} total records collected")
+        logger.info(f"📦 Processed: {total_batches} batches across {len(pipelines)} pipelines")
+        if total_errors > 0:
+            logger.info(f"⚠️ Errors: {total_errors} batch failures (may be expected due to API limitations)")
         logger.info("=" * 80)
         logger.info("🎉 Historical data collection completed successfully!")
         logger.info("=" * 80)
