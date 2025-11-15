@@ -76,3 +76,4 @@ dmypy.json
 # *.md
 *.sql
 *.sqlite
+feature/spot/newera(2).sql
