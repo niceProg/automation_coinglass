@@ -80,6 +80,13 @@ Usage Examples:
     python main.py --dev
     python main.py --server
 
+    # Historical Data Collection
+    python main.py --historical 3        # 3 years of historical data (all time-based pipelines)
+    python main.py --historical 1        # 1 year of historical data
+    python main.py --historical 1672531200 1763164800000  # Custom timestamp range
+    python main.py --historical 1672531200  # From specific date to now
+    python main.py --historical 3 funding_rate spot_ask_bids_history  # Historical data for specific pipelines
+
     # Individual Pipelines
     python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
     # python main.py exchange_balance_list  # DISABLED - Not documented
@@ -615,6 +622,13 @@ def show_help():
     logger.info("  python main.py --continuous")
     logger.info("  python main.py --dev")
     logger.info("  python main.py --server    # High-frequency (1s) for Docker deployment")
+
+    logger.info("\n📅 Historical Data Collection:")
+    logger.info("  python main.py --historical 3        # 3 years of historical data")
+    logger.info("  python main.py --historical 1        # 1 year of historical data")
+    logger.info("  python main.py --historical 1672531200 1763164800000  # Custom timestamp range")
+    logger.info("  python main.py --historical 1672531200  # From specific date to now")
+    logger.info("  python main.py --historical 3 funding_rate spot_ask_bids_history  # Specific pipelines")
 
     logger.info("\n📈 Individual Market Categories:")
     logger.info("  # Derivatives")
