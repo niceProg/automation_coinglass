@@ -32,8 +32,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
             pair = f"{symbol}USDT"
             for interval in TIMEFRAMES:
                 try:
+                    # Pass time parameters if available
+                    time_params = {}
+                    if "start_time" in params:
+                        time_params["start_time"] = params["start_time"]
+                    if "end_time" in params:
+                        time_params["end_time"] = params["end_time"]
+
                     rows = client.get_fr_history(
-                        exchange=exchange, symbol=pair, interval=interval
+                        exchange=exchange, symbol=pair, interval=interval, **time_params
                     )
                     if rows:
                         saved = repo.upsert_fr_history(

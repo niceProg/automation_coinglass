@@ -33,8 +33,6 @@ COMMAND CATEGORIES:
     # exchange_onchain_transfers       On-chain transfer monitoring (DISABLED)
 
 💰 SPOT MARKET:
-    spot_orderbook                   Real-time orderbook snapshots for trading pairs
-    spot_orderbook_aggregated        Aggregated orderbook data across exchanges
     spot_coins_markets               Comprehensive coin market data
     spot_pairs_markets               Trading pair market data
     spot_price_history               Historical OHLC price data
@@ -85,7 +83,7 @@ Usage Examples:
     # Individual Pipelines
     python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
     # python main.py exchange_balance_list  # DISABLED - Not documented
-    python main.py spot_orderbook spot_orderbook_aggregated spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history spot_ask_bids_history spot_aggregated_ask_bids_history
+    python main.py spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history spot_ask_bids_history spot_aggregated_ask_bids_history
     python main.py bitcoin_etf_list bitcoin_etf_flows_history  # bitcoin_etf_history disabled
     # python main.py supported_exchange_pairs pairs_markets  # DISABLED
 """
@@ -358,6 +356,152 @@ def show_freshness():
     logger.info("=" * 80)
 
 
+def run_historical_mode(historical_args, pipelines=None):
+    """Run historical data collection with custom time parameters."""
+    from app.services.coinglass_service import CoinglassService
+    from datetime import datetime, timedelta
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Parse historical arguments
+    start_time = None
+    end_time = None
+
+    if len(historical_args) == 0:
+        # Default to 1 year if no arguments provided
+        years = 1
+        end_time = datetime.now()
+        start_time = end_time - timedelta(days=365 * years)
+    elif len(historical_args) == 1:
+        # Preset mode: --historical 3 (3 years)
+        try:
+            years = int(historical_args[0])
+            end_time = datetime.now()
+            start_time = end_time - timedelta(days=365 * years)
+        except ValueError:
+            # If not a number, treat as start timestamp
+            try:
+                start_time = datetime.fromtimestamp(int(historical_args[0]))
+                end_time = datetime.now()
+            except (ValueError, OSError):
+                logger.error(f"❌ Invalid timestamp format: {historical_args[0]}")
+                return
+    elif len(historical_args) >= 2:
+        # Manual mode: --historical start_time end_time
+        try:
+            start_time = datetime.fromtimestamp(int(historical_args[0]))
+            end_time = datetime.fromtimestamp(int(historical_args[1]))
+        except (ValueError, OSError) as e:
+            logger.error(f"❌ Invalid timestamp format: {e}")
+            return
+
+    # Convert to Unix timestamps for API
+    start_timestamp = int(start_time.timestamp())
+    end_timestamp = int(end_time.timestamp())
+
+    logger.info("=" * 80)
+    logger.info("📅 HISTORICAL DATA COLLECTION MODE")
+    logger.info("=" * 80)
+    logger.info(f"🕐 Time Range: {start_time.strftime('%Y-%m-%d %H:%M:%S')} to {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"🔢 Timestamps: {start_timestamp} to {end_timestamp}")
+
+    # Define intervals that support time parameters
+    time_intervals = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+
+    # Default pipelines if none specified - only pipelines that support time-based parameters
+    if not pipelines:
+        pipelines = [
+            # Pipelines with "timeframes" parameter
+            "funding_rate",
+            "oi_aggregated_history",
+            "long_short_ratio_global",
+            "long_short_ratio_top",
+            "liquidation_aggregated",
+            "futures_basis",
+            # Pipelines with "intervals" parameter
+            "spot_price_history",
+            "open_interest_aggregated_stablecoin_history",
+            "futures_footprint_history",
+            "spot_large_orderbook_history",
+            "spot_aggregated_taker_volume_history",
+            "spot_taker_volume_history",
+            "spot_ask_bids_history",
+            "spot_aggregated_ask_bids_history"
+        ]
+        logger.info(f"📊 Using default pipelines: {', '.join(pipelines)}")
+
+    logger.info(f"🎯 Running pipelines: {', '.join(pipelines)}")
+    logger.info(f"⏱️  Time parameters applied to intervals: {', '.join(time_intervals)}")
+    logger.info("=" * 80)
+
+    # Historical parameters to inject
+    historical_params = {
+        "start_time": start_timestamp,
+        "end_time": end_timestamp
+    }
+
+    # Run with historical parameters
+    try:
+        service = CoinglassService(ensure_tables=True)
+        results = {}
+
+        for pipeline_name in pipelines:
+            if pipeline_name in service.pipelines:
+                logger.info(f"\n🔄 Running {pipeline_name} with historical parameters...")
+
+                # Merge historical params with pipeline default params
+                pipeline_params = service.pipelines[pipeline_name]["params"].copy()
+                pipeline_params.update(historical_params)
+
+                # Only apply time parameters to pipelines that support intervals or timeframes
+                if "intervals" in pipeline_params:
+                    # Filter intervals to only time-based ones for historical mode
+                    original_intervals = pipeline_params["intervals"]
+                    if isinstance(original_intervals, list):
+                        pipeline_params["intervals"] = [interval for interval in original_intervals
+                                                   if interval in time_intervals]
+                        logger.info(f"   📝 Filtered intervals: {pipeline_params['intervals']}")
+                elif "timeframes" in pipeline_params:
+                    # Filter timeframes to only time-based ones for historical mode
+                    original_timeframes = pipeline_params["timeframes"]
+                    if isinstance(original_timeframes, list):
+                        pipeline_params["timeframes"] = [timeframe for timeframe in original_timeframes
+                                                      if timeframe in time_intervals]
+                        logger.info(f"   📝 Filtered timeframes: {pipeline_params['timeframes']}")
+
+                # Add the historical parameters directly
+                pipeline_params.update(historical_params)
+
+                result = service.pipelines[pipeline_name]["func"](
+                    conn=service.conn,
+                    client=service.client,
+                    params=pipeline_params
+                )
+                results[pipeline_name] = result
+
+                logger.info(f"✅ {pipeline_name} completed")
+            else:
+                logger.warning(f"⚠️ {pipeline_name}: Not found in service pipelines")
+
+        logger.info("=" * 80)
+        logger.info("📊 HISTORICAL COLLECTION SUMMARY")
+        logger.info("=" * 80)
+        for pipeline_name, result in results.items():
+            if isinstance(result, dict) and "total" in result:
+                logger.info(f"✅ {pipeline_name}: {result['total']} total records processed")
+            else:
+                logger.info(f"✅ {pipeline_name}: Completed")
+        logger.info("=" * 80)
+        logger.info("🎉 Historical data collection completed successfully!")
+        logger.info("=" * 80)
+
+    except Exception as e:
+        logger.error(f"❌ Failed to run historical collection: {e}")
+        logger.info("=" * 80)
+        raise
+
+
 def show_help():
     """Show help information when no arguments are provided."""
     now = datetime.now()
@@ -422,10 +566,6 @@ def show_help():
 
     # Spot Market
     logger.info("\n💰 SPOT MARKET:")
-    logger.info(
-        "  spot_orderbook              Real-time orderbook snapshots (all mandatory pairs)"
-    )
-    logger.info("  spot_orderbook_aggregated   Aggregated orderbook data (all symbols)")
     logger.info("  spot_coins_markets          Comprehensive coin market data")
     logger.info("  spot_pairs_markets          Trading pair market data")
     logger.info(
@@ -487,7 +627,6 @@ def show_help():
     # logger.info("  python main.py exchange_balance_list")  # DISABLED - Not documented
     logger.info("  ")
     logger.info("  # Spot Microstructure")
-    logger.info("  python main.py spot_orderbook spot_orderbook_aggregated")
     logger.info("  python main.py spot_coins_markets spot_pairs_markets spot_price_history")
     logger.info("  python main.py spot_large_orderbook spot_large_orderbook_history")
     logger.info("  python main.py spot_aggregated_taker_volume_history spot_taker_volume_history")
@@ -623,12 +762,19 @@ def main():
         "--freshness", action="store_true", help="Check data freshness for all pipelines"
     )
     parser.add_argument(
+        "--historical",
+        nargs="*",
+        help="Run historical data collection with custom time ranges:\n"
+        "Preset: --historical 1 year, 2 years, 3 years, etc.\n"
+        "Manual: --historical 1672531200 1763164800000 (start_time end_time)"
+    )
+    parser.add_argument(
         "pipelines",
         nargs="*",
         help="Specific pipelines to run by category:\n"
         "Derivatives: funding_rate, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis, futures_footprint_history\n"
         "Exchange: exchange_assets [DISABLED], exchange_balance_list [DISABLED], exchange_onchain_transfers [DISABLED]\n"
-        "Spot: spot_orderbook, spot_orderbook_aggregated, spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history, spot_ask_bids_history, spot_aggregated_ask_bids_history\n"
+        "Spot: spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history, spot_ask_bids_history, spot_aggregated_ask_bids_history\n"
         "Bitcoin ETF: bitcoin_etf_list, bitcoin_etf_flows_history, bitcoin_etf_premium_discount_history\n"
         "Trading: supported_exchange_pairs [DISABLED], pairs_markets [DISABLED], coins_markets [DISABLED]\n"
         "Macro: bitcoin_vs_global_m2_growth\n"
@@ -664,6 +810,9 @@ def main():
 
     elif args.freshness:
         show_freshness()
+
+    elif args.historical is not None:
+        run_historical_mode(args.historical, args.pipelines if args.pipelines else None)
 
     elif args.pipelines:
         # Check if any CryptoQuant pipelines are requested

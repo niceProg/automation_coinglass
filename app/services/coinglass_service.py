@@ -19,8 +19,6 @@ from app.providers.coinglass.pipelines import (
     # exchange_assets,  # DISABLED
     # exchange_balance_list,  # DISABLED - Not documented
     # exchange_onchain_transfers,  # DISABLED
-    spot_orderbook,
-    spot_orderbook_aggregated,
     spot_coins_markets,
     spot_pairs_markets,
     spot_price_history,
@@ -211,26 +209,6 @@ class CoinglassService:
                 "params": {**self.default_params, "symbols": ["BTCUSDT"], "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"], "hours_back": 2},
             },
             # Spot Market Pipelines
-            "spot_orderbook": {
-                "func": spot_orderbook.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
-                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "ranges": ["0.25", "0.5"],
-                    "hours_back": 2,
-                },
-            },
-            "spot_orderbook_aggregated": {
-                "func": spot_orderbook_aggregated.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
-                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "ranges": ["0.25", "0.5"],
-                    "hours_back": 2,
-                },
-            },
             "spot_coins_markets": {
                 "func": spot_coins_markets.run,
                 "params": {
@@ -522,9 +500,7 @@ class CoinglassService:
                     # ("exchange_onchain_transfers", "cg_exchange_onchain_transfers"),  # DISABLED
                     # ===== NEW ENDPOINTS =====
                     ("futures_footprint_history", "cg_futures_footprint_history"),
-                    ("spot_orderbook", "cg_spot_orderbook_history"),
-                    ("spot_orderbook_aggregated", "cg_spot_orderbook_aggregated"),
-                    ("spot_large_orderbook_history", "cg_spot_large_orderbook_history"),
+                                        ("spot_large_orderbook_history", "cg_spot_large_orderbook_history"),
                     ("spot_large_orderbook", "cg_spot_large_orderbook"),
                     ("spot_aggregated_taker_volume_history", "cg_spot_aggregated_taker_volume_history"),
                     ("spot_taker_volume_history", "cg_spot_taker_volume_history"),
