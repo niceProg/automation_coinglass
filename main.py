@@ -386,22 +386,43 @@ def run_historical_mode(historical_args, pipelines=None):
         # Preset mode: --historical 3 (3 years)
         try:
             years = int(historical_args[0])
-            years_ago = years
-            end_time = datetime.now()
-            start_time = end_time - timedelta(days=365 * years)
-        except ValueError:
-            # If not a number, treat as start timestamp
-            try:
-                start_time = datetime.fromtimestamp(int(historical_args[0]))
+            # Check if it's a reasonable year value (1-100)
+            if 1 <= years <= 100:
+                years_ago = years
                 end_time = datetime.now()
-            except (ValueError, OSError):
-                logger.error(f"❌ Invalid timestamp format: {historical_args[0]}")
-                return
+                start_time = end_time - timedelta(days=365 * years)
+            else:
+                # Treat as timestamp (seconds or milliseconds)
+                timestamp_val = int(historical_args[0])
+                # If timestamp is in milliseconds (> 1e12), convert to seconds
+                if timestamp_val > 1e12:
+                    timestamp_val = timestamp_val / 1000
+                try:
+                    start_time = datetime.fromtimestamp(timestamp_val)
+                    end_time = datetime.now()
+                    years_ago = None
+                except (ValueError, OSError) as e:
+                    logger.error(f"❌ Invalid timestamp format: {historical_args[0]} - {e}")
+                    return
+        except ValueError:
+            logger.error(f"❌ Invalid format: {historical_args[0]}. Use years (1-100) or timestamp.")
+            return
     elif len(historical_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            start_time = datetime.fromtimestamp(int(historical_args[0]))
-            end_time = datetime.fromtimestamp(int(historical_args[1]))
+            # Handle both seconds and milliseconds for start_time
+            start_ts = int(historical_args[0])
+            if start_ts > 1e12:  # If milliseconds, convert to seconds
+                start_ts = start_ts / 1000
+            start_time = datetime.fromtimestamp(start_ts)
+
+            # Handle both seconds and milliseconds for end_time
+            end_ts = int(historical_args[1])
+            if end_ts > 1e12:  # If milliseconds, convert to seconds
+                end_ts = end_ts / 1000
+            end_time = datetime.fromtimestamp(end_ts)
+
+            years_ago = None
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
