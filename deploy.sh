@@ -19,13 +19,15 @@ show_usage() {
     echo "Usage: ./deploy.sh [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --all-profiles     Deploy all services (derivatives, exchange, spot, etf, trading, cryptoquant)"
+    echo "  --all-profiles     Deploy all services (derivatives, exchange, spot, etf, trading, cryptoquant, sentiment, macro)"
     echo "  --derivatives      Deploy only derivatives pipelines"
     echo "  --exchange         Deploy only exchange pipelines"
     echo "  --spot             Deploy only spot market pipelines"
     echo "  --etf              Deploy only Bitcoin ETF pipelines"
     echo "  --trading          Deploy only trading market pipelines"
     echo "  --cryptoquant      Deploy only CryptoQuant pipelines"
+    echo "  --sentiment        Deploy only sentiment analysis pipelines"
+    echo "  --macro            Deploy only macro economic pipelines"
     echo "  --production       Deploy all production services"
     echo "  --setup            Run database setup only"
     echo "  --no-build         Skip Docker image rebuild"
@@ -62,12 +64,20 @@ SKIP_BUILD=false
 
 case "${1:-}" in
     --all-profiles)
-        PROFILES="--profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant"
+        PROFILES="--profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile sentiment --profile macro"
         echo -e "${GREEN}🎯 Deploying ALL profiles${NC}"
         ;;
     --cryptoquant)
         PROFILES="--profile cryptoquant"
         echo -e "${GREEN}🎯 Deploying cryptoquant profile${NC}"
+        ;;
+    --sentiment)
+        PROFILES="--profile sentiment"
+        echo -e "${GREEN}🎯 Deploying sentiment profile${NC}"
+        ;;
+    --macro)
+        PROFILES="--profile macro"
+        echo -e "${GREEN}🎯 Deploying macro profile${NC}"
         ;;
     --derivatives)
         PROFILES="--profile derivatives"
@@ -181,6 +191,8 @@ echo "   ./deploy.sh --spot           # Deploy only spot"
 echo "   ./deploy.sh --etf            # Deploy only ETF"
 echo "   ./deploy.sh --trading        # Deploy only trading"
     echo "   ./deploy.sh --cryptoquant    # Deploy only CryptoQuant"
+echo "   ./deploy.sh --sentiment      # Deploy only sentiment analysis"
+echo "   ./deploy.sh --macro          # Deploy only macro economic"
 echo ""
 echo -e "${YELLOW}Stop:${NC}"
 echo "   ./stop.sh                    # Stop all services"
