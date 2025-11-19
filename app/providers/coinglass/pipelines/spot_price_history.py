@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Any, Dict, List
 from datetime import datetime, timedelta
 from app.repositories.coinglass_repository import CoinglassRepository
@@ -21,6 +22,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])  # Binance and Bybit as requested
     SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"])  # All mandatory pairs
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])  # All supported intervals
+    REQUEST_DELAY = params.get("request_delay", 20)  # Delay between requests in seconds to avoid rate limiting
     # LIMIT = params.get("limit", 100)  # Removed - using API default
 
     summary = {
@@ -73,6 +75,10 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         logger.warning(f"No data returned for spot price history: {exchange} {symbol} {interval}")
 
                     summary["fetches"] += 1
+
+                    # Add delay between requests to avoid HTTP 400 (rate limiting)
+                    logger.info(f"⏳ Waiting {REQUEST_DELAY} seconds before next request...")
+                    time.sleep(REQUEST_DELAY)
 
                 except Exception as e:
                     logger.warning(f"Error fetching spot price history for {exchange} {symbol}: {e}")
