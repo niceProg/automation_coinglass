@@ -423,19 +423,26 @@ def run_historical_mode(historical_args, pipelines=None):
         end_time = datetime.now()
         start_time = end_time - timedelta(days=365 * years)
     elif len(time_args) == 1:
-        # Preset mode: --historical 3 (3 years) or single timestamp
-        try:
-            years = int(time_args[0])
+        # Single numeric argument - determine if it's years or timestamp
+        num_value = int(time_args[0])
+
+        # Heuristic: If number is <= 10, treat as years; otherwise treat as timestamp
+        # Years 1-10 make sense, timestamps are large numbers (millions+)
+        if num_value <= 10:
+            # Preset mode: --historical 3 (3 years)
+            years = num_value
             years_ago = years
             end_time = datetime.now()
             start_time = end_time - timedelta(days=365 * years)
-        except ValueError:
-            # Should not happen since we filtered numeric values already
+            logger.info(f"📅 Using {years} years of historical data")
+        else:
+            # Timestamp mode: --historical 1704067200 (timestamp)
             try:
-                start_time = datetime.fromtimestamp(int(time_args[0]))
+                start_time = datetime.fromtimestamp(num_value)
                 end_time = datetime.now()
-            except (ValueError, OSError):
-                logger.error(f"❌ Invalid timestamp format: {time_args[0]}")
+                logger.info(f"📅 Using custom start timestamp: {num_value} ({start_time.strftime('%Y-%m-%d')})")
+            except (ValueError, OSError) as e:
+                logger.error(f"❌ Invalid timestamp format: {time_args[0]} - {e}")
                 return
     elif len(time_args) >= 2:
         # Manual mode: --historical start_time end_time
