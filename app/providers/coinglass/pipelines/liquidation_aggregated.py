@@ -37,8 +37,18 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     for symbol in SYMBOLS:
         for interval in TIMEFRAMES:
             try:
+                # Pass time parameters if available
+                time_params = {}
+                if "start_time" in params:
+                    time_params["start_time"] = params["start_time"]
+                if "end_time" in params:
+                    time_params["end_time"] = params["end_time"]
+
+                if time_params:
+                    logger.info(f"Using time parameters: {time_params}")
+
                 rows = client.get_liquidation_aggregated_history(
-                    exchange_list=EXCHANGE_LIST, symbol=symbol, interval=interval
+                    exchange_list=EXCHANGE_LIST, symbol=symbol, interval=interval, **time_params
                 )
                 if rows:
                     result = repo.upsert_liquidation_aggregated_history(

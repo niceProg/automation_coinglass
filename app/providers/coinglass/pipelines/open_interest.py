@@ -65,9 +65,19 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     for symbol in SYMBOLS:
         for interval in TIMEFRAMES:
             try:
+                # Pass time parameters if available
+                time_params = {}
+                if "start_time" in params:
+                    time_params["start_time"] = params["start_time"]
+                if "end_time" in params:
+                    time_params["end_time"] = params["end_time"]
+
+                if time_params:
+                    logger.info(f"Using time parameters: {time_params}")
+
                 rows = client.get_oi_aggregated_history(
                     symbol=symbol, interval=interval,
-                    unit=UNIT
+                    unit=UNIT, **time_params
                 )
                 if rows:
                     saved = repo.upsert_oi_aggregated_history(
