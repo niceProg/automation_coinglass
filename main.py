@@ -391,37 +391,57 @@ def run_historical_mode(historical_args, pipelines=None):
 
     logger = logging.getLogger(__name__)
 
-    # Parse historical arguments
+    # Separate time arguments from pipeline names in historical_args
+    time_args = []
+    pipeline_names_from_historical = []
+
+    for arg in historical_args:
+        try:
+            # Try to convert to int (timestamp or year)
+            int(arg)
+            time_args.append(arg)
+        except ValueError:
+            # If not a number, treat as pipeline name
+            pipeline_names_from_historical.append(arg)
+
+    # Merge pipeline names from both sources
+    if pipeline_names_from_historical:
+        if pipelines:
+            pipelines.extend(pipeline_names_from_historical)
+        else:
+            pipelines = pipeline_names_from_historical
+
+    # Parse historical arguments (only time_args)
     start_time = None
     end_time = None
     years_ago = None  # Track years for error messages
 
-    if len(historical_args) == 0:
+    if len(time_args) == 0:
         # Default to 1 year if no arguments provided
         years = 1
         years_ago = years
         end_time = datetime.now()
         start_time = end_time - timedelta(days=365 * years)
-    elif len(historical_args) == 1:
-        # Preset mode: --historical 3 (3 years)
+    elif len(time_args) == 1:
+        # Preset mode: --historical 3 (3 years) or single timestamp
         try:
-            years = int(historical_args[0])
+            years = int(time_args[0])
             years_ago = years
             end_time = datetime.now()
             start_time = end_time - timedelta(days=365 * years)
         except ValueError:
-            # If not a number, treat as start timestamp
+            # Should not happen since we filtered numeric values already
             try:
-                start_time = datetime.fromtimestamp(int(historical_args[0]))
+                start_time = datetime.fromtimestamp(int(time_args[0]))
                 end_time = datetime.now()
             except (ValueError, OSError):
-                logger.error(f"❌ Invalid timestamp format: {historical_args[0]}")
+                logger.error(f"❌ Invalid timestamp format: {time_args[0]}")
                 return
-    elif len(historical_args) >= 2:
+    elif len(time_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            start_time = datetime.fromtimestamp(int(historical_args[0]))
-            end_time = datetime.fromtimestamp(int(historical_args[1]))
+            start_time = datetime.fromtimestamp(int(time_args[0]))
+            end_time = datetime.fromtimestamp(int(time_args[1]))
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
