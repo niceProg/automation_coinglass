@@ -1,6 +1,5 @@
 # app/providers/coinglass/pipelines/funding_rate.py
 import logging
-import time
 from typing import Any, Dict, List
 from app.repositories.coinglass_repository import CoinglassRepository
 
@@ -19,7 +18,6 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     TIMEFRAMES = params.get("timeframes", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])
     EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])
-    REQUEST_DELAY = params.get("request_delay", 20)  # Delay between requests in seconds to avoid rate limiting
     # LIMIT = params.get("limit", 1000)  # Removed - using API default
 
     summary = {
@@ -67,11 +65,6 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                             f"⚠️ fr_history[{exchange}:{pair}:{interval}]: No data (skipped)"
                         )
                     summary["fr_history_fetches"] += 1
-
-                    # Add delay between requests to avoid HTTP 400 (rate limiting)
-                    logger.info(f"⏳ Waiting {REQUEST_DELAY} seconds before next request...")
-                    time.sleep(REQUEST_DELAY)
-
                 except Exception as e:
                     logger.warning(
                         f"⚠️ fr_history[{exchange}:{pair}:{interval}]: Exception: {e} (skipped)"
@@ -91,10 +84,6 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                 summary["fr_exchange_list"] += saved
             else:
                 logger.info(f"⚠️ fr_exchange_list[{symbol}]: No data (skipped)")
-
-            # Add delay between requests to avoid HTTP 400 (rate limiting)
-            logger.info(f"⏳ Waiting {REQUEST_DELAY} seconds before next request...")
-            time.sleep(REQUEST_DELAY)
         except Exception as e:
             logger.warning(f"⚠️ fr_exchange_list[{symbol}]: Exception: {e} (skipped)")
             continue
