@@ -31,8 +31,11 @@ show_usage() {
     echo "  --etf              Stop only Bitcoin ETF pipelines"
     echo "  --trading          Stop only trading market pipelines"
     echo "  --cryptoquant      Stop only CryptoQuant pipelines"
+    echo "  --sentiment        Stop only sentiment pipelines (fear_greed_index, hyperliquid_whale_alert, whale_transfer)"
+    echo "  --macro            Stop only macro pipelines (bitcoin_vs_global_m2_growth)"
     echo "  --production       Stop all production services"
     echo "  --monitoring       Stop monitoring services (status, freshness)"
+    echo "  --endpoints        Stop specific endpoints: hyperliquid_whale_alert, bitcoin_vs_global_m2_growth, whale_transfer, fear_greed_index"
     echo "  --service <name>   Stop a specific service by name"
     echo "  --remove           Stop and remove containers, networks, and volumes (ALL profiles)"
     echo "  --help             Show this help message"
@@ -40,6 +43,9 @@ show_usage() {
     echo "Examples:"
     echo "  ./stop.sh                          # Stop all services (derivatives, exchange, spot, etf, trading, cryptoquant)"
     echo "  ./stop.sh --derivatives            # Stop only derivatives services"
+    echo "  ./stop.sh --sentiment              # Stop only sentiment services"
+    echo "  ./stop.sh --macro                  # Stop only macro services"
+    echo "  ./stop.sh --endpoints              # Stop specific endpoints (hyperliquid_whale_alert, bitcoin_vs_global_m2_growth, whale_transfer, fear_greed_index)"
     echo "  ./stop.sh --service funding_rate   # Stop only funding_rate service"
     echo "  ./stop.sh --remove                 # Stop and remove everything"
     echo ""
@@ -48,7 +54,7 @@ show_usage() {
 # Function to stop all services across all profiles
 stop_all() {
     echo -e "${YELLOW}🛑 Stopping all services across all profiles...${NC}"
-    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile monitoring --profile setup down
+    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile sentiment --profile macro --profile monitoring --profile setup down
     echo -e "${GREEN}✅ All services stopped${NC}"
 }
 
@@ -69,12 +75,20 @@ stop_service() {
     echo -e "${GREEN}✅ Service $service stopped${NC}"
 }
 
+# Function to stop the specific requested endpoints
+stop_requested_endpoints() {
+    echo -e "${YELLOW}🛑 Stopping specific endpoints: hyperliquid_whale_alert, bitcoin_vs_global_m2_growth, whale_transfer, fear_greed_index...${NC}"
+    docker-compose stop hyperliquid_whale_alert bitcoin_vs_global_m2_growth whale_transfer fear_greed_index
+    docker-compose rm -f hyperliquid_whale_alert bitcoin_vs_global_m2_growth whale_transfer fear_greed_index
+    echo -e "${GREEN}✅ Requested endpoints stopped${NC}"
+}
+
 # Function to stop and remove everything
 stop_and_remove() {
     echo -e "${RED}🗑️  Stopping and removing all containers, networks, and volumes...${NC}"
     echo -e "${YELLOW}⚠️  This will remove all data. Press Ctrl+C to cancel...${NC}"
     sleep 3
-    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile monitoring --profile setup down --volumes --remove-orphans
+    docker-compose --profile derivatives --profile exchange --profile spot --profile etf --profile trading --profile cryptoquant --profile sentiment --profile macro --profile monitoring --profile setup down --volumes --remove-orphans
     echo -e "${GREEN}✅ All containers, networks, and volumes removed${NC}"
 }
 
@@ -114,6 +128,18 @@ case "${1:-}" in
         ;;
     --cryptoquant)
         stop_profile "cryptoquant"
+        show_status
+        ;;
+    --sentiment)
+        stop_profile "sentiment"
+        show_status
+        ;;
+    --macro)
+        stop_profile "macro"
+        show_status
+        ;;
+    --endpoints)
+        stop_requested_endpoints
         show_status
         ;;
     --production)
