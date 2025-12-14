@@ -37,6 +37,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     summary = {
         "aggregated_ask_bids_history": 0,
         "aggregated_ask_bids_history_duplicates": 0,
+        "total_received": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -60,13 +61,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         )
 
                         if data:
+                            # Add to total received count
+                            received_count = len(data)
+                            summary["total_received"] += received_count
+
                             # Process and insert data with duplicate checking
                             result = repo.upsert_spot_aggregated_ask_bids_history_batch(
                                 exchange, symbol, interval, range_percent, data
                             )
                             logger.info(
                                 f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                f"received={len(data)}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
+                                f"received={received_count}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
                             )
                             summary["aggregated_ask_bids_history"] += result['spot_aggregated_ask_bids_history']
                             summary["aggregated_ask_bids_history_duplicates"] += result['spot_aggregated_ask_bids_history_duplicates']
@@ -85,4 +90,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         continue
 
     logger.info(f"Spot Aggregated Ask Bids History pipeline completed: {summary}")
+
+    # Log total summary
+    total_received = summary["total_received"]
+    total_saved = summary["aggregated_ask_bids_history"]
+    total_duplicates = summary["aggregated_ask_bids_history_duplicates"]
+
+    logger.info(
+        f"📦 Spot Aggregated Ask Bids History pipeline completed. "
+        f"Total records: received={total_received}, saved={total_saved}, duplicates={total_duplicates} ✅"
+    )
+
     return summary
