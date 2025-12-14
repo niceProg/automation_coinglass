@@ -2892,13 +2892,21 @@ class CoinglassRepository:
 
         try:
             with self.conn.cursor() as cur:
+                # Track unique timestamps to calculate duplicates correctly
+                unique_timestamps = set()
+
                 for row in data:
                     # For now, use simple parsing - this could be improved later
                     base_asset = symbol.replace('USDT', '').replace('USD', '')
 
+                    timestamp = row.get("time")
+
+                    # Track unique timestamps regardless of insert/update
+                    unique_timestamps.add(timestamp)
+
                     cur.execute(sql, (
                         exchange_name, symbol, base_asset, interval, range_percent,
-                        row.get("time"),
+                        timestamp,
                         row.get("aggregated_bids_usd"),
                         row.get("aggregated_bids_quantity"),
                         row.get("aggregated_asks_usd"),
@@ -2909,6 +2917,15 @@ class CoinglassRepository:
                         result["spot_aggregated_ask_bids_history"] += 1
                     elif cur.rowcount == 2:
                         result["spot_aggregated_ask_bids_history_duplicates"] += 1
+
+                # Calculate the correct number of duplicates
+                total_records = len(data)
+                unique_records = len(unique_timestamps)
+                actual_duplicates = total_records - unique_records
+
+                # Update the duplicates count to reflect the real number of duplicate records
+                result["spot_aggregated_ask_bids_history_duplicates"] = actual_duplicates
+
             self.conn.commit()
             return result
         except Exception as e:
