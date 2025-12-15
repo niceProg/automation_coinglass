@@ -2887,44 +2887,38 @@ class CoinglassRepository:
             aggregated_bids_usd=VALUES(aggregated_bids_usd),
             aggregated_bids_quantity=VALUES(aggregated_bids_quantity),
             aggregated_asks_usd=VALUES(aggregated_asks_usd),
-            aggregated_asks_quantity=VALUES(aggregated_asks_quantity)
+            aggregated_asks_quantity=VALUES(aggregated_asks_quantity),
+            updated_at=CURRENT_TIMESTAMP
         """
 
         try:
             with self.conn.cursor() as cur:
-                # Track unique timestamps to calculate duplicates correctly
-                unique_timestamps = set()
+                total_inserted = 0
+                total_updated = 0
 
                 for row in data:
                     # For now, use simple parsing - this could be improved later
                     base_asset = symbol.replace('USDT', '').replace('USD', '')
 
-                    timestamp = row.get("time")
-
-                    # Track unique timestamps regardless of insert/update
-                    unique_timestamps.add(timestamp)
-
                     cur.execute(sql, (
                         exchange_name, symbol, base_asset, interval, range_percent,
-                        timestamp,
+                        row.get("time"),
                         row.get("aggregated_bids_usd"),
                         row.get("aggregated_bids_quantity"),
                         row.get("aggregated_asks_usd"),
                         row.get("aggregated_asks_quantity")
                     ))
+
                     # Get affected rows count (1 = insert, 2 = update)
-                    if cur.rowcount == 1:
-                        result["spot_aggregated_ask_bids_history"] += 1
-                    elif cur.rowcount == 2:
-                        result["spot_aggregated_ask_bids_history_duplicates"] += 1
+                    affected_rows = cur.rowcount
+                    if affected_rows == 1:
+                        total_inserted += 1
+                    elif affected_rows == 2:
+                        total_updated += 1
 
-                # Calculate the correct number of duplicates
-                total_records = len(data)
-                unique_records = len(unique_timestamps)
-                actual_duplicates = total_records - unique_records
-
-                # Update the duplicates count to reflect the real number of duplicate records
-                result["spot_aggregated_ask_bids_history_duplicates"] = actual_duplicates
+                # Set the results
+                result["spot_aggregated_ask_bids_history"] = total_inserted  # Fresh records (inserted)
+                result["spot_aggregated_ask_bids_history_duplicates"] = total_updated  # Duplicate records (updated)
 
             self.conn.commit()
             return result
