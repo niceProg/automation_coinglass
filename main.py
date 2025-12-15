@@ -496,7 +496,7 @@ def run_historical_mode(historical_args, pipelines=None):
 
     # Define intervals that support batch processing (1 hour and above)
     batch_timeframes = ["1h", "4h", "6h", "8h", "12h", "1d", "1w"]
-    all_time_intervals = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+    all_time_intervals = ["1h", "4h", "6h", "8h", "12h", "1d", "1w"]
 
     # Create time batches for historical data
     time_batches = create_time_batches(start_timestamp, end_timestamp, batch_days=30)

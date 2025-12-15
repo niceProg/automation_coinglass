@@ -24,7 +24,18 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     # Pipeline parameters
     EXCHANGES = params.get("exchanges", ["Binance", "Bybit", "OKX"])  # Individual exchanges
     SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL"])  # Base assets for aggregated data
-    INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])
+    # Convert intervals to API format (add 'h' prefix for hour intervals, 'd' for day)
+    RAW_INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])  # Standard format from main.py
+    INTERVALS = []
+    for interval in RAW_INTERVALS:
+        if interval in ["1h", "4h", "6h", "8h", "12h"]:
+            INTERVALS.append(interval.replace("h", "h"))  # h1, h4, h6, h8, h12
+        elif interval == "1d":
+            INTERVALS.append("d1")  # d1 format for daily
+        elif interval == "1w":
+            INTERVALS.append("w1")  # w1 format for weekly
+        else:
+            INTERVALS.append(interval)  # Keep as is for minutes (1m, 3m, 5m, 15m, 30m)
     RANGES = params.get("ranges", ["0.5", "1", "2", "5"])
 
     # Calculate time range for historical data
