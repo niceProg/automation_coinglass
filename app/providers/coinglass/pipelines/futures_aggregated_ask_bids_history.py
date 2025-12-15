@@ -35,11 +35,9 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         start_time = int((datetime.now() - timedelta(days=DAYS_BACK)).timestamp() * 1000)
 
     summary = {
-        "aggregated_ask_bids_history": 0,
-        "aggregated_ask_bids_history_duplicates": 0,
-        "total_received": 0,
-        "fetches": 0,
-        "errors": 0
+        "futures_aggregated_ask_bids_history": 0,
+        "futures_aggregated_ask_bids_history_duplicates": 0,
+        "fetches": 0
     }
 
     logger.info(f"Starting Futures Aggregated Ask Bids History pipeline for exchanges: {EXCHANGES}")
@@ -61,44 +59,30 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         )
 
                         if data:
-                            # Add to total received count
-                            received_count = len(data)
-                            summary["total_received"] += received_count
-
                             # Process and insert data with duplicate checking
-                            result = repo.upsert_spot_aggregated_ask_bids_history_batch(
+                            result = repo.upsert_futures_aggregated_ask_bids_history(
                                 exchange, symbol, interval, range_percent, data
                             )
                             logger.info(
-                                f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                f"received={received_count}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
+                                f"✅ futures_aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
+                                f"received={len(data)}, saved={result.get('futures_aggregated_ask_bids_history', 0)}, duplicates={result.get('futures_aggregated_ask_bids_history_duplicates', 0)}"
                             )
-                            summary["aggregated_ask_bids_history"] += result['spot_aggregated_ask_bids_history']
-                            summary["aggregated_ask_bids_history_duplicates"] += result['spot_aggregated_ask_bids_history_duplicates']
+                            # Handle both old int format and new dict format for backward compatibility
+                            if isinstance(result, dict):
+                                summary["futures_aggregated_ask_bids_history"] += result.get("futures_aggregated_ask_bids_history", 0)
+                                if result.get("futures_aggregated_ask_bids_history_duplicates", 0) > 0:
+                                    summary["futures_aggregated_ask_bids_history_duplicates"] = summary.get("futures_aggregated_ask_bids_history_duplicates", 0) + result.get("futures_aggregated_ask_bids_history_duplicates", 0)
+                            else:
+                                summary["futures_aggregated_ask_bids_history"] += result
                         else:
-                            logger.info(
-                                f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
-                            )
+                            logger.warning(f"No data returned for futures aggregated ask bids history: {exchange} {symbol} {interval} range={range_percent}")
 
                         summary["fetches"] += 1
 
                     except Exception as e:
-                        logger.warning(
-                            f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
-                        )
-                        summary["errors"] += 1
+                        logger.warning(f"Error fetching futures aggregated ask bids history for {exchange} {symbol} {interval} range={range_percent}: {e}")
+                        summary["fetches"] += 1
                         continue
 
-    logger.info(f"Futures Aggregated Ask Bids History pipeline completed: {summary}")
-
-    # Log total summary
-    total_received = summary["total_received"]
-    total_saved = summary["aggregated_ask_bids_history"]
-    total_duplicates = summary["aggregated_ask_bids_history_duplicates"]
-
-    logger.info(
-        f"📦 Futures Aggregated Ask Bids History pipeline completed. "
-        f"Total records: received={total_received}, saved={total_saved}, duplicates={total_duplicates} ✅"
-    )
-
+    logger.info(f"📦 Futures Aggregated Ask Bids History pipeline completed. Total records saved: {summary['futures_aggregated_ask_bids_history']}, duplicates={summary['futures_aggregated_ask_bids_history_duplicates']} ✅")
     return summary

@@ -2918,3 +2918,72 @@ class CoinglassRepository:
             self.conn.rollback()
             self.logger.error(f"Error upserting spot aggregated ask bids history batch: {e}")
             return result
+
+    def upsert_futures_aggregated_ask_bids_history(self, exchange_name: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures aggregated ask bids history data in batch."""
+        result = {
+            "futures_aggregated_ask_bids_history": 0,
+            "futures_aggregated_ask_bids_history_duplicates": 0,
+        }
+
+        if not data:
+            return result
+
+        sql = """
+        INSERT INTO cg_futures_aggregated_ask_bids_history (
+            exchange_name, symbol, base_asset, `interval`, range_percent,
+            time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            aggregated_bids_usd=VALUES(aggregated_bids_usd),
+            aggregated_bids_quantity=VALUES(aggregated_bids_quantity),
+            aggregated_asks_usd=VALUES(aggregated_asks_usd),
+            aggregated_asks_quantity=VALUES(aggregated_asks_quantity),
+            updated_at=CURRENT_TIMESTAMP
+        """
+
+        try:
+            with self.conn.cursor() as cur:
+                total_inserted = 0
+                total_updated = 0
+
+                for row in data:
+                    # For now, use simple parsing - this could be improved later
+                    base_asset = symbol.replace('USDT', '').replace('USD', '')
+
+                    # Extract values with safe defaults
+                    time_val = row.get('time')
+                    aggregated_bids_usd = row.get('aggregated_bids_usd', 0)
+                    aggregated_bids_quantity = row.get('aggregated_bids_quantity', 0)
+                    aggregated_asks_usd = row.get('aggregated_asks_usd', 0)
+                    aggregated_asks_quantity = row.get('aggregated_asks_quantity', 0)
+
+                    cur.execute(sql, (
+                        exchange_name,
+                        symbol,
+                        base_asset,
+                        interval,
+                        range_percent,
+                        time_val,
+                        aggregated_bids_usd,
+                        aggregated_bids_quantity,
+                        aggregated_asks_usd,
+                        aggregated_asks_quantity
+                    ))
+
+                    # Check if this was an insert or update
+                    if cur.rowcount == 1:
+                        total_inserted += 1
+                    else:
+                        total_updated += 1
+
+                # Set the results
+                result["futures_aggregated_ask_bids_history"] = total_inserted  # Fresh records (inserted)
+                result["futures_aggregated_ask_bids_history_duplicates"] = total_updated  # Duplicate records (updated)
+
+            self.conn.commit()
+            return result
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error upserting futures aggregated ask bids history batch: {e}")
+            return result
