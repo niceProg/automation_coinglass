@@ -2869,7 +2869,7 @@ class CoinglassRepository:
             return result
 
     def upsert_spot_aggregated_ask_bids_history_batch(self, exchange_name: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
-        """Upsert spot aggregated ask bids history data in batch."""
+        """Upsert spot aggregated ask bids history data in batch. [DISABLED - Pipeline not active]"""
         result = {
             "spot_aggregated_ask_bids_history": 0,
             "spot_aggregated_ask_bids_history_duplicates": 0,

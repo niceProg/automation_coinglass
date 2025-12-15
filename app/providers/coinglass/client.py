@@ -1053,7 +1053,7 @@ class CoinglassClient:
             params["range"] = range_percent
         return self._make_request("spot/orderbook/ask-bids-history", params) or []
 
-    def get_spot_aggregated_ask_bids_history(
+    def get_spot_aggregated_ask_bids_history(  # [DISABLED - Pipeline not active]
         self,
         exchange_list: str,
         symbol: str,
