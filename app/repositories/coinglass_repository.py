@@ -2,6 +2,7 @@
 import logging
 import pymysql
 from typing import Any, Dict, List, Optional
+from datetime import datetime
 from app.models.coinglass import COINGLASS_TABLES
 import time
 

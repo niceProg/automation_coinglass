@@ -374,7 +374,7 @@ class CoinglassService:
             "futures_aggregated_ask_bids_history": {
                 "func": futures_aggregated_ask_bids_history.run,
                 "params": {
-                    "exchanges_list": "Binance,Bybit,OKX",
+                    "exchanges": ["Binance", "Bybit"],
                     "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
                     "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "ranges": ["0.25", "0.5", "1", "2", "5"],

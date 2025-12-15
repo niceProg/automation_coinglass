@@ -660,7 +660,7 @@ class CoinglassClient:
         self,
         exchange_list: str,
         symbol: str,
-        interval: str = "h1",
+        interval: str = "1h",  # Changed from h1 to 1h
         limit: int = 1000,
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
@@ -691,7 +691,14 @@ class CoinglassClient:
             params["end_time"] = str(end_time)
         if range_percent:
             params["range"] = range_percent
-        return self._make_request("futures/orderbook/aggregated-ask-bids-history", params) or []
+
+        # Debug logging
+        self.logger.debug(f"[Futures Aggregated Ask Bids] Request params: {params}")
+
+        result = self._make_request("futures/orderbook/aggregated-ask-bids-history", params) or []
+        self.logger.debug(f"[Futures Aggregated Ask Bids] Response count: {len(result) if result else 0}")
+
+        return result
 
     # ---------- Spot Markets ----------
     def get_spot_coins_markets(
