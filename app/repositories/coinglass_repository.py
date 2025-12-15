@@ -2919,7 +2919,7 @@ class CoinglassRepository:
             self.logger.error(f"Error upserting spot aggregated ask bids history batch: {e}")
             return result
 
-    def upsert_futures_aggregated_ask_bids_history(self, exchange_name: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
+    def upsert_futures_aggregated_ask_bids_history(self, exchange_list: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
         """Upsert futures aggregated ask bids history data in batch."""
         result = {
             "futures_aggregated_ask_bids_history": 0,
@@ -2931,7 +2931,7 @@ class CoinglassRepository:
 
         sql = """
         INSERT INTO cg_futures_aggregated_ask_bids_history (
-            exchange_name, symbol, base_asset, `interval`, range_percent,
+            exchange_list, symbol, base_asset, `interval`, range_percent,
             time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
@@ -2959,11 +2959,11 @@ class CoinglassRepository:
                     aggregated_asks_quantity = row.get('aggregated_asks_quantity', 0)
 
                     cur.execute(sql, (
-                        exchange_name,
+                        exchange_list,
                         symbol,
                         base_asset,
                         interval,
-                        range_percent,
+                        float(range_percent),  # Convert to DECIMAL
                         time_val,
                         aggregated_bids_usd,
                         aggregated_bids_quantity,
