@@ -455,24 +455,8 @@ def run_historical_mode(historical_args, pipelines=None):
     elif len(time_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            start_ts = int(time_args[0])
-            end_ts = int(time_args[1])
-
-            # Determine if timestamps are in seconds or milliseconds
-            # If > 10^12, treat as milliseconds, otherwise as seconds
-            if start_ts > 10**12:
-                start_time = datetime.fromtimestamp(start_ts / 1000)
-                logger.info(f"📅 Using custom start timestamp: {start_ts} (milliseconds)")
-            else:
-                start_time = datetime.fromtimestamp(start_ts)
-                logger.info(f"📅 Using custom start timestamp: {start_ts} (seconds)")
-
-            if end_ts > 10**12:
-                end_time = datetime.fromtimestamp(end_ts / 1000)
-                logger.info(f"📅 Using custom end timestamp: {end_ts} (milliseconds)")
-            else:
-                end_time = datetime.fromtimestamp(end_ts)
-                logger.info(f"📅 Using custom end timestamp: {end_ts} (seconds)")
+            start_time = datetime.fromtimestamp(int(time_args[0]))
+            end_time = datetime.fromtimestamp(int(time_args[1]))
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
@@ -496,7 +480,7 @@ def run_historical_mode(historical_args, pipelines=None):
 
     # Define intervals that support batch processing (1 hour and above)
     batch_timeframes = ["1h", "4h", "6h", "8h", "12h", "1d", "1w"]
-    all_time_intervals = ["1h", "4h", "6h", "8h", "12h", "1d", "1w"]
+    all_time_intervals = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"]
 
     # Create time batches for historical data
     time_batches = create_time_batches(start_timestamp, end_timestamp, batch_days=30)

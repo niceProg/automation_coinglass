@@ -22,38 +22,28 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])  # Individual exchanges
-    SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])  # Base assets for aggregated data
-    # Use intervals directly - API accepts "1h", "4h", "6h", "8h", "12h", "1d", "1w" format
-    INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])
+    EXCHANGES = params.get("exchanges", ["Binance", "Bybit", "OKX"])  # Individual exchanges
+    SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL"])  # Base assets for aggregated data
+    # Convert intervals to API format (add 'h' prefix for hour intervals, 'd' for day)
+    RAW_INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])  # Standard format from main.py
+    INTERVALS = []
+    for interval in RAW_INTERVALS:
+        if interval in ["1h", "4h", "6h", "8h", "12h"]:
+            INTERVALS.append(interval.replace("h", "h"))  # h1, h4, h6, h8, h12
+        elif interval == "1d":
+            INTERVALS.append("d1")  # d1 format for daily
+        elif interval == "1w":
+            INTERVALS.append("w1")  # w1 format for weekly
+        else:
+            INTERVALS.append(interval)  # Keep as is for minutes (1m, 3m, 5m, 15m, 30m)
     RANGES = params.get("ranges", ["0.5", "1", "2", "5"])
 
     # Calculate time range for historical data
-    DAYS_BACK = params.get("days_back", 7)  # Use 7 days back to avoid API limitations
+    DAYS_BACK = params.get("days_back", 30)  # 30 days back for good coverage
     end_time = params.get("end_time", int(datetime.now().timestamp() * 1000))
     start_time = params.get("start_time")
     if not start_time:
         start_time = int((datetime.now() - timedelta(days=DAYS_BACK)).timestamp() * 1000)
-
-    # For spot_aggregated_ask_bids_history endpoint, data is only available from May 2024
-    # May 1, 2024 = 1714521600000 in milliseconds
-    min_data_timestamp = 1714521600000
-    current_time = int(datetime.now().timestamp() * 1000)
-
-    if start_time < min_data_timestamp:
-        logger.warning(f"⚠️ Adjusting start_time from {start_time} to {min_data_timestamp} (May 1, 2024) because historical data is only available from this date")
-        start_time = min_data_timestamp
-
-    # Validate end_time
-    if end_time < min_data_timestamp:
-        logger.warning(f"⚠️ End time {end_time} is before data availability date (May 1, 2024). No data will be returned.")
-        return {
-            "aggregated_ask_bids_history": 0,
-            "aggregated_ask_bids_history_duplicates": 0,
-            "fetches": 0,
-            "errors": 0,
-            "message": "No data available - requested time range is before May 2024"
-        }
 
     summary = {
         "aggregated_ask_bids_history": 0,
@@ -64,33 +54,24 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     logger.info(f"Starting Spot Aggregated Ask Bids History pipeline for exchanges: {EXCHANGES}")
 
-    # Try with aggregated exchanges first
-    exchange_list = ",".join(EXCHANGES)  # "Binance,Bybit"
+    for exchange in EXCHANGES:
+        for symbol in SYMBOLS:
+            for interval in INTERVALS:
+                for range_percent in RANGES:
+                    try:
+                        logger.info(f"Fetching aggregated ask bids history for {exchange} {symbol} {interval} range={range_percent}")
 
-    for symbol in SYMBOLS:
-        for interval in INTERVALS:
-            for range_percent in RANGES:
-                try:
-                    logger.info(f"Fetching aggregated ask bids history for {exchange_list} {symbol} {interval} range={range_percent}")
-                    logger.debug(f"  Parameters: start_time={start_time}, end_time={end_time}")
+                        data = client.get_spot_aggregated_ask_bids_history(
+                            exchange_list=exchange,  # Use single exchange name
+                            symbol=symbol,
+                            interval=interval,
+                            start_time=start_time,
+                            end_time=end_time,
+                            range_percent=range_percent
+                        )
 
-                    data = client.get_spot_aggregated_ask_bids_history(
-                        exchange_list=exchange_list,  # Use comma-separated exchanges
-                        symbol=symbol,
-                        interval=interval,
-                        start_time=start_time,
-                        end_time=end_time,
-                        range_percent=range_percent
-                    )
-
-                    logger.debug(f"  API returned {len(data) if data else 0} records")
-
-                    if data:
-                        # Process and insert data with duplicate checking for each exchange
-                        total_saved = 0
-                        total_duplicates = 0
-
-                        for exchange in EXCHANGES:
+                        if data:
+                            # Process and insert data with duplicate checking
                             result = repo.upsert_spot_aggregated_ask_bids_history_batch(
                                 exchange, symbol, interval, range_percent, data
                             )
@@ -98,32 +79,21 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                                 f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
                                 f"received={len(data)}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
                             )
-                            total_saved += result['spot_aggregated_ask_bids_history']
-                            total_duplicates += result['spot_aggregated_ask_bids_history_duplicates']
-
-                        summary["aggregated_ask_bids_history"] += total_saved
-                        summary["aggregated_ask_bids_history_duplicates"] += total_duplicates
-                    else:
-                        # Check if this is early 2024 when data wasn't available
-                        batch_start_date = datetime.fromtimestamp(start_time / 1000)
-                        if batch_start_date.year == 2024 and batch_start_date.month < 5:
-                            logger.info(
-                                f"ℹ️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: "
-                                f"No data available for {batch_start_date.strftime('%B %Y')} (Data available from May 2024)"
-                            )
+                            summary["aggregated_ask_bids_history"] += result['spot_aggregated_ask_bids_history']
+                            summary["aggregated_ask_bids_history_duplicates"] += result['spot_aggregated_ask_bids_history_duplicates']
                         else:
                             logger.info(
-                                f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
+                                f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
                             )
 
-                    summary["fetches"] += 1
+                        summary["fetches"] += 1
 
-                except Exception as e:
-                    logger.warning(
-                        f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
-                    )
-                    summary["errors"] += 1
-                    continue
+                    except Exception as e:
+                        logger.warning(
+                            f"⚠️ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
+                        )
+                        summary["errors"] += 1
+                        continue
 
     logger.info(f"Spot Aggregated Ask Bids History pipeline completed: {summary}")
     return summary
