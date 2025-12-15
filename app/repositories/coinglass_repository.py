@@ -2918,88 +2918,52 @@ class CoinglassRepository:
             return result
 
     def upsert_futures_aggregated_ask_bids_history_batch(self, exchange_list: str, symbol: str, interval: str, range_percent: str, data: List[Dict]) -> Dict[str, int]:
-        """Upsert futures aggregated ask bids history data in batch."""
+        """Upsert futures aggregated ask bids history data."""
         result = {
             "futures_aggregated_ask_bids_history": 0,
-            "futures_aggregated_ask_bids_history_duplicates": 0,
+            "futures_aggregated_ask_bids_history_duplicates": 0
         }
 
         if not data:
             return result
 
+        sql = """
+        INSERT INTO cg_futures_aggregated_ask_bids_history (
+            exchange_list, symbol, base_asset, `interval`, range_percent,
+            time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            aggregated_bids_usd = VALUES(aggregated_bids_usd),
+            aggregated_bids_quantity = VALUES(aggregated_bids_quantity),
+            aggregated_asks_usd = VALUES(aggregated_asks_usd),
+            aggregated_asks_quantity = VALUES(aggregated_asks_quantity),
+            updated_at = CURRENT_TIMESTAMP
+        """
+
         try:
             with self.conn.cursor() as cur:
-                # First, check which records already exist
-                existing_times = []
                 for item in data:
-                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
-                    existing_times.append(time_val)
-
-                # Query existing records using batched approach for better performance
-                existing_records = set()
-                batch_size = 100  # Process in batches of 100 timestamps
-
-                for i in range(0, len(existing_times), batch_size):
-                    batch = existing_times[i:i + batch_size]
-                    time_strs = [t.strftime('%Y-%m-%d %H:%M:%S') for t in batch]
-
-                    check_sql = f"""
-                    SELECT time FROM cg_futures_aggregated_ask_bids_history
-                    WHERE exchange_list = %s AND symbol = %s AND `interval` = %s AND range_percent = %s
-                    AND time IN ({','.join(['%s'] * len(time_strs))})
-                    """
-
-                    cur.execute(check_sql, [exchange_list, symbol, interval, range_percent] + time_strs)
-                    existing_records.update({row[0] for row in cur.fetchall()})
-                else:
-                    existing_records = set()
-
-                # Prepare batch data
-                batch_data = []
-                for item in data:
-                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
-                    batch_data.append((
-                        exchange_list,  # exchange_list
-                        symbol,  # symbol
-                        symbol,  # base_asset
-                        interval,  # interval
-                        range_percent,  # range_percent
-                        time_val,  # time
-                        item.get("aggregated_bids_usd", 0),  # aggregated_bids_usd
-                        item.get("aggregated_bids_quantity", 0),  # aggregated_bids_quantity
-                        item.get("aggregated_asks_usd", 0),  # aggregated_asks_usd
-                        item.get("aggregated_asks_quantity", 0),  # aggregated_asks_quantity
+                    cur.execute(sql, (
+                        exchange_list, symbol, symbol, interval, range_percent,
+                        item.get("time"),
+                        item.get("aggregated_bids_usd"),
+                        item.get("aggregated_bids_quantity"),
+                        item.get("aggregated_asks_usd"),
+                        item.get("aggregated_asks_quantity")
                     ))
-
-                # Insert or update all records
-                sql = """
-                INSERT INTO cg_futures_aggregated_ask_bids_history (
-                    exchange_list, symbol, base_asset, `interval`, range_percent,
-                    time, aggregated_bids_usd, aggregated_bids_quantity, aggregated_asks_usd, aggregated_asks_quantity
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    aggregated_bids_usd = VALUES(aggregated_bids_usd),
-                    aggregated_bids_quantity = VALUES(aggregated_bids_quantity),
-                    aggregated_asks_usd = VALUES(aggregated_asks_usd),
-                    aggregated_asks_quantity = VALUES(aggregated_asks_quantity)
-                """
-                cur.executemany(sql, batch_data)
-
-                # Count based on our pre-check
-                for item in data:
-                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
-                    if time_val in existing_records:
-                        result["futures_aggregated_ask_bids_history_duplicates"] += 1
-                    else:
+                    # Get affected rows count (1 = insert, 2 = update)
+                    if cur.rowcount == 1:
                         result["futures_aggregated_ask_bids_history"] += 1
-
-                # Log results for debugging
-                self.logger.debug(f"Upsert results - Total: {len(data)}, New: {result['futures_aggregated_ask_bids_history']}, Duplicates: {result['futures_aggregated_ask_bids_history_duplicates']}")
-
-                self.conn.commit()
-                return result
-
-        except Exception as e:
+                    else:
+                        result["futures_aggregated_ask_bids_history_duplicates"] += 1
+            self.conn.commit()
+            return result
+        except pymysql.Error as e:
             self.conn.rollback()
-            self.logger.error(f"Error upserting futures aggregated ask bids history batch: {e}")
+            error_code = e.args[0] if e.args else 'unknown'
+            error_msg = e.args[1] if len(e.args) > 1 else str(e)
+            self.logger.error(
+                f"Database error upserting futures aggregated ask bids history for {exchange_list}:{symbol}:{interval}:range={range_percent} - "
+                f"Error code: {error_code}, Message: {error_msg}"
+            )
             return result

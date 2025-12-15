@@ -1162,7 +1162,7 @@ COINGLASS_TABLES = {
         base_asset VARCHAR(20) NOT NULL,
         `interval` VARCHAR(10) NOT NULL,
         range_percent DECIMAL(10,2) NOT NULL,
-        time TIMESTAMP(3) NOT NULL,
+        time BIGINT NOT NULL,
         aggregated_bids_usd DECIMAL(38,8) NOT NULL,
         aggregated_bids_quantity DECIMAL(38,8) NOT NULL,
         aggregated_asks_usd DECIMAL(38,8) NOT NULL,

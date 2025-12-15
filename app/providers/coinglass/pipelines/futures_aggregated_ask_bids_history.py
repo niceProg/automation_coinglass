@@ -72,30 +72,35 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
                         if data:
                             # Process and insert data with duplicate checking
-                            result = repo.upsert_futures_aggregated_ask_bids_history_batch(
+                            saved = repo.upsert_futures_aggregated_ask_bids_history_batch(
                                 exchange, symbol, interval, range_percent, data
                             )
                             logger.info(
                                 f"✅ futures_aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                f"received={len(data)}, saved={result['futures_aggregated_ask_bids_history']}, duplicates={result['futures_aggregated_ask_bids_history_duplicates']}"
+                                f"received={len(data)}, saved={saved.get('futures_aggregated_ask_bids_history', 0)}, duplicates={saved.get('futures_aggregated_ask_bids_history_duplicates', 0)}"
                             )
-                            summary["futures_aggregated_ask_bids_history"] += result['futures_aggregated_ask_bids_history']
-                            summary["futures_aggregated_ask_bids_history_duplicates"] += result['futures_aggregated_ask_bids_history_duplicates']
+                            # Handle both old int format and new dict format for backward compatibility
+                            if isinstance(saved, dict):
+                                summary["futures_aggregated_ask_bids_history"] += saved.get("futures_aggregated_ask_bids_history", 0)
+                                if saved.get("futures_aggregated_ask_bids_history_duplicates", 0) > 0:
+                                    summary["futures_aggregated_ask_bids_history_duplicates"] = summary.get("futures_aggregated_ask_bids_history_duplicates", 0) + saved.get("futures_aggregated_ask_bids_history_duplicates", 0)
+                            else:
+                                summary["futures_aggregated_ask_bids_history"] += saved
                         else:
-                            logger.info(
-                                f"⚠️ futures_aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
+                            logger.warning(
+                                f"No data returned for futures aggregated ask bids history: {exchange} {symbol} {interval} range={range_percent}"
                             )
 
                         summary["fetches"] += 1
 
                     except Exception as e:
                         logger.warning(
-                            f"⚠️ futures_aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
+                            f"Error fetching futures aggregated ask bids history for {exchange} {symbol}: {e}"
                         )
-                        summary["errors"] += 1
+                        summary["fetches"] += 1
                         continue
 
         logger.info(f"✅ Completed processing for exchange: {exchange}")
 
-    logger.info(f"Futures Aggregated Ask Bids History pipeline completed: {summary}")
+    logger.info(f"📦 Futures Aggregated Ask Bids History pipeline completed. Total records saved: {summary['futures_aggregated_ask_bids_history']}, duplicates={summary['futures_aggregated_ask_bids_history_duplicates']} ✅")
     return summary
