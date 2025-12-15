@@ -76,54 +76,54 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
                     data = client.get_spot_aggregated_ask_bids_history(
                         exchange_list=exchange_list,  # Use comma-separated exchanges
-                            symbol=symbol,
-                            interval=interval,
-                            start_time=start_time,
-                            end_time=end_time,
-                            range_percent=range_percent
-                        )
+                        symbol=symbol,
+                        interval=interval,
+                        start_time=start_time,
+                        end_time=end_time,
+                        range_percent=range_percent
+                    )
 
-                        logger.debug(f"  API returned {len(data) if data else 0} records")
+                    logger.debug(f"  API returned {len(data) if data else 0} records")
 
-                        if data:
-                            # Process and insert data with duplicate checking for each exchange
-                            total_saved = 0
-                            total_duplicates = 0
+                    if data:
+                        # Process and insert data with duplicate checking for each exchange
+                        total_saved = 0
+                        total_duplicates = 0
 
-                            for exchange in EXCHANGES:
-                                result = repo.upsert_spot_aggregated_ask_bids_history_batch(
-                                    exchange, symbol, interval, range_percent, data
-                                )
-                                logger.info(
-                                    f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
-                                    f"received={len(data)}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
-                                )
-                                total_saved += result['spot_aggregated_ask_bids_history']
-                                total_duplicates += result['spot_aggregated_ask_bids_history_duplicates']
+                        for exchange in EXCHANGES:
+                            result = repo.upsert_spot_aggregated_ask_bids_history_batch(
+                                exchange, symbol, interval, range_percent, data
+                            )
+                            logger.info(
+                                f"✅ aggregated_ask_bids_history[{exchange}:{symbol}:{interval}:range={range_percent}]: "
+                                f"received={len(data)}, saved={result['spot_aggregated_ask_bids_history']}, duplicates={result['spot_aggregated_ask_bids_history_duplicates']}"
+                            )
+                            total_saved += result['spot_aggregated_ask_bids_history']
+                            total_duplicates += result['spot_aggregated_ask_bids_history_duplicates']
 
-                            summary["aggregated_ask_bids_history"] += total_saved
-                            summary["aggregated_ask_bids_history_duplicates"] += total_duplicates
+                        summary["aggregated_ask_bids_history"] += total_saved
+                        summary["aggregated_ask_bids_history_duplicates"] += total_duplicates
+                    else:
+                        # Check if this is early 2024 when data wasn't available
+                        batch_start_date = datetime.fromtimestamp(start_time / 1000)
+                        if batch_start_date.year == 2024 and batch_start_date.month < 5:
+                            logger.info(
+                                f"ℹ️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: "
+                                f"No data available for {batch_start_date.strftime('%B %Y')} (Data available from May 2024)"
+                            )
                         else:
-                            # Check if this is early 2024 when data wasn't available
-                            batch_start_date = datetime.fromtimestamp(start_time / 1000)
-                            if batch_start_date.year == 2024 and batch_start_date.month < 5:
-                                logger.info(
-                                    f"ℹ️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: "
-                                    f"No data available for {batch_start_date.strftime('%B %Y')} (Data available from May 2024)"
-                                )
-                            else:
-                                logger.info(
-                                    f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
-                                )
+                            logger.info(
+                                f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: No data (skipped)"
+                            )
 
-                        summary["fetches"] += 1
+                    summary["fetches"] += 1
 
-                    except Exception as e:
-                        logger.warning(
-                            f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
-                        )
-                        summary["errors"] += 1
-                        continue
+                except Exception as e:
+                    logger.warning(
+                        f"⚠️ aggregated_ask_bids_history[{exchange_list}:{symbol}:{interval}:range={range_percent}]: Exception: {e} (skipped)"
+                    )
+                    summary["errors"] += 1
+                    continue
 
     logger.info(f"Spot Aggregated Ask Bids History pipeline completed: {summary}")
     return summary
