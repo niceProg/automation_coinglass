@@ -438,17 +438,41 @@ def run_historical_mode(historical_args, pipelines=None):
         else:
             # Timestamp mode: --historical 1704067200 (timestamp)
             try:
-                start_time = datetime.fromtimestamp(num_value)
+                # Determine if timestamp is in seconds or milliseconds
+                # If > 10^12, treat as milliseconds, otherwise as seconds
+                if num_value > 10**12:
+                    # Milliseconds timestamp
+                    start_time = datetime.fromtimestamp(num_value / 1000)
+                    logger.info(f"📅 Using custom start timestamp: {num_value} (milliseconds) ({start_time.strftime('%Y-%m-%d')})")
+                else:
+                    # Seconds timestamp
+                    start_time = datetime.fromtimestamp(num_value)
+                    logger.info(f"📅 Using custom start timestamp: {num_value} (seconds) ({start_time.strftime('%Y-%m-%d')})")
                 end_time = datetime.now()
-                logger.info(f"📅 Using custom start timestamp: {num_value} ({start_time.strftime('%Y-%m-%d')})")
             except (ValueError, OSError) as e:
                 logger.error(f"❌ Invalid timestamp format: {time_args[0]} - {e}")
                 return
     elif len(time_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            start_time = datetime.fromtimestamp(int(time_args[0]))
-            end_time = datetime.fromtimestamp(int(time_args[1]))
+            start_ts = int(time_args[0])
+            end_ts = int(time_args[1])
+
+            # Determine if timestamps are in seconds or milliseconds
+            # If > 10^12, treat as milliseconds, otherwise as seconds
+            if start_ts > 10**12:
+                start_time = datetime.fromtimestamp(start_ts / 1000)
+                logger.info(f"📅 Using custom start timestamp: {start_ts} (milliseconds)")
+            else:
+                start_time = datetime.fromtimestamp(start_ts)
+                logger.info(f"📅 Using custom start timestamp: {start_ts} (seconds)")
+
+            if end_ts > 10**12:
+                end_time = datetime.fromtimestamp(end_ts / 1000)
+                logger.info(f"📅 Using custom end timestamp: {end_ts} (milliseconds)")
+            else:
+                end_time = datetime.fromtimestamp(end_ts)
+                logger.info(f"📅 Using custom end timestamp: {end_ts} (seconds)")
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
