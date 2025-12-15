@@ -37,6 +37,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     summary = {
         "ask_bids_history": 0,
         "ask_bids_history_duplicates": 0,
+        "total_received": 0,
         "fetches": 0,
         "errors": 0
     }
@@ -60,11 +61,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         )
 
                         if data:
+                            # Add to total received count
+                            received_count = len(data)
+                            summary["total_received"] += received_count
+
                             # Process and insert data with duplicate checking
                             result = repo.upsert_spot_ask_bids_history_batch(
                                 exchange, symbol, interval, range_percent, data
                             )
-                            received_count = len(data)
                             saved_count = result['spot_ask_bids_history']
                             duplicates_count = result['spot_ask_bids_history_duplicates']
 
@@ -98,4 +102,15 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         continue
 
     logger.info(f"Spot Ask Bids History pipeline completed: {summary}")
+
+    # Log total summary
+    total_received = summary["total_received"]
+    total_saved = summary["ask_bids_history"]
+    total_duplicates = summary["ask_bids_history_duplicates"]
+
+    logger.info(
+        f"📦 Spot Ask Bids History pipeline completed. "
+        f"Total records: received={total_received}, saved={total_saved}, duplicates={total_duplicates} ✅"
+    )
+
     return summary
