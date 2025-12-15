@@ -2927,24 +2927,51 @@ class CoinglassRepository:
         if not data:
             return result
 
-        # Prepare batch data
-        batch_data = []
-        for item in data:
-            batch_data.append((
-                exchange_list,  # exchange_list
-                symbol,  # symbol
-                symbol,  # base_asset
-                interval,  # interval
-                range_percent,  # range_percent
-                datetime.fromtimestamp(item.get("time", 0) / 1000),  # time
-                item.get("aggregated_bids_usd", 0),  # aggregated_bids_usd
-                item.get("aggregated_bids_quantity", 0),  # aggregated_bids_quantity
-                item.get("aggregated_asks_usd", 0),  # aggregated_asks_usd
-                item.get("aggregated_asks_quantity", 0),  # aggregated_asks_quantity
-            ))
-
         try:
             with self.conn.cursor() as cur:
+                # First, check which records already exist
+                existing_times = []
+                for item in data:
+                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
+                    existing_times.append(time_val)
+
+                # Query existing records using batched approach for better performance
+                existing_records = set()
+                batch_size = 100  # Process in batches of 100 timestamps
+
+                for i in range(0, len(existing_times), batch_size):
+                    batch = existing_times[i:i + batch_size]
+                    time_strs = [t.strftime('%Y-%m-%d %H:%M:%S') for t in batch]
+
+                    check_sql = f"""
+                    SELECT time FROM cg_futures_aggregated_ask_bids_history
+                    WHERE exchange_list = %s AND symbol = %s AND `interval` = %s AND range_percent = %s
+                    AND time IN ({','.join(['%s'] * len(time_strs))})
+                    """
+
+                    cur.execute(check_sql, [exchange_list, symbol, interval, range_percent] + time_strs)
+                    existing_records.update({row[0] for row in cur.fetchall()})
+                else:
+                    existing_records = set()
+
+                # Prepare batch data
+                batch_data = []
+                for item in data:
+                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
+                    batch_data.append((
+                        exchange_list,  # exchange_list
+                        symbol,  # symbol
+                        symbol,  # base_asset
+                        interval,  # interval
+                        range_percent,  # range_percent
+                        time_val,  # time
+                        item.get("aggregated_bids_usd", 0),  # aggregated_bids_usd
+                        item.get("aggregated_bids_quantity", 0),  # aggregated_bids_quantity
+                        item.get("aggregated_asks_usd", 0),  # aggregated_asks_usd
+                        item.get("aggregated_asks_quantity", 0),  # aggregated_asks_quantity
+                    ))
+
+                # Insert or update all records
                 sql = """
                 INSERT INTO cg_futures_aggregated_ask_bids_history (
                     exchange_list, symbol, base_asset, `interval`, range_percent,
@@ -2957,17 +2984,21 @@ class CoinglassRepository:
                     aggregated_asks_quantity = VALUES(aggregated_asks_quantity)
                 """
                 cur.executemany(sql, batch_data)
-                self.conn.commit()
 
-                # Count affected rows
-                for rowcount in cur.rowcounts if hasattr(cur, 'rowcounts') else [cur.rowcount]:
-                    if rowcount == 1:
-                        result["futures_aggregated_ask_bids_history"] += 1
-                    elif rowcount == 2:
+                # Count based on our pre-check
+                for item in data:
+                    time_val = datetime.fromtimestamp(item.get("time", 0) / 1000)
+                    if time_val in existing_records:
                         result["futures_aggregated_ask_bids_history_duplicates"] += 1
+                    else:
+                        result["futures_aggregated_ask_bids_history"] += 1
 
-            self.conn.commit()
-            return result
+                # Log results for debugging
+                self.logger.debug(f"Upsert results - Total: {len(data)}, New: {result['futures_aggregated_ask_bids_history']}, Duplicates: {result['futures_aggregated_ask_bids_history_duplicates']}")
+
+                self.conn.commit()
+                return result
+
         except Exception as e:
             self.conn.rollback()
             self.logger.error(f"Error upserting futures aggregated ask bids history batch: {e}")
