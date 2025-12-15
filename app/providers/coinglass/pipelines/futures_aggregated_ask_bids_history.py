@@ -1,4 +1,4 @@
-"""Spot Aggregated Ask Bids History Pipeline"""
+"""Futures Aggregated Ask Bids History Pipeline"""
 
 import logging
 from typing import Any, Dict, List
@@ -12,12 +12,12 @@ settings = Settings()
 
 def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Spot Aggregated Ask Bids History Pipeline
+    Futures Aggregated Ask Bids History Pipeline
     Cadence: Every 15 minutes
-    Endpoint: /api/spot/orderbook/aggregated-ask-bids-history
+    Endpoint: /api/futures/orderbook/aggregated-ask-bids-history
 
     Retrieves aggregated historical orderbook bid/ask data across multiple exchanges,
-    providing market-wide depth and liquidity analysis for spot trading.
+    providing market-wide depth and liquidity analysis for futures trading.
     """
     repo = CoinglassRepository(conn, logger)
 
@@ -42,7 +42,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
         "errors": 0
     }
 
-    logger.info(f"Starting Spot Aggregated Ask Bids History pipeline for exchanges: {EXCHANGES}")
+    logger.info(f"Starting Futures Aggregated Ask Bids History pipeline for exchanges: {EXCHANGES}")
 
     for exchange in EXCHANGES:
         for symbol in SYMBOLS:
@@ -51,7 +51,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                     try:
                         logger.info(f"Fetching aggregated ask bids history for {exchange} {symbol} {interval} range={range_percent}")
 
-                        data = client.get_spot_aggregated_ask_bids_history(
+                        data = client.get_futures_aggregated_ask_bids_history(
                             exchange_list=exchange,  # Use single exchange name
                             symbol=symbol,
                             interval=interval,
@@ -89,7 +89,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         summary["errors"] += 1
                         continue
 
-    logger.info(f"Spot Aggregated Ask Bids History pipeline completed: {summary}")
+    logger.info(f"Futures Aggregated Ask Bids History pipeline completed: {summary}")
 
     # Log total summary
     total_received = summary["total_received"]
@@ -97,7 +97,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     total_duplicates = summary["aggregated_ask_bids_history_duplicates"]
 
     logger.info(
-        f"📦 Spot Aggregated Ask Bids History pipeline completed. "
+        f"📦 Futures Aggregated Ask Bids History pipeline completed. "
         f"Total records: received={total_received}, saved={total_saved}, duplicates={total_duplicates} ✅"
     )
 

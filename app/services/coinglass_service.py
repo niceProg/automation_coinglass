@@ -49,7 +49,8 @@ from app.providers.coinglass.pipelines import (
     whale_transfer,
     # ===== ASK BIDS ENDPOINTS =====
     spot_ask_bids_history,
-    spot_aggregated_ask_bids_history,
+  # spot_aggregated_ask_bids_history,  # DISABLED
+  futures_aggregated_ask_bids_history,
 )
 from app.repositories.coinglass_repository import CoinglassRepository
 from app.core.config import settings
@@ -356,8 +357,18 @@ class CoinglassService:
                     "hours_back": 24,
                 },
             },
-            "spot_aggregated_ask_bids_history": {
-                "func": spot_aggregated_ask_bids_history.run,
+            # "spot_aggregated_ask_bids_history": {  # DISABLED
+            #     "func": spot_aggregated_ask_bids_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+            #         "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+            #         "ranges": ["0.25", "0.5"],
+            #         "hours_back": 24,
+            #     },
+            # },
+            "futures_aggregated_ask_bids_history": {
+                "func": futures_aggregated_ask_bids_history.run,
                 "params": {
                     "exchanges": ["Binance", "Bybit"],
                     "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
