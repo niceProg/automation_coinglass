@@ -655,6 +655,44 @@ class CoinglassClient:
             params["end_time"] = str(end_time)
         return self._make_request("spot/orderbook/aggregated-ask-bids-history", params) or []
 
+    # ---------- Futures Orderbook ----------
+    def get_futures_aggregated_ask_bids_history(
+        self,
+        exchange_list: str,
+        symbol: str,
+        interval: str = "h1",
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        range_percent: str = "1",
+    ) -> List[Dict[str, Any]]:
+        """
+        Get Futures Aggregated Orderbook Bid&Ask History - Aggregated orderbook data across multiple exchanges for futures.
+
+        Args:
+            exchange_list: List of exchange names (e.g., "Binance, OKX, Bybit" or "ALL")
+            symbol: Trading coin (e.g., BTC, ETH, SOL)
+            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            limit: Number of results (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+            range_percent: Depth percentage (0.25, 0.5, 0.75, 1, 2, 3, 5, 10)
+        """
+        params: Dict[str, Any] = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+        }
+        if limit:
+            params["limit"] = str(limit)
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        if range_percent:
+            params["range"] = range_percent
+        return self._make_request("futures/orderbook/aggregated-ask-bids-history", params) or []
+
     # ---------- Spot Markets ----------
     def get_spot_coins_markets(
         self,

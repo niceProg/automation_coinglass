@@ -41,7 +41,10 @@ COMMAND CATEGORIES:
     spot_aggregated_taker_volume_history  Aggregated taker buy/sell volumes across exchanges
     spot_taker_volume_history        Single exchange taker buy/sell volume data
     spot_ask_bids_history            Historical orderbook bid/ask data with depth ranges
-    spot_aggregated_ask_bids_history  Aggregated orderbook bid/ask data across exchanges
+#   spot_aggregated_ask_bids_history  Aggregated orderbook bid/ask data across exchanges [DISABLED]
+
+⚡ FUTURES AGGREGATED ASK BIDS:
+    futures_aggregated_ask_bids_history  Aggregated futures orderbook bid/ask data across exchanges
 
 ₿ BITCOIN ETF:
     bitcoin_etf_list                 Bitcoin ETF overview and status (real-time)
@@ -90,7 +93,8 @@ Usage Examples:
     # Individual Pipelines
     python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
     # python main.py exchange_balance_list  # DISABLED - Not documented
-    python main.py spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history spot_ask_bids_history spot_aggregated_ask_bids_history
+    python main.py spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history spot_ask_bids_history # spot_aggregated_ask_bids_history [DISABLED]
+    python main.py futures_aggregated_ask_bids_history  # Futures aggregated orderbook data
     python main.py bitcoin_etf_list bitcoin_etf_flows_history  # bitcoin_etf_history disabled
     # python main.py supported_exchange_pairs pairs_markets  # DISABLED
 """
@@ -508,8 +512,9 @@ def run_historical_mode(historical_args, pipelines=None):
             "spot_aggregated_taker_volume_history",
             "spot_taker_volume_history",
             "spot_ask_bids_history",
-            "spot_aggregated_ask_bids_history",
+            # "spot_aggregated_ask_bids_history",  # [DISABLED]
             # Pipelines with direct time parameter support
+            "futures_aggregated_ask_bids_history",
             "whale_transfer"
         ]
         logger.info(f"📊 Using default pipelines: {', '.join(pipelines)}")
@@ -772,7 +777,10 @@ def show_help():
     logger.info("  python main.py spot_coins_markets spot_pairs_markets spot_price_history")
     logger.info("  python main.py spot_large_orderbook spot_large_orderbook_history")
     logger.info("  python main.py spot_aggregated_taker_volume_history spot_taker_volume_history")
-    logger.info("  python main.py spot_ask_bids_history spot_aggregated_ask_bids_history")
+    logger.info("  python main.py spot_ask_bids_history # spot_aggregated_ask_bids_history [DISABLED]")
+    logger.info("  ")
+    logger.info("  # Futures Aggregated Orderbook")
+    logger.info("  python main.py futures_aggregated_ask_bids_history")
     logger.info("  ")
     logger.info("  # Bitcoin ETFs")
     logger.info(
@@ -916,7 +924,8 @@ def main():
         help="Specific pipelines to run by category:\n"
         "Derivatives: funding_rate, oi_aggregated_history, long_short_ratio_global, long_short_ratio_top, liquidation_aggregated, liquidation_heatmap, futures_basis, futures_footprint_history\n"
         "Exchange: exchange_assets [DISABLED], exchange_balance_list [DISABLED], exchange_onchain_transfers [DISABLED]\n"
-        "Spot: spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history, spot_ask_bids_history, spot_aggregated_ask_bids_history\n"
+        "Spot: spot_coins_markets, spot_pairs_markets, spot_price_history, spot_large_orderbook, spot_large_orderbook_history, spot_aggregated_taker_volume_history, spot_taker_volume_history, spot_ask_bids_history, spot_aggregated_ask_bids_history [DISABLED]\n"
+        "Futures Aggregated: futures_aggregated_ask_bids_history\n"
         "Bitcoin ETF: bitcoin_etf_list, bitcoin_etf_flows_history, bitcoin_etf_premium_discount_history\n"
         "Trading: supported_exchange_pairs [DISABLED], pairs_markets [DISABLED], coins_markets [DISABLED]\n"
         "Macro: bitcoin_vs_global_m2_growth\n"

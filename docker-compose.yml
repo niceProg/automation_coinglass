@@ -390,15 +390,39 @@ services:
       - spot
       - production
 
-  # Spot Aggregated Ask Bids History
-  spot_aggregated_ask_bids_history:
+  # Spot Aggregated Ask Bids History [DISABLED]
+  # spot_aggregated_ask_bids_history:
+  #   build: .
+  #   container_name: coinglass_spot_aggregated_ask_bids_history
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=45
+  #     - PIPELINE=spot_aggregated_ask_bids_history
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   dns:
+  #     - 8.8.8.8
+  #     - 8.8.4.4
+  #   profiles:
+  #     - spot
+  #     - production
+
+  # =============================================================================
+  # FUTURES AGGREGATED PIPELINES
+  # =============================================================================
+
+  # Futures Aggregated Ask Bids History
+  futures_aggregated_ask_bids_history:
     build: .
-    container_name: coinglass_spot_aggregated_ask_bids_history
+    container_name: coinglass_futures_aggregated_ask_bids_history
     env_file:
       - .env
     environment:
       - DELAY=45
-      - PIPELINE=spot_aggregated_ask_bids_history
+      - PIPELINE=futures_aggregated_ask_bids_history
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
     restart: unless-stopped
     networks:
@@ -407,7 +431,7 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     profiles:
-      - spot
+      - futures
       - production
 
   # =============================================================================

@@ -37,7 +37,10 @@ from . import (
     whale_transfer,
     # ===== ASK BIDS ENDPOINTS =====
     spot_ask_bids_history,
-    spot_aggregated_ask_bids_history,
+    # spot_aggregated_ask_bids_history,  # [DISABLED]
+
+    # ===== FUTURES AGGREGATED ASK BIDS =====
+    futures_aggregated_ask_bids_history,
 )
 
 __all__ = [
@@ -78,5 +81,8 @@ __all__ = [
     "whale_transfer",
     # ===== ASK BIDS ENDPOINTS =====
     "spot_ask_bids_history",
-    "spot_aggregated_ask_bids_history",
+    # "spot_aggregated_ask_bids_history",  # [DISABLED]
+
+    # ===== FUTURES AGGREGATED ASK BIDS =====
+    "futures_aggregated_ask_bids_history",
 ]
