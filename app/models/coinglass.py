@@ -1160,7 +1160,7 @@ COINGLASS_TABLES = {
         exchange_list VARCHAR(255) NOT NULL,
         symbol VARCHAR(20) NOT NULL,
         base_asset VARCHAR(20) NOT NULL,
-        interval VARCHAR(10) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
         range_percent DECIMAL(10,2) NOT NULL,
         time TIMESTAMP(3) NOT NULL,
         aggregated_bids_usd DECIMAL(38,8) NOT NULL,
