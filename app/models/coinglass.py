@@ -1130,29 +1130,29 @@ COINGLASS_TABLES = {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 
-    "cg_spot_aggregated_ask_bids_history": """
-    CREATE TABLE IF NOT EXISTS cg_spot_aggregated_ask_bids_history (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        exchange_name VARCHAR(50) NOT NULL,
-        symbol VARCHAR(20) NOT NULL,
-        base_asset VARCHAR(20) NOT NULL,
-        `interval` VARCHAR(10) NOT NULL,
-        range_percent VARCHAR(10) NOT NULL,
-        time BIGINT NOT NULL,
-        aggregated_bids_usd DECIMAL(38,8),
-        aggregated_bids_quantity DECIMAL(38,8),
-        aggregated_asks_usd DECIMAL(38,8),
-        aggregated_asks_quantity DECIMAL(38,8),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_exchange_name_symbol_interval_range_time (exchange_name, symbol, `interval`, range_percent, time),
-        INDEX idx_exchange_name (exchange_name),
-        INDEX idx_symbol (symbol),
-        INDEX idx_base_asset (base_asset),
-        INDEX idx_interval (`interval`),
-        INDEX idx_time (time)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    """,
+    # "cg_spot_aggregated_ask_bids_history": """  # [DISABLED]
+    # CREATE TABLE IF NOT EXISTS cg_spot_aggregated_ask_bids_history (
+    #     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    #     exchange_name VARCHAR(50) NOT NULL,
+    #     symbol VARCHAR(20) NOT NULL,
+    #     base_asset VARCHAR(20) NOT NULL,
+    #     `interval` VARCHAR(10) NOT NULL,
+    #     range_percent VARCHAR(10) NOT NULL,
+    #     time BIGINT NOT NULL,
+    #     aggregated_bids_usd DECIMAL(38,8),
+    #     aggregated_bids_quantity DECIMAL(38,8),
+    #     aggregated_asks_usd DECIMAL(38,8),
+    #     aggregated_asks_quantity DECIMAL(38,8),
+    #     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    #     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    #     UNIQUE KEY uk_exchange_name_symbol_interval_range_time (exchange_name, symbol, `interval`, range_percent, time),
+    #     INDEX idx_exchange_name (exchange_name),
+    #     INDEX idx_symbol (symbol),
+    #     INDEX idx_base_asset (base_asset),
+    #     INDEX idx_interval (`interval`),
+    #     INDEX idx_time (time)
+    # ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    # """,
 
     "cg_futures_aggregated_ask_bids_history": """
     CREATE TABLE IF NOT EXISTS cg_futures_aggregated_ask_bids_history (
