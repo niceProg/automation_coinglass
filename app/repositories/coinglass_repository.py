@@ -2987,3 +2987,133 @@ class CoinglassRepository:
             self.conn.rollback()
             self.logger.error(f"Error upserting futures aggregated ask bids history batch: {e}")
             return result
+
+    def upsert_futures_price_history(self, exchange: str, symbol: str, interval: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures price history data in batch."""
+        result = {
+            "futures_price_history": 0,
+            "futures_price_history_duplicates": 0,
+        }
+
+        if not data:
+            return result
+
+        try:
+            cursor = self.conn.cursor()
+
+            # Prepare batch data
+            batch_data = []
+            for item in data:
+                batch_data.append((
+                    exchange,
+                    symbol,
+                    interval,
+                    item.get("time"),
+                    item.get("open"),
+                    item.get("high"),
+                    item.get("low"),
+                    item.get("close"),
+                    item.get("volume_usd")
+                ))
+
+            # SQL for INSERT ... ON DUPLICATE KEY UPDATE
+            sql = """
+            INSERT INTO cg_futures_price_history
+            (exchange, symbol, `interval`, time, open, high, low, close, volume_usd)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+            open = VALUES(open),
+            high = VALUES(high),
+            low = VALUES(low),
+            close = VALUES(close),
+            volume_usd = VALUES(volume_usd),
+            updated_at = CURRENT_TIMESTAMP
+            """
+
+            # Execute batch insert/update
+            cursor.executemany(sql, batch_data)
+
+            # Get affected rows
+            total_affected = cursor.rowcount
+
+            # For upsert, we need to determine how many were new vs updated
+            # MySQL doesn't distinguish directly, so we'll estimate
+            # If all were duplicates, rowcount = number of updates
+            # If all were new, rowcount = number of inserts
+            # We'll assume most are updates if rowcount < len(data)
+
+            if total_affected == len(batch_data) * 2:  # All were updates (1 insert + 1 update per row)
+                result["futures_price_history_duplicates"] = len(data)
+            elif total_affected == len(batch_data):  # All were new inserts
+                result["futures_price_history"] = len(data)
+            else:  # Mixed - approximate split
+                estimated_new = total_affected - len(data)
+                result["futures_price_history"] = max(0, estimated_new)
+                result["futures_price_history_duplicates"] = min(len(data), len(data) - estimated_new)
+
+            self.conn.commit()
+            return result
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error upserting futures price history batch: {e}")
+            return result
+
+    def upsert_futures_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures aggregated taker volume history data in batch."""
+        result = {
+            "futures_aggregated_taker_volume_history": 0,
+            "futures_aggregated_taker_volume_history_duplicates": 0,
+        }
+
+        if not data:
+            return result
+
+        try:
+            cursor = self.conn.cursor()
+
+            # Prepare batch data
+            batch_data = []
+            for item in data:
+                batch_data.append((
+                    exchange_list,
+                    symbol,
+                    interval,
+                    unit,
+                    item.get("time"),
+                    item.get("aggregated_buy_volume_usd") or item.get("aggregated_buy_volume"),
+                    item.get("aggregated_sell_volume_usd") or item.get("aggregated_sell_volume")
+                ))
+
+            # SQL for INSERT ... ON DUPLICATE KEY UPDATE
+            sql = """
+            INSERT INTO cg_futures_aggregated_taker_volume_history
+            (exchange_list, symbol, `interval`, unit, time, aggregated_buy_volume, aggregated_sell_volume)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+            aggregated_buy_volume = VALUES(aggregated_buy_volume),
+            aggregated_sell_volume = VALUES(aggregated_sell_volume),
+            updated_at = CURRENT_TIMESTAMP
+            """
+
+            # Execute batch insert/update
+            cursor.executemany(sql, batch_data)
+
+            # Get affected rows
+            total_affected = cursor.rowcount
+
+            # Determine new vs updated records
+            if total_affected == len(batch_data) * 2:  # All were updates
+                result["futures_aggregated_taker_volume_history_duplicates"] = len(data)
+            elif total_affected == len(batch_data):  # All were new inserts
+                result["futures_aggregated_taker_volume_history"] = len(data)
+            else:  # Mixed - approximate split
+                estimated_new = total_affected - len(data)
+                result["futures_aggregated_taker_volume_history"] = max(0, estimated_new)
+                result["futures_aggregated_taker_volume_history_duplicates"] = min(len(data), len(data) - estimated_new)
+
+            self.conn.commit()
+            return result
+        except Exception as e:
+            self.conn.rollback()
+            self.logger.error(f"Error upserting futures aggregated taker volume history batch: {e}")
+            return result

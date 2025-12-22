@@ -225,6 +225,46 @@ services:
       - derivatives
       - production
 
+  # Futures Price History
+  futures_price_history:
+    build: .
+    container_name: coinglass_futures_price_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=45
+      - PIPELINE=futures_price_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - derivatives
+      - production
+
+  # Futures Aggregated Taker Volume History
+  futures_aggregated_taker_volume_history:
+    build: .
+    container_name: coinglass_futures_aggregated_taker_volume_history
+    env_file:
+      - .env
+    environment:
+      - DELAY=50
+      - PIPELINE=futures_aggregated_taker_volume_history
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+      - coinglass_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles:
+      - derivatives
+      - production
+
   # =============================================================================
   # SPOT MARKET PIPELINES
   # =============================================================================
@@ -310,25 +350,25 @@ services:
       - spot
       - production
 
-  # Spot Large Orderbook History
-  spot_large_orderbook_history:
-    build: .
-    container_name: coinglass_spot_large_orderbook_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=30
-      - PIPELINE=spot_large_orderbook_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - spot
-      - production
+  # Spot Large Orderbook History [DISABLED]
+  # spot_large_orderbook_history:
+  #   build: .
+  #   container_name: coinglass_spot_large_orderbook_history
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=30
+  #     - PIPELINE=spot_large_orderbook_history
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   dns:
+  #     - 8.8.8.8
+  #     - 8.8.4.4
+  #   profiles:
+  #     - spot
+  #     - production
 
   # Spot Aggregated Taker Volume History
   spot_aggregated_taker_volume_history:
@@ -350,25 +390,25 @@ services:
       - spot
       - production
 
-  # Spot Taker Volume History
-  spot_taker_volume_history:
-    build: .
-    container_name: coinglass_spot_taker_volume_history
-    env_file:
-      - .env
-    environment:
-      - DELAY=60
-      - PIPELINE=spot_taker_volume_history
-    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
-    restart: unless-stopped
-    networks:
-      - coinglass_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    profiles:
-      - spot
-      - production
+  # Spot Taker Volume History [DISABLED]
+  # spot_taker_volume_history:
+  #   build: .
+  #   container_name: coinglass_spot_taker_volume_history
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DELAY=60
+  #     - PIPELINE=spot_taker_volume_history
+  #   entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+  #   restart: unless-stopped
+  #   networks:
+  #     - coinglass_network
+  #   dns:
+  #     - 8.8.8.8
+  #     - 8.8.4.4
+  #   profiles:
+  #     - spot
+  #     - production
 
   # Spot Ask Bids History
   spot_ask_bids_history:

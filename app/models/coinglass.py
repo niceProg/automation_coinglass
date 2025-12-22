@@ -1177,4 +1177,50 @@ COINGLASS_TABLES = {
         INDEX idx_time (time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+
+    # ----- Futures Price History Table -----
+    "cg_futures_price_history": """
+    CREATE TABLE IF NOT EXISTS cg_futures_price_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange VARCHAR(50) NOT NULL,
+        symbol VARCHAR(50) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        time BIGINT NOT NULL,
+        open DECIMAL(30,10),
+        high DECIMAL(30,10),
+        low DECIMAL(30,10),
+        close DECIMAL(30,10),
+        volume_usd DECIMAL(38,8),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_symbol_interval_time (exchange, symbol, `interval`, time),
+        INDEX idx_exchange (exchange),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_time (time),
+        INDEX idx_volume_usd (volume_usd)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+
+    # ----- Futures Aggregated Taker Volume History Table -----
+    "cg_futures_aggregated_taker_volume_history": """
+    CREATE TABLE IF NOT EXISTS cg_futures_aggregated_taker_volume_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        exchange_list VARCHAR(255) NOT NULL,
+        symbol VARCHAR(20) NOT NULL,
+        `interval` VARCHAR(10) NOT NULL,
+        unit VARCHAR(10) NOT NULL DEFAULT 'usd',
+        time BIGINT NOT NULL,
+        aggregated_buy_volume DECIMAL(38,8) NOT NULL,
+        aggregated_sell_volume DECIMAL(38,8) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_exchange_list_symbol_interval_unit_time (exchange_list, symbol, `interval`, unit, time),
+        INDEX idx_exchange_list (exchange_list),
+        INDEX idx_symbol (symbol),
+        INDEX idx_interval (`interval`),
+        INDEX idx_unit (unit),
+        INDEX idx_time (time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 }

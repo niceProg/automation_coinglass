@@ -24,10 +24,13 @@ from app.providers.coinglass.pipelines import (
     spot_price_history,
     # ===== NEW ENDPOINTS =====
     futures_footprint_history,
-    spot_large_orderbook_history,
+    # Futures Price and Taker Volume Endpoints
+    futures_price_history,
+    futures_aggregated_taker_volume_history,
+    # spot_large_orderbook_history,  # DISABLED
     spot_large_orderbook,
     spot_aggregated_taker_volume_history,
-    spot_taker_volume_history,
+    # spot_taker_volume_history,  # DISABLED
     bitcoin_etf_list,
     # bitcoin_etf_history,  # DISABLED - Endpoint not documented in API markdown
     bitcoin_etf_flows_history,
@@ -308,15 +311,15 @@ class CoinglassService:
                     "hours_back": 24,
                 },
             },
-            "spot_large_orderbook_history": {
-                "func": spot_large_orderbook_history.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
-                    "states": ["1", "2", "3"],  # All states: In Progress, Finish, Revoke
-                    "hours_back": 24,
-                },
-            },
+            # "spot_large_orderbook_history": {  # DISABLED
+            #     "func": spot_large_orderbook_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+            #         "states": ["1", "2", "3"],  # All states: In Progress, Finish, Revoke
+            #         "hours_back": 24,
+            #     },
+            # },
             "spot_large_orderbook": {
                 "func": spot_large_orderbook.run,
                 "params": {
@@ -335,15 +338,37 @@ class CoinglassService:
                     "hours_back": 24,
                 },
             },
-            "spot_taker_volume_history": {
-                "func": spot_taker_volume_history.run,
+            # "spot_taker_volume_history": {  # DISABLED
+            #     "func": spot_taker_volume_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+            #         "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+            #         "limit": 1000,
+            #         "unit": "usd",
+            #         "hours_back": 24,
+            #     },
+            # },
+            # Futures Price and Taker Volume Endpoints
+            "futures_price_history": {
+                "func": futures_price_history.run,
                 "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "exchanges": ["Binance", "Bybit", "OKX"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
-                    "unit": "usd",
                     "hours_back": 24,
+                },
+            },
+            "futures_aggregated_taker_volume_history": {
+                "func": futures_aggregated_taker_volume_history.run,
+                "params": {
+                    "exchange_lists": ["Binance", "Binance,Bybit", "Binance,Bybit,OKX"],
+                    "symbols": ["BTC", "ETH", "SOL"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "unit": "usd",
+                    "limit": 1000,
+                    "days_back": 30,
                 },
             },
             # ===== ASK BIDS ENDPOINTS =====
@@ -511,10 +536,10 @@ class CoinglassService:
                     # ("exchange_onchain_transfers", "cg_exchange_onchain_transfers"),  # DISABLED
                     # ===== NEW ENDPOINTS =====
                     ("futures_footprint_history", "cg_futures_footprint_history"),
-                                        ("spot_large_orderbook_history", "cg_spot_large_orderbook_history"),
+                                        # ("spot_large_orderbook_history", "cg_spot_large_orderbook_history"),  # DISABLED
                     ("spot_large_orderbook", "cg_spot_large_orderbook"),
                     ("spot_aggregated_taker_volume_history", "cg_spot_aggregated_taker_volume_history"),
-                    ("spot_taker_volume_history", "cg_spot_taker_volume_history"),
+                    # ("spot_taker_volume_history", "cg_spot_taker_volume_history"),  # DISABLED
                     # Spot Market Tables
                     ("spot_coins_markets", "cg_spot_coins_markets"),
                     ("spot_pairs_markets", "cg_spot_pairs_markets"),
@@ -548,9 +573,9 @@ class CoinglassService:
                         elif table in ["cg_spot_coins_markets", "cg_spot_pairs_markets"]:
                             # These tables don't have a time column, use updated_at instead
                             cur.execute(f"SELECT COUNT(*) as count, MAX(UNIX_TIMESTAMP(updated_at) * 1000) as latest_time FROM {table}")
-                        elif table == "cg_spot_large_orderbook_history":
-                            # Uses start_time as the primary time column
-                            cur.execute(f"SELECT COUNT(*) as count, MAX(start_time) as latest_time FROM {table}")
+                        # elif table == "cg_spot_large_orderbook_history":  # DISABLED
+                        #     # Uses start_time as the primary time column
+                        #     cur.execute(f"SELECT COUNT(*) as count, MAX(start_time) as latest_time FROM {table}")
                         elif table == "cg_spot_large_orderbook":
                             # Uses current_time as the primary time column
                             cur.execute(f"SELECT COUNT(*) as count, MAX(current_time) as latest_time FROM {table}")

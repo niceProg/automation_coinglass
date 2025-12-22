@@ -826,6 +826,75 @@ class CoinglassClient:
             params["end_time"] = str(end_time)
         return self._make_request("chain/whale-transfer", params) or []
 
+    # ---------- Futures Price History ----------
+    def get_futures_price_history(
+        self,
+        exchange: str,
+        symbol: str,  # pair (e.g., BTCUSDT)
+        interval: str = "1h",
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict]:
+        """
+        Get Futures Price OHLC History.
+
+        Args:
+            exchange: Futures exchange name (e.g., Binance, OKX)
+            symbol: Trading pair (e.g., BTCUSDT)
+            interval: Data interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            limit: Number of results per request (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params = {
+            "exchange": exchange,
+            "symbol": symbol,
+            "interval": interval,
+            "limit": str(limit),
+        }
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("futures/price/history", params) or []
+
+    # ---------- Futures Aggregated Taker Volume ----------
+    def get_futures_aggregated_taker_volume_history(
+        self,
+        exchange_list: str,  # e.g., "Binance,OKX,Bybit"
+        symbol: str,  # coin (e.g., BTC)
+        interval: str = "h1",
+        unit: str = "usd",  # or "coin"
+        limit: int = 1000,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ) -> List[Dict]:
+        """
+        Get Futures Aggregated Taker Buy/Sell Volume History.
+
+        Args:
+            exchange_list: List of exchange names (e.g., "Binance,OKX,Bybit")
+            symbol: Trading coin (e.g., BTC)
+            interval: Time interval (1m, 3m, 5m, 15m, 30m, 1h, 4h, 6h, 8h, 12h, 1d, 1w)
+            unit: Unit for returned data (usd or coin)
+            limit: Number of results per request (max 1000)
+            start_time: Start timestamp in milliseconds
+            end_time: End timestamp in milliseconds
+        """
+        params = {
+            "exchange_list": exchange_list,
+            "symbol": symbol,
+            "interval": interval,
+            "unit": unit,
+            "limit": str(limit),
+        }
+        if start_time:
+            params["start_time"] = str(start_time)
+        if end_time:
+            params["end_time"] = str(end_time)
+        return self._make_request("futures/aggregated-taker-buy-sell-volume/history", params) or []
+
     # ===== NEW ENDPOINTS =====
 
     def get_futures_footprint_history(

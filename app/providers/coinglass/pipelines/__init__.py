@@ -20,10 +20,13 @@ from . import (
     spot_price_history,
     # ===== NEW ENDPOINTS =====
     futures_footprint_history,
-    spot_large_orderbook_history,
+    # Futures Price and Taker Volume Endpoints
+    futures_price_history,
+    futures_aggregated_taker_volume_history,
+    # spot_large_orderbook_history,  # DISABLED
     spot_large_orderbook,
     spot_aggregated_taker_volume_history,
-    spot_taker_volume_history,
+    # spot_taker_volume_history,  # DISABLED
     bitcoin_etf_list,
     # bitcoin_etf_history,  # DISABLED - Endpoint not documented in API markdown
     bitcoin_etf_flows_history,
@@ -62,10 +65,13 @@ __all__ = [
     "spot_price_history",
     # ===== NEW ENDPOINTS =====
     "futures_footprint_history",
-    "spot_large_orderbook_history",
+    # Futures Price and Taker Volume Endpoints
+    "futures_price_history",
+    "futures_aggregated_taker_volume_history",
+    # "spot_large_orderbook_history",  # DISABLED
     "spot_large_orderbook",
     "spot_aggregated_taker_volume_history",
-    "spot_taker_volume_history",
+    # "spot_taker_volume_history",  # DISABLED
     "bitcoin_etf_list",
     # "bitcoin_etf_history",  # DISABLED - Endpoint not documented in API markdown
     "bitcoin_etf_flows_history",
