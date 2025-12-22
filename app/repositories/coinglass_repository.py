@@ -3001,6 +3001,18 @@ class CoinglassRepository:
                     sell_volume
                 ))
 
+            # First, find duplicates by checking existing records
+            time_values = [item[6] for item in insert_data]  # time values from insert_data
+            placeholders = ','.join(['%s'] * len(time_values))
+
+            check_sql = f"""
+                SELECT time FROM cg_futures_aggregated_taker_buy_sell_volume_history
+                WHERE exchange_list = %s AND symbol = %s AND `interval` = %s AND unit = %s
+                AND time IN ({placeholders})
+            """
+            cursor.execute(check_sql, [exchange_list, symbol, interval, unit] + time_values)
+            existing_times = set(row[0] for row in cursor.fetchall())
+
             # SQL for INSERT ... ON DUPLICATE KEY UPDATE
             sql = """
                 INSERT INTO cg_futures_aggregated_taker_buy_sell_volume_history (
@@ -3017,9 +3029,12 @@ class CoinglassRepository:
             cursor.executemany(sql, insert_data)
 
             # Count new records vs duplicates
-            affected_rows = cursor.rowcount
-            result["futures_aggregated_taker_buy_sell_volume_history"] = len(insert_data)
-            result["futures_aggregated_taker_buy_sell_volume_history_duplicates"] = max(0, affected_rows - len(insert_data))
+            total_count = len(insert_data)
+            duplicate_count = len(existing_times)
+            new_count = total_count - duplicate_count
+
+            result["futures_aggregated_taker_buy_sell_volume_history"] = new_count
+            result["futures_aggregated_taker_buy_sell_volume_history_duplicates"] = duplicate_count
 
             self.conn.commit()
             cursor.close()
@@ -3066,6 +3081,18 @@ class CoinglassRepository:
                     item.get("volume_usd", 0)
                 ))
 
+            # First, find duplicates by checking existing records
+            time_values = [item[5] for item in insert_data]  # time values from insert_data
+            placeholders = ','.join(['%s'] * len(time_values))
+
+            check_sql = f"""
+                SELECT time FROM cg_futures_price_history
+                WHERE exchange = %s AND symbol = %s AND `interval` = %s
+                AND time IN ({placeholders})
+            """
+            cursor.execute(check_sql, [exchange, symbol, interval] + time_values)
+            existing_times = set(row[0] for row in cursor.fetchall())
+
             # SQL for INSERT ... ON DUPLICATE KEY UPDATE
             sql = """
                 INSERT INTO cg_futures_price_history (
@@ -3085,9 +3112,12 @@ class CoinglassRepository:
             cursor.executemany(sql, insert_data)
 
             # Count new records vs duplicates
-            affected_rows = cursor.rowcount
-            result["futures_price_history"] = len(insert_data)
-            result["futures_price_history_duplicates"] = max(0, affected_rows - len(insert_data))
+            total_count = len(insert_data)
+            duplicate_count = len(existing_times)
+            new_count = total_count - duplicate_count
+
+            result["futures_price_history"] = new_count
+            result["futures_price_history_duplicates"] = duplicate_count
 
             self.conn.commit()
             cursor.close()

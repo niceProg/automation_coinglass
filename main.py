@@ -475,11 +475,8 @@ def run_historical_mode(historical_args, pipelines=None):
     end_timestamp = int(end_time.timestamp())
 
     # Apply Coinglass API constraints
-    min_timestamp = 1704067200000 // 1000  # January 1, 2024 in seconds
-    if start_timestamp < min_timestamp:
-        logger.info(f"⚠️ Adjusting start_time from {start_timestamp} to {min_timestamp} (January 1, 2024) due to API limitations")
-        start_timestamp = min_timestamp
-        start_time = datetime.fromtimestamp(min_timestamp)
+    # NOTE: Removed hardcoded timestamp limit - let user specify any timestamp supported by Coinglass API
+    # If API returns error for old data, user can adjust accordingly
 
     logger.info("=" * 80)
     logger.info("📅 HISTORICAL DATA COLLECTION MODE")
