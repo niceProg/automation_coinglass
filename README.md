@@ -178,6 +178,10 @@ automation_coinglass/
 - `/api/futures/orderbook/ask-bids-history` - Pair Orderbook Bid&Ask
 - `/api/futures/orderbook/aggregated-ask-bids-history` - Aggregated Orderbook Bid&Ask
 
+### Price & Volume
+- `/api/futures/price/history` - Futures OHLC Price History
+- `/api/futures/aggregated-taker-buy-sell-volume/history` - Aggregated Taker Buy/Sell Volume History
+
 ### Options
 - `/api/option/max-pain` - Option Max Pain
 - `/api/option/info` - Options Info

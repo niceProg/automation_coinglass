@@ -2967,3 +2967,138 @@ class CoinglassRepository:
                 f"Error code: {error_code}, Message: {error_msg}"
             )
             return result
+
+    def upsert_futures_aggregated_taker_buy_sell_volume_history_batch(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures aggregated taker buy/sell volume history data."""
+        result = {
+            "futures_aggregated_taker_buy_sell_volume_history": 0,
+            "futures_aggregated_taker_buy_sell_volume_history_duplicates": 0
+        }
+
+        if not data:
+            return result
+
+        try:
+            cursor = self.conn.cursor()
+            base_asset = self._get_base_asset_from_symbol(symbol)
+
+            # Prepare batch insert data
+            insert_data = []
+            for item in data:
+                # Handle both naming conventions from the API
+                time_val = item.get("time", item.get("createTime", 0))
+                buy_volume = item.get("aggregated_buy_volume_usd", item.get("aggregatedBuyVolumeUsd", 0))
+                sell_volume = item.get("aggregated_sell_volume_usd", item.get("aggregatedSellVolumeUsd", 0))
+
+                insert_data.append((
+                    exchange_list,
+                    symbol,
+                    base_asset,
+                    interval,
+                    unit,
+                    time_val,
+                    buy_volume,
+                    sell_volume
+                ))
+
+            # SQL for INSERT ... ON DUPLICATE KEY UPDATE
+            sql = """
+                INSERT INTO cg_futures_aggregated_taker_buy_sell_volume_history (
+                    exchange_list, symbol, base_asset, `interval`, unit, time,
+                    aggregated_buy_volume, aggregated_sell_volume
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    aggregated_buy_volume = VALUES(aggregated_buy_volume),
+                    aggregated_sell_volume = VALUES(aggregated_sell_volume),
+                    updated_at = CURRENT_TIMESTAMP
+            """
+
+            # Execute batch insert
+            cursor.executemany(sql, insert_data)
+
+            # Count new records vs duplicates
+            affected_rows = cursor.rowcount
+            result["futures_aggregated_taker_buy_sell_volume_history"] = len(insert_data)
+            result["futures_aggregated_taker_buy_sell_volume_history_duplicates"] = max(0, affected_rows - len(insert_data))
+
+            self.conn.commit()
+            cursor.close()
+
+            return result
+        except pymysql.Error as e:
+            self.conn.rollback()
+            error_code = e.args[0] if e.args else 'unknown'
+            error_msg = e.args[1] if len(e.args) > 1 else str(e)
+            self.logger.error(
+                f"Database error upserting futures aggregated taker buy/sell volume history for {exchange_list}:{symbol}:{interval} - "
+                f"Error code: {error_code}, Message: {error_msg}"
+            )
+            return result
+
+    def upsert_futures_price_history_batch(self, exchange: str, symbol: str, interval: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures price history (OHLC) data."""
+        result = {
+            "futures_price_history": 0,
+            "futures_price_history_duplicates": 0
+        }
+
+        if not data:
+            return result
+
+        try:
+            cursor = self.conn.cursor()
+            base_asset, quote_asset = self._get_assets_from_pair(symbol)
+
+            # Prepare batch insert data
+            insert_data = []
+            for item in data:
+                insert_data.append((
+                    exchange,
+                    symbol,
+                    base_asset,
+                    quote_asset,
+                    interval,
+                    item.get("time", 0),
+                    item.get("open", 0),
+                    item.get("high", 0),
+                    item.get("low", 0),
+                    item.get("close", 0),
+                    item.get("volume_usd", 0)
+                ))
+
+            # SQL for INSERT ... ON DUPLICATE KEY UPDATE
+            sql = """
+                INSERT INTO cg_futures_price_history (
+                    exchange, symbol, base_asset, quote_asset, `interval`, time,
+                    open, high, low, close, volume_usd
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    open = VALUES(open),
+                    high = VALUES(high),
+                    low = VALUES(low),
+                    close = VALUES(close),
+                    volume_usd = VALUES(volume_usd),
+                    updated_at = CURRENT_TIMESTAMP
+            """
+
+            # Execute batch insert
+            cursor.executemany(sql, insert_data)
+
+            # Count new records vs duplicates
+            affected_rows = cursor.rowcount
+            result["futures_price_history"] = len(insert_data)
+            result["futures_price_history_duplicates"] = max(0, affected_rows - len(insert_data))
+
+            self.conn.commit()
+            cursor.close()
+
+            return result
+        except pymysql.Error as e:
+            self.conn.rollback()
+            error_code = e.args[0] if e.args else 'unknown'
+            error_msg = e.args[1] if len(e.args) > 1 else str(e)
+            self.logger.error(
+                f"Database error upserting futures price history for {exchange}:{symbol}:{interval} - "
+                f"Error code: {error_code}, Message: {error_msg}"
+            )
+            return result

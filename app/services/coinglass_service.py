@@ -53,6 +53,10 @@ from app.providers.coinglass.pipelines import (
 
     # ===== FUTURES AGGREGATED ASK BIDS =====
     futures_aggregated_ask_bids_history,
+
+    # ===== NEW FUTURES PIPELINES =====
+    futures_aggregated_taker_buy_sell_volume_history,
+    futures_price_history,
 )
 from app.repositories.coinglass_repository import CoinglassRepository
 from app.core.config import settings
@@ -380,6 +384,29 @@ class CoinglassService:
                     "ranges": ["0.25", "0.5", "1", "2", "5"],
                     "limit": 1000,
                     "days_back": 30,
+                },
+            },
+
+            # ===== NEW FUTURES PIPELINES =====
+            "futures_aggregated_taker_buy_sell_volume_history": {
+                "func": futures_aggregated_taker_buy_sell_volume_history.run,
+                "params": {
+                    "exchange_lists": ["Binance,OKX,Bybit"],
+                    "symbols": ["BTC", "ETH", "SOL"],
+                    "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "units": ["usd", "coin"],
+                    "limit": 1000,
+                    "days_back": 30,
+                },
+            },
+            "futures_price_history": {
+                "func": futures_price_history.run,
+                "params": {
+                    "exchanges": ["Binance", "OKX", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "limit": 1000,
+                    "days_back": 7,
                 },
             },
         }

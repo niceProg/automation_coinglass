@@ -41,6 +41,10 @@ from . import (
 
     # ===== FUTURES AGGREGATED ASK BIDS =====
     futures_aggregated_ask_bids_history,
+
+    # ===== NEW FUTURES PIPELINES =====
+    futures_aggregated_taker_buy_sell_volume_history,
+    futures_price_history,
 )
 
 __all__ = [
@@ -85,4 +89,8 @@ __all__ = [
 
     # ===== FUTURES AGGREGATED ASK BIDS =====
     "futures_aggregated_ask_bids_history",
+
+    # ===== NEW FUTURES PIPELINES =====
+    "futures_aggregated_taker_buy_sell_volume_history",
+    "futures_price_history",
 ]

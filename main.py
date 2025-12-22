@@ -46,6 +46,10 @@ COMMAND CATEGORIES:
 ⚡ FUTURES AGGREGATED ASK BIDS:
     futures_aggregated_ask_bids_history  Aggregated futures orderbook bid/ask data across exchanges
 
+⚡ FUTURES PRICE & VOLUME:
+    futures_price_history                   Futures OHLC price data across exchanges
+    futures_aggregated_taker_buy_sell_volume_history  Aggregated taker buy/sell volumes
+
 ₿ BITCOIN ETF:
     bitcoin_etf_list                 Bitcoin ETF overview and status (real-time)
     # bitcoin_etf_history              Historical holdings and NAV data  # DISABLED - Endpoint not documented
@@ -95,6 +99,7 @@ Usage Examples:
     # python main.py exchange_balance_list  # DISABLED - Not documented
     python main.py spot_coins_markets spot_pairs_markets spot_price_history spot_large_orderbook spot_large_orderbook_history spot_aggregated_taker_volume_history spot_taker_volume_history spot_ask_bids_history # spot_aggregated_ask_bids_history [DISABLED]
     python main.py futures_aggregated_ask_bids_history  # Futures aggregated orderbook data
+    python main.py futures_price_history futures_aggregated_taker_buy_sell_volume_history  # Futures price and volume data
     python main.py bitcoin_etf_list bitcoin_etf_flows_history  # bitcoin_etf_history disabled
     # python main.py supported_exchange_pairs pairs_markets  # DISABLED
 """
@@ -515,6 +520,8 @@ def run_historical_mode(historical_args, pipelines=None):
             # "spot_aggregated_ask_bids_history",  # [DISABLED]
             # Pipelines with direct time parameter support
             "futures_aggregated_ask_bids_history",
+            "futures_price_history",
+            "futures_aggregated_taker_buy_sell_volume_history",
             "whale_transfer"
         ]
         logger.info(f"📊 Using default pipelines: {', '.join(pipelines)}")
@@ -781,6 +788,9 @@ def show_help():
     logger.info("  ")
     logger.info("  # Futures Aggregated Orderbook")
     logger.info("  python main.py futures_aggregated_ask_bids_history")
+    logger.info("  ")
+    logger.info("  # Futures Price & Volume")
+    logger.info("  python main.py futures_price_history futures_aggregated_taker_buy_sell_volume_history")
     logger.info("  ")
     logger.info("  # Bitcoin ETFs")
     logger.info(
