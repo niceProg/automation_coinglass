@@ -464,8 +464,25 @@ def run_historical_mode(historical_args, pipelines=None):
     elif len(time_args) >= 2:
         # Manual mode: --historical start_time end_time
         try:
-            start_time = datetime.fromtimestamp(int(time_args[0]))
-            end_time = datetime.fromtimestamp(int(time_args[1]))
+            # Handle each timestamp independently (can be mix of seconds and milliseconds)
+            start_ts_value = int(time_args[0])
+            end_ts_value = int(time_args[1])
+
+            # Detect if start timestamp is in seconds or milliseconds
+            if start_ts_value > 10**12:
+                start_time = datetime.fromtimestamp(start_ts_value / 1000)
+                logger.info(f"📅 Start timestamp: {start_ts_value} (milliseconds) ({start_time.strftime('%Y-%m-%d')})")
+            else:
+                start_time = datetime.fromtimestamp(start_ts_value)
+                logger.info(f"📅 Start timestamp: {start_ts_value} (seconds) ({start_time.strftime('%Y-%m-%d')})")
+
+            # Detect if end timestamp is in seconds or milliseconds
+            if end_ts_value > 10**12:
+                end_time = datetime.fromtimestamp(end_ts_value / 1000)
+                logger.info(f"📅 End timestamp: {end_ts_value} (milliseconds) ({end_time.strftime('%Y-%m-%d')})")
+            else:
+                end_time = datetime.fromtimestamp(end_ts_value)
+                logger.info(f"📅 End timestamp: {end_ts_value} (seconds) ({end_time.strftime('%Y-%m-%d')})")
         except (ValueError, OSError) as e:
             logger.error(f"❌ Invalid timestamp format: {e}")
             return
