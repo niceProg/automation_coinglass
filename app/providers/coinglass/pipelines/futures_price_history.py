@@ -29,7 +29,7 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     # Pipeline parameters
     EXCHANGES = params.get("exchanges", ["Binance", "OKX", "Bybit"])  # Futures exchanges
-    SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT", "SOLUSDT"])  # Trading pairs
+    SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT"])  # Trading pairs - Sementara BTCUSDT & ETHUSDT dulu
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])  # API intervals
     LIMIT = params.get("limit", 1000)  # Max results per request
 

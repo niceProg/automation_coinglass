@@ -3102,3 +3102,40 @@ class CoinglassRepository:
                 f"Error code: {error_code}, Message: {error_msg}"
             )
             return result
+
+    def _get_base_asset_from_symbol(self, symbol: str) -> str:
+        """
+        Extract base asset from symbol.
+        Examples:
+        - BTC -> BTC
+        - ETH -> ETH
+        - BTCUSDT -> BTC
+        - ETHUSDT -> ETH
+        """
+        # Remove common quote assets
+        quote_assets = ['USDT', 'USD', 'BUSD', 'USDC', 'TUSD', 'USDP', 'DAI']
+
+        for quote in quote_assets:
+            if symbol.endswith(quote):
+                return symbol[:-len(quote)]
+
+        # If no known quote asset found, return as is
+        return symbol
+
+    def _get_assets_from_pair(self, symbol: str) -> tuple:
+        """
+        Extract base and quote assets from trading pair.
+        Examples:
+        - BTCUSDT -> (BTC, USDT)
+        - ETHUSDT -> (ETH, USDT)
+        - BTC -> (BTC, USDT)  # Default quote
+        """
+        # Common quote assets
+        quote_assets = ['USDT', 'USD', 'BUSD', 'USDC', 'TUSD', 'USDP', 'DAI']
+
+        for quote in quote_assets:
+            if symbol.endswith(quote):
+                return symbol[:-len(quote)], quote
+
+        # If no known quote asset found, assume symbol is base asset with USDT as quote
+        return symbol, 'USDT'
