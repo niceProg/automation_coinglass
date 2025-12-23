@@ -391,7 +391,7 @@ class CoinglassService:
             "futures_aggregated_taker_buy_sell_volume_history": {
                 "func": futures_aggregated_taker_buy_sell_volume_history.run,
                 "params": {
-                    "exchange_lists": ["Binance,OKX,Bybit"],
+                    "exchanges": ["Binance", "OKX", "Bybit"],  # Individual exchanges
                     "symbols": ["BTC", "ETH"],  # Sementara BTC & ETH dulu
                     "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "units": ["usd", "coin"],

@@ -2968,7 +2968,7 @@ class CoinglassRepository:
             )
             return result
 
-    def upsert_futures_aggregated_taker_buy_sell_volume_history_batch(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
+    def upsert_futures_aggregated_taker_buy_sell_volume_history_batch(self, exchange: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
         """Upsert futures aggregated taker buy/sell volume history data."""
         result = {
             "futures_aggregated_taker_buy_sell_volume_history": 0,
@@ -2991,7 +2991,7 @@ class CoinglassRepository:
                 sell_volume = item.get("aggregated_sell_volume_usd", item.get("aggregatedSellVolumeUsd", 0))
 
                 insert_data.append((
-                    exchange_list,
+                    exchange,
                     symbol,
                     base_asset,
                     interval,
@@ -3007,16 +3007,16 @@ class CoinglassRepository:
 
             check_sql = f"""
                 SELECT time FROM cg_futures_aggregated_taker_buy_sell_volume_history
-                WHERE exchange_list = %s AND symbol = %s AND `interval` = %s AND unit = %s
+                WHERE exchange = %s AND symbol = %s AND `interval` = %s AND unit = %s
                 AND time IN ({placeholders})
             """
-            cursor.execute(check_sql, [exchange_list, symbol, interval, unit] + time_values)
+            cursor.execute(check_sql, [exchange, symbol, interval, unit] + time_values)
             existing_times = set(row[0] for row in cursor.fetchall())
 
             # SQL for INSERT ... ON DUPLICATE KEY UPDATE
             sql = """
                 INSERT INTO cg_futures_aggregated_taker_buy_sell_volume_history (
-                    exchange_list, symbol, base_asset, `interval`, unit, time,
+                    exchange, symbol, base_asset, `interval`, unit, time,
                     aggregated_buy_volume, aggregated_sell_volume
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
@@ -3045,7 +3045,7 @@ class CoinglassRepository:
             error_code = e.args[0] if e.args else 'unknown'
             error_msg = e.args[1] if len(e.args) > 1 else str(e)
             self.logger.error(
-                f"Database error upserting futures aggregated taker buy/sell volume history for {exchange_list}:{symbol}:{interval} - "
+                f"Database error upserting futures aggregated taker buy/sell volume history for {exchange}:{symbol}:{interval} - "
                 f"Error code: {error_code}, Message: {error_msg}"
             )
             return result

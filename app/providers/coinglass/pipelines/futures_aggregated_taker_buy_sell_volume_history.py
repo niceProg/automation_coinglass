@@ -22,14 +22,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     Based on the API documentation from futures.md:
     - Returns aggregated buy/sell volumes with timestamps
-    - Support for multiple exchanges (Binance, OKX, Bybit, etc.)
+    - Support for multiple exchanges (Binance, OKX, Bybit, etc.) - processed individually
     - Various intervals from 1m to 1w
     - Support for USD or coin units
     """
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGE_LISTS = params.get("exchange_lists", ["Binance,OKX,Bybit"])  # Lists of exchanges to aggregate
+    EXCHANGES = params.get("exchanges", ["Binance", "OKX", "Bybit"])  # Individual exchanges
     SYMBOLS = params.get("symbols", ["BTC", "ETH"])  # Trading coins - Sementara BTC & ETH dulu
     INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])  # API intervals
     UNITS = params.get("units", ["usd", "coin"])  # Data units
@@ -51,17 +51,17 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     logger.info(f"Starting Futures Aggregated Taker Buy/Sell Volume History pipeline")
 
-    for exchange_list in EXCHANGE_LISTS:
-        logger.info(f"🔄 Processing exchange list: {exchange_list}")
+    for exchange in EXCHANGES:
+        logger.info(f"🔄 Processing exchange: {exchange}")
 
         for symbol in SYMBOLS:
             for interval in INTERVALS:
                 for unit in UNITS:
                     try:
-                        logger.info(f"Fetching futures aggregated taker volume for {exchange_list} {symbol} {interval} unit={unit}")
+                        logger.info(f"Fetching futures aggregated taker volume for {exchange} {symbol} {interval} unit={unit}")
 
                         data = client.get_futures_aggregated_taker_buy_sell_volume_history(
-                            exchange_list=exchange_list,
+                            exchange_list=exchange,
                             symbol=symbol,
                             interval=interval,
                             start_time=start_time,
@@ -73,10 +73,10 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                         if data:
                             # Process and insert data with duplicate checking
                             saved = repo.upsert_futures_aggregated_taker_buy_sell_volume_history_batch(
-                                exchange_list, symbol, interval, unit, data
+                                exchange, symbol, interval, unit, data
                             )
                             logger.info(
-                                f"✅ futures_aggregated_taker_buy_sell_volume_history[{exchange_list}:{symbol}:{interval}:unit={unit}]: "
+                                f"✅ futures_aggregated_taker_buy_sell_volume_history[{exchange}:{symbol}:{interval}:unit={unit}]: "
                                 f"received={len(data)}, saved={saved.get('futures_aggregated_taker_buy_sell_volume_history', 0)}, duplicates={saved.get('futures_aggregated_taker_buy_sell_volume_history_duplicates', 0)}"
                             )
                             # Handle both old int format and new dict format for backward compatibility
@@ -88,19 +88,19 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
                                 summary["futures_aggregated_taker_buy_sell_volume_history"] += saved
                         else:
                             logger.warning(
-                                f"No data returned for futures aggregated taker volume: {exchange_list} {symbol} {interval} unit={unit}"
+                                f"No data returned for futures aggregated taker volume: {exchange} {symbol} {interval} unit={unit}"
                             )
 
                         summary["fetches"] += 1
 
                     except Exception as e:
                         logger.warning(
-                            f"Error fetching futures aggregated taker volume for {exchange_list} {symbol}: {e}"
+                            f"Error fetching futures aggregated taker volume for {exchange} {symbol}: {e}"
                         )
                         summary["fetches"] += 1
                         continue
 
-        logger.info(f"✅ Completed processing for exchange list: {exchange_list}")
+        logger.info(f"✅ Completed processing for exchange: {exchange}")
 
     logger.info(f"📦 Futures Aggregated Taker Buy/Sell Volume History pipeline completed. Total records saved: {summary['futures_aggregated_taker_buy_sell_volume_history']}, duplicates={summary['futures_aggregated_taker_buy_sell_volume_history_duplicates']} ✅")
     return summary
