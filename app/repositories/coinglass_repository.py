@@ -3003,10 +3003,20 @@ class CoinglassRepository:
 
             # Prepare batch data
             batch_data = []
+            quote_candidates = ("USDT", "USDC", "USD", "BTC", "ETH")
+            quote_asset = "USDT"
+            base_asset = symbol
+            for candidate in quote_candidates:
+                if symbol.endswith(candidate):
+                    quote_asset = candidate
+                    base_asset = symbol[: -len(candidate)]
+                    break
             for item in data:
                 batch_data.append((
                     exchange,
                     symbol,
+                    base_asset,
+                    quote_asset,
                     interval,
                     item.get("time"),
                     item.get("open"),
@@ -3019,14 +3029,16 @@ class CoinglassRepository:
             # SQL for INSERT ... ON DUPLICATE KEY UPDATE
             sql = """
             INSERT INTO cg_futures_price_history
-            (exchange, symbol, `interval`, time, open, high, low, close, volume_usd)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (exchange, symbol, base_asset, quote_asset, `interval`, time, open, high, low, close, volume_usd)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
             open = VALUES(open),
             high = VALUES(high),
             low = VALUES(low),
             close = VALUES(close),
             volume_usd = VALUES(volume_usd),
+            base_asset = VALUES(base_asset),
+            quote_asset = VALUES(quote_asset),
             updated_at = CURRENT_TIMESTAMP
             """
 

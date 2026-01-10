@@ -1184,6 +1184,8 @@ COINGLASS_TABLES = {
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         exchange VARCHAR(50) NOT NULL,
         symbol VARCHAR(50) NOT NULL,
+        base_asset VARCHAR(20) NOT NULL,
+        quote_asset VARCHAR(20) NOT NULL,
         `interval` VARCHAR(10) NOT NULL,
         time BIGINT NOT NULL,
         open DECIMAL(30,10),
@@ -1196,6 +1198,8 @@ COINGLASS_TABLES = {
         UNIQUE KEY uk_exchange_symbol_interval_time (exchange, symbol, `interval`, time),
         INDEX idx_exchange (exchange),
         INDEX idx_symbol (symbol),
+        INDEX idx_base_asset (base_asset),
+        INDEX idx_quote_asset (quote_asset),
         INDEX idx_interval (`interval`),
         INDEX idx_time (time),
         INDEX idx_volume_usd (volume_usd)
