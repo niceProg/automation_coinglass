@@ -22,7 +22,7 @@ from . import (
     futures_footprint_history,
     # Futures Price and Taker Volume Endpoints
     futures_price_history,
-    futures_aggregated_taker_volume_history,
+    futures_aggregated_taker_buy_sell_volume_history,
     # spot_large_orderbook_history,  # DISABLED
     spot_large_orderbook,
     spot_aggregated_taker_volume_history,
@@ -67,7 +67,7 @@ __all__ = [
     "futures_footprint_history",
     # Futures Price and Taker Volume Endpoints
     "futures_price_history",
-    "futures_aggregated_taker_volume_history",
+    "futures_aggregated_taker_buy_sell_volume_history",
     # "spot_large_orderbook_history",  # DISABLED
     "spot_large_orderbook",
     "spot_aggregated_taker_volume_history",

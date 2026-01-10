@@ -3058,11 +3058,11 @@ class CoinglassRepository:
             self.logger.error(f"Error upserting futures price history batch: {e}")
             return result
 
-    def upsert_futures_aggregated_taker_volume_history(self, exchange_list: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
-        """Upsert futures aggregated taker volume history data in batch."""
+    def upsert_futures_aggregated_taker_buy_sell_volume_history(self, exchange: str, symbol: str, interval: str, unit: str, data: List[Dict]) -> Dict[str, int]:
+        """Upsert futures aggregated taker buy/sell volume history data in batch."""
         result = {
-            "futures_aggregated_taker_volume_history": 0,
-            "futures_aggregated_taker_volume_history_duplicates": 0,
+            "futures_aggregated_taker_buy_sell_volume_history": 0,
+            "futures_aggregated_taker_buy_sell_volume_history_duplicates": 0,
         }
 
         if not data:
@@ -3074,24 +3074,27 @@ class CoinglassRepository:
             # Prepare batch data
             batch_data = []
             for item in data:
+                base_asset = symbol.replace("USDT", "").replace("USD", "")
                 batch_data.append((
-                    exchange_list,
+                    exchange,
                     symbol,
                     interval,
                     unit,
                     item.get("time"),
+                    base_asset,
                     item.get("aggregated_buy_volume_usd") or item.get("aggregated_buy_volume"),
                     item.get("aggregated_sell_volume_usd") or item.get("aggregated_sell_volume")
                 ))
 
             # SQL for INSERT ... ON DUPLICATE KEY UPDATE
             sql = """
-            INSERT INTO cg_futures_aggregated_taker_volume_history
-            (exchange_list, symbol, `interval`, unit, time, aggregated_buy_volume, aggregated_sell_volume)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO cg_futures_aggregated_taker_buy_sell_volume_history
+            (exchange, symbol, `interval`, unit, time, base_asset, aggregated_buy_volume, aggregated_sell_volume)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
             aggregated_buy_volume = VALUES(aggregated_buy_volume),
             aggregated_sell_volume = VALUES(aggregated_sell_volume),
+            base_asset = VALUES(base_asset),
             updated_at = CURRENT_TIMESTAMP
             """
 
@@ -3103,17 +3106,17 @@ class CoinglassRepository:
 
             # Determine new vs updated records
             if total_affected == len(batch_data) * 2:  # All were updates
-                result["futures_aggregated_taker_volume_history_duplicates"] = len(data)
+                result["futures_aggregated_taker_buy_sell_volume_history_duplicates"] = len(data)
             elif total_affected == len(batch_data):  # All were new inserts
-                result["futures_aggregated_taker_volume_history"] = len(data)
+                result["futures_aggregated_taker_buy_sell_volume_history"] = len(data)
             else:  # Mixed - approximate split
                 estimated_new = total_affected - len(data)
-                result["futures_aggregated_taker_volume_history"] = max(0, estimated_new)
-                result["futures_aggregated_taker_volume_history_duplicates"] = min(len(data), len(data) - estimated_new)
+                result["futures_aggregated_taker_buy_sell_volume_history"] = max(0, estimated_new)
+                result["futures_aggregated_taker_buy_sell_volume_history_duplicates"] = min(len(data), len(data) - estimated_new)
 
             self.conn.commit()
             return result
         except Exception as e:
             self.conn.rollback()
-            self.logger.error(f"Error upserting futures aggregated taker volume history batch: {e}")
+            self.logger.error(f"Error upserting futures aggregated taker buy/sell volume history batch: {e}")
             return result

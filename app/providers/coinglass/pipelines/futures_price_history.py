@@ -22,17 +22,21 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGES = params.get("exchanges", ["Binance", "Bybit", "OKX"])
-    SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT", "SOLUSDT"])
+    EXCHANGES = params.get("exchanges", ["Binance", "OKX", "Bybit"])
+    SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT"])
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     LIMIT = params.get("limit", 1000)
 
     # Calculate time range for historical data
+    DAYS_BACK = params.get("days_back")
     HOURS_BACK = params.get("hours_back", 24)
     end_time = params.get("end_time", int(datetime.now().timestamp() * 1000))
     start_time = params.get("start_time")
     if not start_time:
-        start_time = int((datetime.now() - timedelta(hours=HOURS_BACK)).timestamp() * 1000)
+        if DAYS_BACK:
+            start_time = int((datetime.now() - timedelta(days=DAYS_BACK)).timestamp() * 1000)
+        else:
+            start_time = int((datetime.now() - timedelta(hours=HOURS_BACK)).timestamp() * 1000)
 
     summary = {
         "futures_price_history": 0,

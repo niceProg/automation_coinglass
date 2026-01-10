@@ -26,23 +26,23 @@ from app.providers.coinglass.pipelines import (
     futures_footprint_history,
     # Futures Price and Taker Volume Endpoints
     futures_price_history,
-    futures_aggregated_taker_volume_history,
+    futures_aggregated_taker_buy_sell_volume_history,
     # spot_large_orderbook_history,  # DISABLED
     spot_large_orderbook,
     spot_aggregated_taker_volume_history,
     # spot_taker_volume_history,  # DISABLED
-    bitcoin_etf_list,
+    # bitcoin_etf_list,  # DISABLED
     # bitcoin_etf_history,  # DISABLED - Endpoint not documented in API markdown
-    bitcoin_etf_flows_history,
-    bitcoin_etf_premium_discount_history,
+    # bitcoin_etf_flows_history,  # DISABLED
+    # bitcoin_etf_premium_discount_history,  # DISABLED
     # Trading Market Pipelines
     # supported_exchange_pairs,  # DISABLED
     # pairs_markets,  # DISABLED
     # coins_markets,  # DISABLED
     # Macro Overlay Pipelines
-    bitcoin_vs_global_m2_growth,
+    # bitcoin_vs_global_m2_growth,  # DISABLED
     # Options Pipelines
-    option_exchange_oi_history,
+    # option_exchange_oi_history,  # DISABLED
     # open_interest_exchange_list,  # DISABLED - Table deleted
     # Open Interest Aggregated Stablecoin History Pipeline
     open_interest_aggregated_stablecoin_history,
@@ -53,7 +53,7 @@ from app.providers.coinglass.pipelines import (
     # ===== ASK BIDS ENDPOINTS =====
     spot_ask_bids_history,
   # spot_aggregated_ask_bids_history,  # DISABLED
-  futures_aggregated_ask_bids_history,
+  # futures_aggregated_ask_bids_history,  # DISABLED
 )
 from app.repositories.coinglass_repository import CoinglassRepository
 from app.core.config import settings
@@ -226,22 +226,22 @@ class CoinglassService:
                 "params": {**self.default_params, "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"]},
             },
             # Bitcoin ETF Pipelines
-            "bitcoin_etf_list": {
-                "func": bitcoin_etf_list.run,
-                "params": {},  # Real-time data, no specific params needed
-            },
+            # "bitcoin_etf_list": {  # DISABLED
+            #     "func": bitcoin_etf_list.run,
+            #     "params": {},  # Real-time data, no specific params needed
+            # },
             # "bitcoin_etf_history": {  # DISABLED - Endpoint not documented in API markdown
             #     "func": bitcoin_etf_history.run,
             #     "params": {"tickers": ["GBTC", "IBIT", "FBTC", "ARKB", "BITO", "BRRR"]},  # Major Bitcoin ETFs
             # },
-            "bitcoin_etf_flows_history": {
-                "func": bitcoin_etf_flows_history.run,
-                "params": {},  # All ETF flows history
-            },
-            "bitcoin_etf_premium_discount_history": {
-                "func": bitcoin_etf_premium_discount_history.run,
-                "params": {},  # All ETFs premium/discount history
-            },
+            # "bitcoin_etf_flows_history": {  # DISABLED
+            #     "func": bitcoin_etf_flows_history.run,
+            #     "params": {},  # All ETF flows history
+            # },
+            # "bitcoin_etf_premium_discount_history": {  # DISABLED
+            #     "func": bitcoin_etf_premium_discount_history.run,
+            #     "params": {},  # All ETFs premium/discount history
+            # },
             # Trading Market Pipelines
             # "supported_exchange_pairs": {
             #     "func": supported_exchange_pairs.run,
@@ -256,19 +256,19 @@ class CoinglassService:
             #     "params": {"exchange_list": "Binance,Bybit", "per_page": 50, "page": 1},
             # },
             # Macro Overlay Pipelines
-            "bitcoin_vs_global_m2_growth": {
-                "func": bitcoin_vs_global_m2_growth.run,
-                "params": {},  # No params required
-            },
+            # "bitcoin_vs_global_m2_growth": {  # DISABLED
+            #     "func": bitcoin_vs_global_m2_growth.run,
+            #     "params": {},  # No params required
+            # },
             # Options Pipelines
-            "option_exchange_oi_history": {
-                "func": option_exchange_oi_history.run,
-                "params": {
-                    "symbols": ["BTC", "ETH"],
-                    "units": ["USD"],
-                    "ranges": ["1h", "4h", "12h", "all"],
-                },
-            },
+            # "option_exchange_oi_history": {  # DISABLED
+            #     "func": option_exchange_oi_history.run,
+            #     "params": {
+            #         "symbols": ["BTC", "ETH"],
+            #         "units": ["USD"],
+            #         "ranges": ["1h", "4h", "12h", "all"],
+            #     },
+            # },
             # Open Interest Exchange List (DISABLED - Use original open_interest pipeline instead)
             # "open_interest_exchange_list": {
             #     "func": open_interest_exchange_list.run,
@@ -353,20 +353,20 @@ class CoinglassService:
             "futures_price_history": {
                 "func": futures_price_history.run,
                 "params": {
-                    "exchanges": ["Binance", "Bybit", "OKX"],
-                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+                    "exchanges": ["Binance", "OKX", "Bybit"],
+                    "symbols": ["BTCUSDT", "ETHUSDT"],
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
-                    "hours_back": 24,
+                    "days_back": 7,
                 },
             },
-            "futures_aggregated_taker_volume_history": {
-                "func": futures_aggregated_taker_volume_history.run,
+            "futures_aggregated_taker_buy_sell_volume_history": {
+                "func": futures_aggregated_taker_buy_sell_volume_history.run,
                 "params": {
-                    "exchange_lists": ["Binance", "Binance,Bybit", "Binance,Bybit,OKX"],
-                    "symbols": ["BTC", "ETH", "SOL"],
-                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "unit": "usd",
+                    "exchanges": ["Binance", "OKX", "Bybit"],
+                    "symbols": ["BTC", "ETH"],
+                    "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "units": ["usd", "coin"],
                     "limit": 1000,
                     "days_back": 30,
                 },
@@ -392,16 +392,16 @@ class CoinglassService:
             #         "hours_back": 24,
             #     },
             # },
-            "futures_aggregated_ask_bids_history": {
-                "func": futures_aggregated_ask_bids_history.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
-                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "ranges": ["0.25", "0.5"],
-                    "hours_back": 24,
-                },
-            },
+            # "futures_aggregated_ask_bids_history": {  # DISABLED
+            #     "func": futures_aggregated_ask_bids_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+            #         "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+            #         "ranges": ["0.25", "0.5"],
+            #         "hours_back": 24,
+            #     },
+            # },
         }
 
         # Initialize freshness monitor

@@ -1202,12 +1202,13 @@ COINGLASS_TABLES = {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 
-    # ----- Futures Aggregated Taker Volume History Table -----
-    "cg_futures_aggregated_taker_volume_history": """
-    CREATE TABLE IF NOT EXISTS cg_futures_aggregated_taker_volume_history (
+    # ----- Futures Aggregated Taker Buy/Sell Volume History Table -----
+    "cg_futures_aggregated_taker_buy_sell_volume_history": """
+    CREATE TABLE IF NOT EXISTS cg_futures_aggregated_taker_buy_sell_volume_history (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        exchange_list VARCHAR(255) NOT NULL,
+        exchange VARCHAR(50) NOT NULL,
         symbol VARCHAR(20) NOT NULL,
+        base_asset VARCHAR(20) NOT NULL,
         `interval` VARCHAR(10) NOT NULL,
         unit VARCHAR(10) NOT NULL DEFAULT 'usd',
         time BIGINT NOT NULL,
@@ -1215,9 +1216,10 @@ COINGLASS_TABLES = {
         aggregated_sell_volume DECIMAL(38,8) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_exchange_list_symbol_interval_unit_time (exchange_list, symbol, `interval`, unit, time),
-        INDEX idx_exchange_list (exchange_list),
+        UNIQUE KEY uk_exchange_symbol_interval_unit_time (exchange, symbol, `interval`, unit, time),
+        INDEX idx_exchange (exchange),
         INDEX idx_symbol (symbol),
+        INDEX idx_base_asset (base_asset),
         INDEX idx_interval (`interval`),
         INDEX idx_unit (unit),
         INDEX idx_time (time)
