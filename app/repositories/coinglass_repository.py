@@ -1,7 +1,7 @@
 # app/repositories/coinglass_repository.py
 import logging
 import pymysql
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
 from app.models.coinglass import COINGLASS_TABLES
 import time
@@ -87,11 +87,14 @@ class CoinglassRepository:
 
         return duplicate_count
 
-    def ensure_schema(self):
-        """Create all tables."""
+    def ensure_schema(self, exclude_tables: Optional[Set[str]] = None):
+        """Create all tables except those explicitly excluded."""
         try:
             with self.conn.cursor() as cur:
                 for table_name, create_sql in COINGLASS_TABLES.items():
+                    if exclude_tables and table_name in exclude_tables:
+                        self.logger.info(f"Skipping disabled table: {table_name}")
+                        continue
                     cur.execute(create_sql)
                     self.logger.info(f"Table ensured: {table_name}")
             self.conn.commit()

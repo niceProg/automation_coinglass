@@ -527,13 +527,10 @@ def run_historical_mode(historical_args, pipelines=None):
             "spot_price_history",
             "open_interest_aggregated_stablecoin_history",
             "futures_footprint_history",
-            "spot_large_orderbook_history",
             "spot_aggregated_taker_volume_history",
-            "spot_taker_volume_history",
             "spot_ask_bids_history",
             # "spot_aggregated_ask_bids_history",  # [DISABLED]
             # Pipelines with direct time parameter support
-            "futures_aggregated_ask_bids_history",
             "futures_price_history",
             "futures_aggregated_taker_buy_sell_volume_history",
             "whale_transfer"

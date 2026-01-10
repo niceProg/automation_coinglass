@@ -229,22 +229,22 @@ class CoinglassService:
                 "params": {**self.default_params, "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"]},
             },
             # Bitcoin ETF Pipelines
-            "bitcoin_etf_list": {
-                "func": bitcoin_etf_list.run,
-                "params": {},  # Real-time data, no specific params needed
-            },
+            # "bitcoin_etf_list": {  # DISABLED
+            #     "func": bitcoin_etf_list.run,
+            #     "params": {},  # Real-time data, no specific params needed
+            # },
             # "bitcoin_etf_history": {  # DISABLED - Endpoint not documented in API markdown
             #     "func": bitcoin_etf_history.run,
             #     "params": {"tickers": ["GBTC", "IBIT", "FBTC", "ARKB", "BITO", "BRRR"]},  # Major Bitcoin ETFs
             # },
-            "bitcoin_etf_flows_history": {
-                "func": bitcoin_etf_flows_history.run,
-                "params": {},  # All ETF flows history
-            },
-            "bitcoin_etf_premium_discount_history": {
-                "func": bitcoin_etf_premium_discount_history.run,
-                "params": {},  # All ETFs premium/discount history
-            },
+            # "bitcoin_etf_flows_history": {  # DISABLED
+            #     "func": bitcoin_etf_flows_history.run,
+            #     "params": {},  # All ETF flows history
+            # },
+            # "bitcoin_etf_premium_discount_history": {  # DISABLED
+            #     "func": bitcoin_etf_premium_discount_history.run,
+            #     "params": {},  # All ETFs premium/discount history
+            # },
             # Trading Market Pipelines
             # "supported_exchange_pairs": {
             #     "func": supported_exchange_pairs.run,
@@ -259,19 +259,19 @@ class CoinglassService:
             #     "params": {"exchange_list": "Binance,Bybit", "per_page": 50, "page": 1},
             # },
             # Macro Overlay Pipelines
-            "bitcoin_vs_global_m2_growth": {
-                "func": bitcoin_vs_global_m2_growth.run,
-                "params": {},  # No params required
-            },
+            # "bitcoin_vs_global_m2_growth": {  # DISABLED
+            #     "func": bitcoin_vs_global_m2_growth.run,
+            #     "params": {},  # No params required
+            # },
             # Options Pipelines
-            "option_exchange_oi_history": {
-                "func": option_exchange_oi_history.run,
-                "params": {
-                    "symbols": ["BTC", "ETH"],
-                    "units": ["USD"],
-                    "ranges": ["1h", "4h", "12h", "all"],
-                },
-            },
+            # "option_exchange_oi_history": {  # DISABLED
+            #     "func": option_exchange_oi_history.run,
+            #     "params": {
+            #         "symbols": ["BTC", "ETH"],
+            #         "units": ["USD"],
+            #         "ranges": ["1h", "4h", "12h", "all"],
+            #     },
+            # },
             # Open Interest Exchange List (DISABLED - Use original open_interest pipeline instead)
             # "open_interest_exchange_list": {
             #     "func": open_interest_exchange_list.run,
@@ -314,15 +314,15 @@ class CoinglassService:
                     "hours_back": 24,
                 },
             },
-            "spot_large_orderbook_history": {
-                "func": spot_large_orderbook_history.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
-                    "states": ["1", "2", "3"],  # All states: In Progress, Finish, Revoke
-                    "hours_back": 24,
-                },
-            },
+            # "spot_large_orderbook_history": {  # DISABLED
+            #     "func": spot_large_orderbook_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+            #         "states": ["1", "2", "3"],  # All states: In Progress, Finish, Revoke
+            #         "hours_back": 24,
+            #     },
+            # },
             "spot_large_orderbook": {
                 "func": spot_large_orderbook.run,
                 "params": {
@@ -341,17 +341,17 @@ class CoinglassService:
                     "hours_back": 24,
                 },
             },
-            "spot_taker_volume_history": {
-                "func": spot_taker_volume_history.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
-                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "limit": 1000,
-                    "unit": "usd",
-                    "hours_back": 24,
-                },
-            },
+            # "spot_taker_volume_history": {  # DISABLED
+            #     "func": spot_taker_volume_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+            #         "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+            #         "limit": 1000,
+            #         "unit": "usd",
+            #         "hours_back": 24,
+            #     },
+            # },
             # ===== ASK BIDS ENDPOINTS =====
             "spot_ask_bids_history": {
                 "func": spot_ask_bids_history.run,
@@ -375,17 +375,17 @@ class CoinglassService:
             # },
 
             # ===== FUTURES AGGREGATED ASK BIDS =====
-            "futures_aggregated_ask_bids_history": {
-                "func": futures_aggregated_ask_bids_history.run,
-                "params": {
-                    "exchanges": ["Binance", "Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
-                    "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
-                    "ranges": ["0.25", "0.5", "1", "2", "5"],
-                    "limit": 1000,
-                    "days_back": 30,
-                },
-            },
+            # "futures_aggregated_ask_bids_history": {  # DISABLED
+            #     "func": futures_aggregated_ask_bids_history.run,
+            #     "params": {
+            #         "exchanges": ["Binance", "Bybit"],
+            #         "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+            #         "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+            #         "ranges": ["0.25", "0.5", "1", "2", "5"],
+            #         "limit": 1000,
+            #         "days_back": 30,
+            #     },
+            # },
 
             # ===== NEW FUTURES PIPELINES =====
             "futures_aggregated_taker_buy_sell_volume_history": {
@@ -417,7 +417,24 @@ class CoinglassService:
         # Only ensure tables exist if explicitly requested
         if ensure_tables:
             repository = CoinglassRepository(self.conn, logger)
-            repository.ensure_schema()
+            disabled_tables = {
+                # Disabled ETF pipelines
+                "cg_bitcoin_etf_list",
+                "cg_bitcoin_etf_flows_history",
+                "cg_bitcoin_etf_flows_details",
+                "cg_bitcoin_etf_premium_discount_history",
+                # Disabled macro pipeline
+                "cg_bitcoin_vs_global_m2_growth",
+                # Disabled options pipeline (parent + child tables)
+                "cg_option_exchange_oi_history",
+                "cg_option_exchange_oi_history_time_list",
+                "cg_option_exchange_oi_history_exchange_data",
+                # Disabled pipelines
+                "cg_spot_large_orderbook_history",
+                "cg_spot_taker_volume_history",
+                "cg_futures_aggregated_ask_bids_history",
+            }
+            repository.ensure_schema(exclude_tables=disabled_tables)
 
     def ensure_tables(self):
         """Ensure database tables exist."""
