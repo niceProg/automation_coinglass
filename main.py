@@ -93,6 +93,7 @@ Usage Examples:
     python main.py --historical 1672531200 1763164800000  # Custom timestamp range
     python main.py --historical 1672531200  # From specific date to now
     python main.py --historical 3 funding_rate spot_ask_bids_history  # Historical data for specific pipelines
+    python main.py funding_rate oi_aggregated_history long_short_ratio_top --pair ETHUSDT --historical 1704067200000
 
     # Individual Pipelines
     python main.py funding_rate oi_aggregated_history long_short_ratio_global long_short_ratio_top liquidation_aggregated liquidation_heatmap futures_basis futures_footprint_history
@@ -120,6 +121,64 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+KNOWN_QUOTES = ("USDT", "USD", "USDC", "BUSD", "USDP", "DAI", "FDUSD")
+
+
+def _normalize_pair_args(pair_args):
+    if not pair_args:
+        return []
+    normalized = []
+    for raw_pair in pair_args:
+        if not raw_pair:
+            continue
+        for part in raw_pair.split(","):
+            pair = part.strip().upper()
+            if pair:
+                normalized.append(pair)
+    return list(dict.fromkeys(normalized))
+
+
+def _looks_like_pair(symbol):
+    upper_symbol = symbol.upper()
+    return any(upper_symbol.endswith(quote) for quote in KNOWN_QUOTES)
+
+
+def _pair_to_base_symbol(pair):
+    upper_pair = pair.upper()
+    for quote in KNOWN_QUOTES:
+        if upper_pair.endswith(quote) and len(upper_pair) > len(quote):
+            return upper_pair[: -len(quote)]
+    return upper_pair
+
+
+def _ensure_pairs_have_quote(pairs):
+    normalized_pairs = []
+    for pair in pairs:
+        upper_pair = pair.upper()
+        if _looks_like_pair(upper_pair):
+            normalized_pairs.append(upper_pair)
+        else:
+            normalized_pairs.append(f"{upper_pair}USDT")
+    return normalized_pairs
+
+
+def _apply_pair_filter_to_params(params, pair_filter):
+    normalized = _normalize_pair_args(pair_filter)
+    if not normalized:
+        return
+    base_symbols = list(dict.fromkeys(_pair_to_base_symbol(p) for p in normalized))
+    pair_symbols = _ensure_pairs_have_quote(normalized)
+    if "pairs" in params:
+        params["pairs"] = pair_symbols
+    elif "symbols" in params:
+        default_symbols = params["symbols"]
+        if isinstance(default_symbols, list) and any(
+            _looks_like_pair(symbol) for symbol in default_symbols
+        ):
+            params["symbols"] = pair_symbols
+        else:
+            params["symbols"] = base_symbols
 
 
 def setup_database():
@@ -197,7 +256,7 @@ def initial_scrape(months: int = 1):
     return results
 
 
-def run_pipelines(pipelines=None):
+def run_pipelines(pipelines=None, pair_filter=None):
     """Run specific pipelines or all pipelines."""
     if pipelines:
         logger.info("=" * 60)
@@ -209,7 +268,11 @@ def run_pipelines(pipelines=None):
         logger.info("=" * 60)
 
     controller = IngestionController()
-    results = controller.run_coinglass(pipelines=pipelines)
+    custom_params = {"pair_filter": pair_filter} if pair_filter else None
+    results = controller.run_coinglass(
+        pipelines=pipelines,
+        custom_params=custom_params,
+    )
 
     # Track overall statistics
     total_fresh = 0
@@ -262,7 +325,12 @@ def run_pipelines(pipelines=None):
     return results
 
 
-def continuous_mode(dev_mode: bool = False, server_mode: bool = False, pipelines: list = None):
+def continuous_mode(
+    dev_mode: bool = False,
+    server_mode: bool = False,
+    pipelines: list = None,
+    pair_filter: list = None,
+):
     """Run continuous data collection with automation every 10 seconds or 1 second for server mode."""
     # Log current date and time when starting
     now = datetime.now()
@@ -304,7 +372,7 @@ def continuous_mode(dev_mode: bool = False, server_mode: bool = False, pipelines
 
     # Run initial collection
     logger.info("Running initial collection...")
-    run_pipelines(pipelines=pipelines)
+    run_pipelines(pipelines=pipelines, pair_filter=pair_filter)
 
     # Start automation loop
     logger.info(f"🔄 {mode_name} active. Press Ctrl+C to stop.")
@@ -323,7 +391,7 @@ def continuous_mode(dev_mode: bool = False, server_mode: bool = False, pipelines
             logger.info(f"🔄 CYCLE #{cycle_count} - {date_str} {time_str}")
             logger.info("=" * 60)
 
-            run_pipelines(pipelines=pipelines)
+            run_pipelines(pipelines=pipelines, pair_filter=pair_filter)
 
             logger.info(f"✅ Cycle #{cycle_count} completed. Next cycle in {cycle_delay}s...")
             time.sleep(cycle_delay)
@@ -392,7 +460,7 @@ def create_time_batches(start_ts, end_ts, batch_days=30):
     return batches
 
 
-def run_historical_mode(historical_args, pipelines=None):
+def run_historical_mode(historical_args, pipelines=None, pair_filter=None):
     """Run historical data collection with custom time parameters and batch processing."""
     from app.services.coinglass_service import CoinglassService
     from datetime import datetime, timedelta
@@ -569,6 +637,8 @@ def run_historical_mode(historical_args, pipelines=None):
                     "end_time": batch['end_time']
                 }
                 pipeline_params.update(batch_params)
+                if pair_filter:
+                    _apply_pair_filter_to_params(pipeline_params, pair_filter)
 
                 # Filter timeframes/intervals based on batch processing rules
                 if "intervals" in pipeline_params:
@@ -780,6 +850,7 @@ def show_help():
     logger.info("  python main.py --historical 1672531200 1763164800000  # Custom timestamp range")
     logger.info("  python main.py --historical 1672531200  # From specific date to now")
     logger.info("  python main.py --historical 3 funding_rate spot_ask_bids_history  # Specific pipelines")
+    logger.info("  python main.py funding_rate oi_aggregated_history long_short_ratio_top --pair ETHUSDT --historical 1704067200000")
 
     logger.info("\n📈 Individual Market Categories:")
     logger.info("  # Derivatives")
@@ -940,6 +1011,11 @@ def main():
         "Manual: --historical 1672531200 1763164800000 (start_time end_time)"
     )
     parser.add_argument(
+        "--pair",
+        nargs="*",
+        help="Filter symbols/pairs for pipelines (comma-separated or repeatable), e.g. --pair ETHUSDT,SOLUSDT",
+    )
+    parser.add_argument(
         "pipelines",
         nargs="*",
         help="Specific pipelines to run by category:\n"
@@ -957,6 +1033,8 @@ def main():
 
     args = parser.parse_args()
 
+    pair_filter = _normalize_pair_args(args.pair)
+
     # Handle commands
     if args.setup:
         success = setup_database()
@@ -969,13 +1047,28 @@ def main():
         sys.exit(1 if has_errors else 0)
 
     elif args.continuous:
-        continuous_mode(dev_mode=False, server_mode=False, pipelines=args.pipelines if args.pipelines else None)
+        continuous_mode(
+            dev_mode=False,
+            server_mode=False,
+            pipelines=args.pipelines if args.pipelines else None,
+            pair_filter=pair_filter,
+        )
 
     elif args.dev:
-        continuous_mode(dev_mode=True, server_mode=False, pipelines=args.pipelines if args.pipelines else None)
+        continuous_mode(
+            dev_mode=True,
+            server_mode=False,
+            pipelines=args.pipelines if args.pipelines else None,
+            pair_filter=pair_filter,
+        )
 
     elif args.server:
-        continuous_mode(dev_mode=False, server_mode=True, pipelines=args.pipelines if args.pipelines else None)
+        continuous_mode(
+            dev_mode=False,
+            server_mode=True,
+            pipelines=args.pipelines if args.pipelines else None,
+            pair_filter=pair_filter,
+        )
 
     elif args.status:
         show_status()
@@ -984,7 +1077,11 @@ def main():
         show_freshness()
 
     elif args.historical is not None:
-        run_historical_mode(args.historical, args.pipelines if args.pipelines else None)
+        run_historical_mode(
+            args.historical,
+            args.pipelines if args.pipelines else None,
+            pair_filter=pair_filter,
+        )
 
     elif args.pipelines:
         # Check if any CryptoQuant pipelines are requested
@@ -996,7 +1093,10 @@ def main():
 
         # Run Coinglass pipelines if any
         if requested_coinglass:
-            coinglass_results = run_pipelines(pipelines=requested_coinglass)
+            coinglass_results = run_pipelines(
+                pipelines=requested_coinglass,
+                pair_filter=pair_filter,
+            )
             results.update(coinglass_results)
 
         # Run CryptoQuant pipelines if any

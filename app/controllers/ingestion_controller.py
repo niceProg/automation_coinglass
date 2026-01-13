@@ -19,14 +19,21 @@ class IngestionController:
         )
         self.logger = logging.getLogger("app.controller")
 
-    def run_coinglass(self, pipelines: Optional[List[str]] = None):
+    def run_coinglass(
+        self,
+        pipelines: Optional[List[str]] = None,
+        custom_params: Optional[dict] = None,
+    ):
         """Run Coinglass pipelines."""
         try:
             service = CoinglassService(ensure_tables=False)
             if pipelines:
-                return service.run_selected_pipelines(pipelines)
+                return service.run_selected_pipelines(
+                    pipelines,
+                    custom_params=custom_params,
+                )
             else:
-                return service.run_all_pipelines()
+                return service.run_all_pipelines(custom_params=custom_params)
         except Exception as e:
             self.logger.error(f"Coinglass service failed: {e}", exc_info=True)
             return {"error": str(e)}

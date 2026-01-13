@@ -64,6 +64,46 @@ from app.monitoring.freshness_monitor import DataFreshnessMonitor
 
 logger = logging.getLogger(__name__)
 
+KNOWN_QUOTES = ("USDT", "USD", "USDC", "BUSD", "USDP", "DAI", "FDUSD")
+
+
+def _normalize_pair_filter(pair_filter: Optional[List[str]]) -> List[str]:
+    if not pair_filter:
+        return []
+    normalized = []
+    for raw_pair in pair_filter:
+        if not raw_pair:
+            continue
+        pair = raw_pair.strip().upper()
+        if pair:
+            normalized.append(pair)
+    # Preserve order while de-duping
+    return list(dict.fromkeys(normalized))
+
+
+def _looks_like_pair(symbol: str) -> bool:
+    upper_symbol = symbol.upper()
+    return any(upper_symbol.endswith(quote) for quote in KNOWN_QUOTES)
+
+
+def _pair_to_base_symbol(pair: str) -> str:
+    upper_pair = pair.upper()
+    for quote in KNOWN_QUOTES:
+        if upper_pair.endswith(quote) and len(upper_pair) > len(quote):
+            return upper_pair[: -len(quote)]
+    return upper_pair
+
+
+def _ensure_pairs_have_quote(pairs: List[str]) -> List[str]:
+    normalized_pairs = []
+    for pair in pairs:
+        upper_pair = pair.upper()
+        if _looks_like_pair(upper_pair):
+            normalized_pairs.append(upper_pair)
+        else:
+            normalized_pairs.append(f"{upper_pair}USDT")
+    return normalized_pairs
+
 
 class CoinglassService:
     """Service to orchestrate Coinglass data ingestion."""
@@ -459,6 +499,24 @@ class CoinglassService:
         if custom_params:
             params.update(custom_params)
 
+        pair_filter = _normalize_pair_filter(params.pop("pair_filter", None))
+        if pair_filter:
+            base_symbols = list(dict.fromkeys(_pair_to_base_symbol(p) for p in pair_filter))
+            pair_symbols = _ensure_pairs_have_quote(pair_filter)
+            if "pairs" in params:
+                params["pairs"] = pair_symbols
+                logger.info(f"Applying pair filter to {pipeline_name}: {pair_symbols}")
+            elif "symbols" in params:
+                default_symbols = params["symbols"]
+                if isinstance(default_symbols, list) and any(
+                    _looks_like_pair(symbol) for symbol in default_symbols
+                ):
+                    params["symbols"] = pair_symbols
+                    logger.info(f"Applying pair filter to {pipeline_name}: {pair_symbols}")
+                else:
+                    params["symbols"] = base_symbols
+                    logger.info(f"Applying symbol filter to {pipeline_name}: {base_symbols}")
+
         # Apply exchange filtering from environment variable
         exchange_filter = os.getenv("EXCHANGE_FILTER")
         if exchange_filter:
@@ -489,23 +547,34 @@ class CoinglassService:
             logger.error(f"Pipeline '{pipeline_name}' failed: {e}", exc_info=True)
             return {"error": str(e)}
 
-    def run_selected_pipelines(self, pipeline_names: List[str]) -> Dict[str, Any]:
+    def run_selected_pipelines(
+        self,
+        pipeline_names: List[str],
+        custom_params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Run selected pipelines."""
         results = {}
         for name in pipeline_names:
             try:
-                results[name] = self.run_pipeline(name)
+                results[name] = self.run_pipeline(name, custom_params=custom_params)
             except Exception as e:
                 logger.error(f"Failed to run pipeline {name}: {e}")
                 results[name] = {"error": str(e)}
         return results
 
-    def run_all_pipelines(self, check_freshness: bool = True) -> Dict[str, Any]:
+    def run_all_pipelines(
+        self,
+        check_freshness: bool = True,
+        custom_params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Run all pipelines with optional freshness monitoring."""
         logger.info("Running all pipelines...")
 
         # Run pipelines
-        results = self.run_selected_pipelines(list(self.pipelines.keys()))
+        results = self.run_selected_pipelines(
+            list(self.pipelines.keys()),
+            custom_params=custom_params,
+        )
 
         # Check freshness after running pipelines
         if check_freshness:
