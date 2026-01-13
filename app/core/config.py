@@ -63,7 +63,7 @@ class Settings:
             # "Lighter", "EdgeX", "Drift", "Paradex", "Extended", "ApeX Omni"
         ],
     )
-    COINGLASS_SYMBOLS = _env_list("COINGLASS_SYMBOLS", ["BTC"])
+    COINGLASS_SYMBOLS = _env_list("COINGLASS_SYMBOLS", ["BTC", "ETH", "SOL", "XRP"])
 
     # Minimum USD for filtering
     MIN_USD = float(os.getenv("MIN_USD", "100"))
