@@ -4,10 +4,9 @@ import logging
 from typing import Any, Dict, List
 from datetime import datetime, timedelta
 from app.repositories.coinglass_repository import CoinglassRepository
-from app.core.config import Settings
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-settings = Settings()
 
 
 def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -22,8 +21,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGES = params.get("exchanges", ["Binance", "OKX", "Bybit"])
-    SYMBOLS = params.get("symbols", ["BTC", "ETH"])  # Base assets
+    EXCHANGES = params.get("exchanges", settings.COINGLASS_EXCHANGES)
+    SYMBOLS = params.get("symbols", settings.COINGLASS_SYMBOLS)  # Base assets
     INTERVALS = params.get("intervals", ["1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     UNITS = params.get("units")
     if not UNITS:

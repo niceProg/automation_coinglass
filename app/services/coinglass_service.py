@@ -75,7 +75,7 @@ class CoinglassService:
         # Default parameters for pipelines
         self.default_params = {
             "symbols": settings.COINGLASS_SYMBOLS,
-            "exchanges": ["Binance", "Bybit"],
+            "exchanges": settings.COINGLASS_EXCHANGES,
             # "limit": 1000,  # Removed - using API default
             "min_usd": settings.MIN_USD,
         }
@@ -86,7 +86,7 @@ class CoinglassService:
                 "func": funding_rate.run,
                 "params": {
                     "symbols": settings.COINGLASS_SYMBOLS,
-                    "exchanges": ["Binance", "Bybit"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
                     "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     # "limit": 1000,  # Removed - using API default
                     "min_usd": settings.MIN_USD,
@@ -115,7 +115,7 @@ class CoinglassService:
                 "func": long_short_ratio_global.run,
                 "params": {
                     "symbols": settings.COINGLASS_SYMBOLS,
-                    "exchanges": ["Binance", "Bybit"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
                     "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "min_usd": settings.MIN_USD,
                 },
@@ -124,7 +124,7 @@ class CoinglassService:
                 "func": long_short_ratio_top.run,
                 "params": {
                     "symbols": settings.COINGLASS_SYMBOLS,
-                    "exchanges": ["Binance", "Bybit"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
                     "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "min_usd": settings.MIN_USD,
                 },
@@ -149,8 +149,8 @@ class CoinglassService:
             "futures_basis": {
                 "func": futures_basis.run,
                 "params": {
-                    "pairs": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
-                    "exchanges": ["Binance", "Bybit"],
+                    "symbols": settings.COINGLASS_SYMBOLS,
+                    "exchanges": settings.COINGLASS_EXCHANGES,
                     "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "min_usd": settings.MIN_USD,
                 },
@@ -210,7 +210,7 @@ class CoinglassService:
             # },
             "spot_price_history": {
                 "func": spot_price_history.run,
-                "params": {**self.default_params, "symbols": ["BTCUSDT"], "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"], "hours_back": 2},
+                "params": {**self.default_params, "symbols": settings.COINGLASS_SYMBOLS, "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"], "hours_back": 2},
             },
             # Spot Market Pipelines
             "spot_coins_markets": {
@@ -330,8 +330,8 @@ class CoinglassService:
             "spot_aggregated_taker_volume_history": {
                 "func": spot_aggregated_taker_volume_history.run,
                 "params": {
-                    "exchange_lists": ["Binance", "Binance,Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
+                    "symbols": settings.COINGLASS_SYMBOLS,
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
                     "unit": "usd",
@@ -353,8 +353,8 @@ class CoinglassService:
             "futures_price_history": {
                 "func": futures_price_history.run,
                 "params": {
-                    "exchanges": ["Binance", "OKX", "Bybit"],
-                    "symbols": ["BTCUSDT", "ETHUSDT"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
+                    "symbols": settings.COINGLASS_SYMBOLS,
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
                     "days_back": 7,
@@ -363,8 +363,8 @@ class CoinglassService:
             "futures_aggregated_taker_buy_sell_volume_history": {
                 "func": futures_aggregated_taker_buy_sell_volume_history.run,
                 "params": {
-                    "exchanges": ["Binance", "OKX", "Bybit"],
-                    "symbols": ["BTC", "ETH"],
+                    "exchanges": settings.COINGLASS_EXCHANGES,
+                    "symbols": settings.COINGLASS_SYMBOLS,
                     "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "units": ["usd", "coin"],
                     "limit": 1000,

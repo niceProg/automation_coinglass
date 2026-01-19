@@ -4,10 +4,9 @@ import logging
 from typing import Any, Dict, List
 from datetime import datetime, timedelta
 from app.repositories.coinglass_repository import CoinglassRepository
-from app.core.config import Settings
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-settings = Settings()
 
 
 def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -22,8 +21,9 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     repo = CoinglassRepository(conn, logger)
 
     # Pipeline parameters
-    EXCHANGES = params.get("exchanges", ["Binance", "OKX", "Bybit"])
-    SYMBOLS = params.get("symbols", ["BTCUSDT", "ETHUSDT"])
+    EXCHANGES = params.get("exchanges", settings.COINGLASS_EXCHANGES)
+    raw_symbols = params.get("symbols", settings.COINGLASS_SYMBOLS)
+    SYMBOLS = _ensure_usdt_pairs(raw_symbols)
     INTERVALS = params.get("intervals", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
     LIMIT = params.get("limit", 1000)
 
@@ -91,3 +91,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     logger.info(f"📦 Futures Price History pipeline completed. Total records saved: {summary['futures_price_history']}, duplicates={summary['futures_price_history_duplicates']} ✅")
     return summary
+
+
+def _ensure_usdt_pairs(symbols: List[str]) -> List[str]:
+    pairs: List[str] = []
+    for symbol in symbols:
+        upper = symbol.upper()
+        if upper.endswith(("USDT", "USDC", "USD")):
+            pairs.append(symbol)
+        else:
+            pairs.append(f"{symbol}USDT")
+    return pairs

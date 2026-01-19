@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Dict, List
 from app.repositories.coinglass_repository import CoinglassRepository
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,9 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     # Futures basis specific timeframes
     TIMEFRAMES = params.get("timeframes", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
-    PAIRS = params.get("pairs", ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"])
-    EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])
+    symbols = params.get("symbols", settings.COINGLASS_SYMBOLS)
+    PAIRS = params.get("pairs", _ensure_usdt_pairs(symbols))
+    EXCHANGES = params.get("exchanges", settings.COINGLASS_EXCHANGES)
 
     summary = {
         "futures_basis": 0,
@@ -69,3 +71,14 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     return summary
+
+
+def _ensure_usdt_pairs(symbols: List[str]) -> List[str]:
+    pairs: List[str] = []
+    for symbol in symbols:
+        upper = symbol.upper()
+        if upper.endswith(("USDT", "USDC", "USD")):
+            pairs.append(symbol)
+        else:
+            pairs.append(f"{symbol}USDT")
+    return pairs

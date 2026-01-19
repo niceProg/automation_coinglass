@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Dict, List
 from app.repositories.coinglass_repository import CoinglassRepository
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,8 @@ def run(conn, client, params: Dict[str, Any]) -> Dict[str, Any]:
 
     # Funding rate specific timeframes
     TIMEFRAMES = params.get("timeframes", ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"])
-    SYMBOLS = params.get("symbols", ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"])
-    EXCHANGES = params.get("exchanges", ["Binance", "Bybit"])
+    SYMBOLS = params.get("symbols", settings.COINGLASS_SYMBOLS)
+    EXCHANGES = params.get("exchanges", settings.COINGLASS_EXCHANGES)
     # LIMIT = params.get("limit", 1000)  # Removed - using API default
 
     summary = {
