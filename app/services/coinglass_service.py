@@ -105,6 +105,11 @@ def _ensure_pairs_have_quote(pairs: List[str]) -> List[str]:
     return normalized_pairs
 
 
+def _symbols_to_usdt_pairs(symbols: List[str]) -> List[str]:
+    """Convert base symbols to USDT pairs, preserving any existing pairs."""
+    return _ensure_pairs_have_quote(symbols)
+
+
 class CoinglassService:
     """Service to orchestrate Coinglass data ingestion."""
 
@@ -192,7 +197,7 @@ class CoinglassService:
             "futures_basis": {
                 "func": futures_basis.run,
                 "params": {
-                    "pairs": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "HYPEUSDT", "BNBUSDT", "DOGEUSDT"],
+                    "pairs": _symbols_to_usdt_pairs(settings.COINGLASS_SYMBOLS),
                     "exchanges": ["Binance", "Bybit"],
                     "timeframes": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "min_usd": settings.MIN_USD,
@@ -253,7 +258,12 @@ class CoinglassService:
             # },
             "spot_price_history": {
                 "func": spot_price_history.run,
-                "params": {**self.default_params, "symbols": ["BTCUSDT"], "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"], "hours_back": 2},
+                "params": {
+                    **self.default_params,
+                    "symbols": _symbols_to_usdt_pairs(settings.COINGLASS_SYMBOLS),
+                    "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
+                    "hours_back": 2,
+                },
             },
             # Spot Market Pipelines
             "spot_coins_markets": {
@@ -374,7 +384,7 @@ class CoinglassService:
                 "func": spot_aggregated_taker_volume_history.run,
                 "params": {
                     "exchange_lists": ["Binance", "Binance,Bybit"],
-                    "symbols": ["BTC", "ETH", "SOL", "XRP", "HYPE", "BNB", "DOGE"],
+                    "symbols": settings.COINGLASS_SYMBOLS,
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
                     "unit": "usd",
@@ -432,7 +442,7 @@ class CoinglassService:
                 "func": futures_aggregated_taker_buy_sell_volume_history.run,
                 "params": {
                     "exchanges": ["Binance", "OKX", "Bybit"],  # Individual exchanges
-                    "symbols": ["BTC", "ETH"],  # Sementara BTC & ETH dulu
+                    "symbols": settings.COINGLASS_SYMBOLS,
                     "intervals": ["1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "units": ["usd", "coin"],
                     "limit": 1000,
@@ -443,7 +453,7 @@ class CoinglassService:
                 "func": futures_price_history.run,
                 "params": {
                     "exchanges": ["Binance", "OKX", "Bybit"],
-                    "symbols": ["BTCUSDT", "ETHUSDT"],  # Sementara BTCUSDT & ETHUSDT dulu
+                    "symbols": _symbols_to_usdt_pairs(settings.COINGLASS_SYMBOLS),
                     "intervals": ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "6h", "8h", "12h", "1d", "1w"],
                     "limit": 1000,
                     "days_back": 7,
